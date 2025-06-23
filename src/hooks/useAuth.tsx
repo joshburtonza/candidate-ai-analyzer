@@ -23,11 +23,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log('useAuth: Starting auth initialization');
     
-    // Get initial session
+    let mounted = true;
+
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('useAuth: Auth state changed:', event, session?.user?.id || 'No session');
+        
+        if (!mounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Use setTimeout to prevent potential deadlocks
+          setTimeout(() => {
+            if (mounted) {
+              fetchProfile(session.user.id);
+            }
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
+        if (loading && mounted) {
+          setLoading(false);
+        }
+      }
+    );
+
+    // THEN get initial session
     const getInitialSession = async () => {
       try {
         console.log('useAuth: Getting initial session');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('useAuth: Error getting session:', error);
@@ -46,34 +77,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
       } catch (error) {
         console.error('useAuth: Error in getInitialSession:', error);
-        setLoading(false);
-      }
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('useAuth: Auth state changed:', event, session?.user?.id || 'No session');
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-        
-        if (loading) {
+        if (mounted) {
           setLoading(false);
         }
       }
-    );
+    };
 
     getInitialSession();
 
     return () => {
       console.log('useAuth: Cleaning up subscription');
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -90,7 +104,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error) {
         console.error('useAuth: Error fetching profile:', error);
-        // Don't fail if profile doesn't exist, create a basic one
         if (error.code === 'PGRST116') {
           console.log('useAuth: Profile not found, user might be new');
           setProfile(null);
@@ -108,10 +121,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     console.log('useAuth: Signing out');
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+    } catch (error) {
+      console.error('useAuth: Error signing out:', error);
+    }
   };
 
   console.log('useAuth: Current state - loading:', loading, 'user:', user?.id || 'null', 'profile:', profile?.email || 'null');
