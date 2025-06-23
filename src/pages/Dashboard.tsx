@@ -33,7 +33,14 @@ const Dashboard = () => {
         .order('uploaded_at', { ascending: false });
 
       if (error) throw error;
-      setUploads(data || []);
+      
+      // Cast the database response to our CVUpload type
+      const typedUploads: CVUpload[] = (data || []).map(upload => ({
+        ...upload,
+        extracted_json: upload.extracted_json as any, // Cast Json to CandidateData | null
+      }));
+      
+      setUploads(typedUploads);
     } catch (error: any) {
       toast({
         title: "Error",

@@ -115,7 +115,13 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           f.id === uploadFile.id ? { ...f, progress: 100, status: 'completed' } : f
         ));
 
-        onUploadComplete(updatedData);
+        // Cast the database response to our CVUpload type
+        const typedUpload: CVUpload = {
+          ...updatedData,
+          extracted_json: updatedData.extracted_json as any, // Cast Json to CandidateData | null
+        };
+
+        onUploadComplete(typedUpload);
 
         // Remove from uploading list after delay
         setTimeout(() => {
