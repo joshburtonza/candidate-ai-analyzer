@@ -44,10 +44,10 @@ const CandidateProfile = () => {
         return;
       }
 
-      // Properly cast the data with type assertion
+      // Properly cast the data with type assertion through unknown
       const typedUpload: CVUpload = {
         ...data,
-        extracted_json: data.extracted_json as CandidateData | null,
+        extracted_json: data.extracted_json as unknown as CandidateData | null,
         processing_status: data.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       };
 
