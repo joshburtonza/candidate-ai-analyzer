@@ -21,9 +21,11 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('Dashboard: Auth state changed - authLoading:', authLoading, 'user:', user?.id || 'null');
+    console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null');
     
+    // Only fetch uploads when we have a user and auth is not loading
     if (!authLoading && user) {
+      console.log('Dashboard: User authenticated, fetching uploads');
       fetchUploads();
     } else if (!authLoading && !user) {
       console.log('Dashboard: No user found after auth loaded');
@@ -32,8 +34,14 @@ const Dashboard = () => {
   }, [user, authLoading]);
 
   const fetchUploads = async () => {
+    if (!user) {
+      console.log('Dashboard: No user available for fetching uploads');
+      setLoading(false);
+      return;
+    }
+
     try {
-      console.log('Dashboard: Fetching uploads for user:', user?.id);
+      console.log('Dashboard: Fetching uploads for user:', user.id);
       setError(null);
       
       const { data, error } = await supabase
@@ -74,7 +82,7 @@ const Dashboard = () => {
     setUploads(prev => [newUpload, ...prev]);
   };
 
-  // Show loading only if auth is loading or we're fetching data
+  // Show loading only if auth is loading
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
     return (
@@ -84,7 +92,8 @@ const Dashboard = () => {
     );
   }
 
-  if (loading) {
+  // Show loading screen only for data loading (not auth loading)
+  if (loading && user) {
     console.log('Dashboard: Showing data loading screen');
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">

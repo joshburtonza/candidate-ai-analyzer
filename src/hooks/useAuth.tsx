@@ -36,13 +36,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('useAuth: User found, fetching profile');
-          // Fetch profile with a small delay to prevent potential race conditions
-          setTimeout(() => {
-            if (mounted) {
-              fetchProfile(session.user.id);
-            }
-          }, 100);
+          console.log('useAuth: User found, will fetch profile async');
+          // Don't block loading on profile fetch
+          setLoading(false);
+          fetchProfile(session.user.id);
         } else {
           console.log('useAuth: No user, clearing profile');
           setProfile(null);
@@ -71,7 +68,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          // Don't block on profile fetch
+          setLoading(false);
+          fetchProfile(session.user.id);
         } else {
           setLoading(false);
         }
@@ -104,18 +103,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error && error.code !== 'PGRST116') {
         console.error('useAuth: Error fetching profile:', error);
-        setProfile(null);
-        setLoading(false);
         return;
       }
       
       if (!profileData) {
-        console.log('useAuth: No profile found, creating one');
+        console.log('useAuth: No profile found, creating basic one');
         // Create a basic profile if none exists
-        const newProfile = {
+        const newProfile: Partial<Profile> = {
           id: userId,
           email: user?.email || '',
-          full_name: user?.email || '',
+          full_name: user?.email?.split('@')[0] || 'User',
           is_admin: false
         };
         
@@ -123,25 +120,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .from('profiles')
           .insert([newProfile])
           .select()
-          .single();
+          .maybeSingle();
         
         if (createError) {
           console.error('useAuth: Error creating profile:', createError);
-          setProfile(null);
-        } else {
+        } else if (createdProfile) {
           console.log('useAuth: Profile created successfully');
-          setProfile(createdProfile);
+          setProfile(createdProfile as Profile);
         }
       } else {
         console.log('useAuth: Profile fetched successfully:', profileData?.email);
-        setProfile(profileData);
+        setProfile(profileData as Profile);
       }
-      
-      setLoading(false);
     } catch (error) {
       console.error('useAuth: Error in fetchProfile:', error);
-      setProfile(null);
-      setLoading(false);
     }
   };
 
