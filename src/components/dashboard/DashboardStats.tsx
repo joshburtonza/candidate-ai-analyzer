@@ -18,9 +18,9 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
       return new Date(u.uploaded_at).toDateString() === today;
     }).length,
     averageScore: completedUploads.length > 0 
-      ? Math.round(completedUploads.reduce((sum, upload) => {
-          return sum + parseInt(upload.extracted_json?.score || '0');
-        }, 0) / completedUploads.length)
+      ? Math.round((completedUploads.reduce((sum, upload) => {
+          return sum + parseFloat(upload.extracted_json?.score || '0');
+        }, 0) / completedUploads.length) * 10) / 10
       : 0,
     uniqueCountries: new Set(
       completedUploads
@@ -48,7 +48,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
     },
     {
       title: 'AVERAGE FIT SCORE',
-      value: `${stats.averageScore}%`,
+      value: `${stats.averageScore}/10`,
       icon: TrendingUp,
       color: 'bg-yellow-600',
     },

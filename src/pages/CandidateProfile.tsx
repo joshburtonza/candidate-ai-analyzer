@@ -185,13 +185,13 @@ const CandidateProfile = () => {
   }
 
   const data = upload.extracted_json;
-  const score = parseInt(data.score || '0');
+  const score = parseFloat(data.score || '0');
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-orange-600 to-orange-400';
-    if (score >= 60) return 'from-yellow-600 to-orange-500';
-    if (score >= 40) return 'from-red-600 to-yellow-600';
+    if (score >= 8) return 'from-orange-600 to-orange-400';
+    if (score >= 6) return 'from-yellow-600 to-orange-500';
+    if (score >= 4) return 'from-red-600 to-yellow-600';
     return 'from-gray-600 to-red-600';
   };
 
@@ -229,8 +229,8 @@ const CandidateProfile = () => {
                     <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
                       <span className="text-white font-bold text-3xl">{score}</span>
                     </div>
-                    <p className="text-white/80">Assessment Score</p>
-                    <Progress value={score} scoreValue={score} className="mt-4 h-2" />
+                    <p className="text-white/80">Assessment Score (out of 10)</p>
+                    <Progress value={score * 10} scoreValue={score * 10} className="mt-4 h-2" />
                   </div>
 
                   {/* Contact Info */}

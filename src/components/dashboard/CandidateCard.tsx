@@ -17,12 +17,12 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
   const data = upload.extracted_json!;
-  const score = parseInt(data.score || '0');
+  const score = parseFloat(data.score || '0');
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-gradient-to-r from-orange-600 to-orange-400';
-    if (score >= 60) return 'bg-gradient-to-r from-yellow-600 to-orange-500';
-    if (score >= 40) return 'bg-gradient-to-r from-red-600 to-yellow-600';
+    if (score >= 8) return 'bg-gradient-to-r from-orange-600 to-orange-400';
+    if (score >= 6) return 'bg-gradient-to-r from-yellow-600 to-orange-500';
+    if (score >= 4) return 'bg-gradient-to-r from-red-600 to-yellow-600';
     return 'bg-gradient-to-r from-gray-600 to-red-600';
   };
 
@@ -114,9 +114,9 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
           <div className="space-y-2 flex-shrink-0">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-400">FIT SCORE</span>
-              <span className="text-sm font-medium text-white">{score}%</span>
+              <span className="text-sm font-medium text-white">{score}/10</span>
             </div>
-            <Progress value={score} scoreValue={score} className="h-2" />
+            <Progress value={score * 10} scoreValue={score * 10} className="h-2" />
           </div>
 
           {/* Action Button */}
