@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,6 +97,40 @@ const CandidateProfile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to safely render text or structured data
+  const renderTextOrStructuredData = (data: any): string => {
+    if (typeof data === 'string') {
+      return data;
+    }
+    if (typeof data === 'object' && data !== null) {
+      if (Array.isArray(data)) {
+        return data.map(item => {
+          if (typeof item === 'string') return item;
+          if (typeof item === 'object') {
+            // Handle structured job history or education entries
+            if (item.company || item.position) {
+              return `${item.company || ''} - ${item.position || ''} (${item.dates || ''})${item.responsibilities ? '\n' + item.responsibilities : ''}`;
+            }
+            if (item.institution || item.degree) {
+              return `${item.degree || ''} - ${item.institution || ''} (${item.dates || ''})`;
+            }
+            return JSON.stringify(item, null, 2);
+          }
+          return String(item);
+        }).join('\n\n');
+      }
+      // Single object case
+      if (data.company || data.position) {
+        return `${data.company || ''} - ${data.position || ''} (${data.dates || ''})${data.responsibilities ? '\n' + data.responsibilities : ''}`;
+      }
+      if (data.institution || data.degree) {
+        return `${data.degree || ''} - ${data.institution || ''} (${data.dates || ''})`;
+      }
+      return JSON.stringify(data, null, 2);
+    }
+    return String(data || '');
   };
 
   if (loading) {
@@ -262,7 +297,7 @@ const CandidateProfile = () => {
                     <h3 className="text-2xl font-semibold text-white">Education</h3>
                   </div>
                   <div className="text-white/90 whitespace-pre-line leading-relaxed">
-                    {data.educational_qualifications}
+                    {renderTextOrStructuredData(data.educational_qualifications)}
                   </div>
                 </Card>
               )}
@@ -275,7 +310,7 @@ const CandidateProfile = () => {
                     <h3 className="text-2xl font-semibold text-white">Work Experience</h3>
                   </div>
                   <div className="text-white/90 whitespace-pre-line leading-relaxed">
-                    {data.job_history}
+                    {renderTextOrStructuredData(data.job_history)}
                   </div>
                 </Card>
               )}
