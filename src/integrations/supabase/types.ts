@@ -9,7 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cv_uploads: {
+        Row: {
+          extracted_json: Json | null
+          file_size: number | null
+          file_url: string
+          id: string
+          original_filename: string
+          processing_status: string | null
+          source_email: string | null
+          uploaded_at: string | null
+          user_id: string
+        }
+        Insert: {
+          extracted_json?: Json | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          original_filename: string
+          processing_status?: string | null
+          source_email?: string | null
+          uploaded_at?: string | null
+          user_id: string
+        }
+        Update: {
+          extracted_json?: Json | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          original_filename?: string
+          processing_status?: string | null
+          source_email?: string | null
+          uploaded_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          is_admin?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
