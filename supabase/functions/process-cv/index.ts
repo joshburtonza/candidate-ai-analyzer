@@ -47,25 +47,70 @@ serve(async (req) => {
 
     console.log('File downloaded successfully, size:', fileData.size)
 
-    // Extract text content from the file
-    let fileText = ''
-    try {
-      fileText = await fileData.text()
-      console.log('Raw file text length:', fileText.length)
-    } catch (error) {
-      console.log('Could not extract text from file:', error)
-      fileText = ''
+    let extractedText = ''
+
+    // Check if it's a PDF file and use PDF.co for extraction
+    const fileName = filePath.split('/').pop() || ''
+    const isPDF = fileName.toLowerCase().endsWith('.pdf')
+
+    if (isPDF && Deno.env.get('PDFCO_API_KEY')) {
+      console.log('Using PDF.co for PDF text extraction')
+      
+      try {
+        // Convert file to base64 for PDF.co API
+        const arrayBuffer = await fileData.arrayBuffer()
+        const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+        
+        // Call PDF.co text extraction API
+        const pdfcoResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
+          method: 'POST',
+          headers: {
+            'x-api-key': Deno.env.get('PDFCO_API_KEY')!,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            file: `data:application/pdf;base64,${base64Data}`,
+            pages: '1-5', // Extract first 5 pages to manage content size
+            inline: true
+          })
+        })
+
+        if (pdfcoResponse.ok) {
+          const pdfcoResult = await pdfcoResponse.json()
+          if (pdfcoResult.body) {
+            extractedText = pdfcoResult.body
+            console.log('PDF.co extraction successful, text length:', extractedText.length)
+          } else {
+            console.log('PDF.co extraction failed, falling back to basic extraction')
+            extractedText = await fileData.text().catch(() => '')
+          }
+        } else {
+          console.log('PDF.co API error, falling back to basic extraction')
+          extractedText = await fileData.text().catch(() => '')
+        }
+      } catch (error) {
+        console.log('Error with PDF.co extraction, falling back:', error)
+        extractedText = await fileData.text().catch(() => '')
+      }
+    } else {
+      // Fallback to basic text extraction for non-PDF files or when PDF.co is not available
+      console.log('Using basic text extraction')
+      try {
+        extractedText = await fileData.text()
+        console.log('Basic text extraction successful, length:', extractedText.length)
+      } catch (error) {
+        console.log('Could not extract text from file:', error)
+        extractedText = ''
+      }
     }
 
     // Clean and truncate the text to fit OpenAI limits
-    // Remove excessive whitespace and formatting characters
-    let cleanedText = fileText
+    let cleanedText = extractedText
       .replace(/\s+/g, ' ') // Replace multiple spaces/newlines with single space
       .replace(/[^\w\s@.,()-]/g, ' ') // Keep only alphanumeric, spaces, and common CV characters
       .trim()
 
     // Truncate to approximately 8000 characters to stay well under token limits
-    // This leaves room for the system prompt and response
     const maxLength = 8000
     if (cleanedText.length > maxLength) {
       cleanedText = cleanedText.substring(0, maxLength) + '...'
@@ -76,7 +121,7 @@ serve(async (req) => {
 
     // If we still don't have meaningful text, use filename analysis
     if (!cleanedText || cleanedText.length < 50) {
-      cleanedText = `Unable to extract readable text from the file. File: ${filePath.split('/').pop()}`
+      cleanedText = `Unable to extract readable text from the file. File: ${fileName}`
       console.log('Using filename-based analysis')
     }
 
@@ -92,7 +137,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a CV/Resume analyzer. Extract the following information from the CV text and return it as a JSON object:
+            content: `You are a CV/Resume analyzer. Extract the following information from the CV text and return it as a JSON object ONLY (no markdown formatting):
             {
               "candidate_name": "Full name of the candidate",
               "email_address": "Email address",
@@ -105,7 +150,7 @@ serve(async (req) => {
               "countries": "Countries mentioned or inferred from location/experience"
             }
             
-            If any field is not found, use appropriate default values. The score should reflect the candidate's overall suitability based on experience, skills, and qualifications. If text is truncated or unclear, do your best with available information.`
+            Return ONLY the JSON object without any markdown code blocks or additional text. If any field is not found, use appropriate default values.`
           },
           {
             role: 'user',
@@ -124,15 +169,25 @@ serve(async (req) => {
     }
 
     const openaiResult = await openaiResponse.json()
-    const extractedText = openaiResult.choices[0]?.message?.content
+    let extractedResponseText = openaiResult.choices[0]?.message?.content
 
-    console.log('OpenAI response received:', extractedText)
+    console.log('OpenAI response received:', extractedResponseText)
+
+    // Clean up the response if it's wrapped in markdown
+    if (extractedResponseText) {
+      // Remove markdown code blocks if present
+      extractedResponseText = extractedResponseText
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .trim()
+    }
 
     let extractedData
     try {
-      extractedData = JSON.parse(extractedText)
+      extractedData = JSON.parse(extractedResponseText)
     } catch (e) {
       console.error('Failed to parse OpenAI response as JSON:', e)
+      console.log('Raw response:', extractedResponseText)
       // Fallback if JSON parsing fails
       extractedData = {
         candidate_name: "Unable to extract",
