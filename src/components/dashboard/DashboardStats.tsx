@@ -35,32 +35,28 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
 
   const statCards = [
     {
-      title: 'Total Candidates',
+      title: 'TOTAL CANDIDATES',
       value: stats.totalCandidates,
       icon: Users,
-      color: 'from-blue-400 to-cyan-400',
-      bgColor: 'from-blue-400/20 to-cyan-400/20',
+      color: 'bg-blue-600',
     },
     {
-      title: "Today's Uploads",
+      title: "TODAY'S UPLOADS",
       value: stats.todayUploads,
       icon: Calendar,
-      color: 'from-green-400 to-emerald-400',
-      bgColor: 'from-green-400/20 to-emerald-400/20',
+      color: 'bg-green-600',
     },
     {
-      title: 'Average Fit Score',
+      title: 'AVERAGE FIT SCORE',
       value: `${stats.averageScore}%`,
       icon: TrendingUp,
-      color: 'from-yellow-400 to-yellow-600',
-      bgColor: 'from-yellow-400/20 to-yellow-600/20',
+      color: 'bg-yellow-600',
     },
     {
-      title: 'Unique Countries',
+      title: 'UNIQUE COUNTRIES',
       value: stats.uniqueCountries,
       icon: MapPin,
-      color: 'from-orange-400 to-red-400',
-      bgColor: 'from-orange-400/20 to-red-400/20',
+      color: 'bg-red-600',
     },
   ];
 
@@ -73,14 +69,14 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
         >
-          <Card className="glass-card elegant-border p-6 hover:bg-white/5 transition-all duration-300 group">
+          <Card className="stat-card p-6 hover:bg-gray-700/50 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/70 text-sm font-medium text-elegant tracking-wider">{stat.title.toUpperCase()}</p>
-                <p className="text-3xl font-bold text-white mt-1 text-elegant">{stat.value}</p>
+                <p className="text-white/70 text-sm font-medium">{stat.title}</p>
+                <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
               </div>
-              <div className={`p-4 rounded-xl bg-gradient-to-r ${stat.bgColor} group-hover:scale-110 transition-transform duration-300 border border-white/10`}>
-                <stat.icon className={`w-6 h-6 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`} />
+              <div className={`p-3 rounded-lg ${stat.color}`}>
+                <stat.icon className="w-6 h-6 text-white" />
               </div>
             </div>
           </Card>

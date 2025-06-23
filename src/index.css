@@ -3,86 +3,86 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Updated design system with elegant dark theme */
+/* Updated design system with black theme and orange accents */
 
 @layer base {
   :root {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
 
     --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 38 100% 60%;
-    --primary-foreground: 0 0% 8%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 38 100% 60%;
-    --accent-foreground: 0 0% 8%;
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 38 100% 60%;
+    --ring: 25 95% 53%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 38 100% 60%;
-    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 38 100% 60%;
+    --sidebar-ring: 25 95% 53%;
   }
 
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 95%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
 
     --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 38 100% 60%;
-    --primary-foreground: 0 0% 8%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 38 100% 60%;
-    --accent-foreground: 0 0% 8%;
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 38 100% 60%;
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 38 100% 60%;
-    --sidebar-primary-foreground: 0 0% 8%;
+    --ring: 25 95% 53%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 38 100% 60%;
+    --sidebar-ring: 25 95% 53%;
   }
 }
 
@@ -97,34 +97,51 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
-    letter-spacing: 0.05em;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
   }
 }
 
-/* Custom elegant styles */
+/* Custom styles */
 @layer components {
-  .elegant-gradient {
-    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+  .dot-grid-bg {
+    background-color: #121212;
+    background-image: 
+      radial-gradient(circle, #333333 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 
-  .gold-accent {
-    color: hsl(38, 100%, 60%);
+  .orange-accent {
+    color: hsl(25, 95%, 53%);
   }
 
-  .glass-card {
-    background: rgba(20, 20, 20, 0.8);
-    backdrop-filter: blur(20px);
+  .dark-card {
+    background: rgba(32, 32, 32, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
   }
 
-  .elegant-border {
+  .stat-card {
+    background: rgba(40, 40, 40, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
   }
 
-  .text-elegant {
-    font-family: 'Playfair Display', serif;
-    letter-spacing: 0.1em;
+  .upload-area {
+    background: rgba(32, 32, 32, 0.8);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+  }
+
+  .candidate-card {
+    background: rgba(40, 40, 40, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+  }
+
+  .header-bg {
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 }

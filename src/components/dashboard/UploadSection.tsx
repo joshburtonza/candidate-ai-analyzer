@@ -157,13 +157,13 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-8">
+      <Card className="dark-card p-8">
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 ${
+          className={`upload-area p-12 text-center cursor-pointer transition-all duration-300 ${
             isDragActive
-              ? 'border-violet-400 bg-violet-500/10'
-              : 'border-white/30 hover:border-violet-400 hover:bg-white/5'
+              ? 'border-orange-500 bg-orange-500/10'
+              : 'hover:border-orange-500 hover:bg-gray-800/50'
           }`}
         >
           <input {...getInputProps()} />
@@ -171,23 +171,23 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
             initial={{ scale: 1 }}
             animate={{ scale: isDragActive ? 1.1 : 1 }}
             transition={{ duration: 0.2 }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-blue-500 rounded-2xl mb-6"
+            className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-lg mb-6"
           >
-            <Upload className="w-8 h-8 text-white" />
+            <Upload className="w-8 h-8 text-black" />
           </motion.div>
           
           {isDragActive ? (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Drop files here</h3>
-              <p className="text-slate-300">Release to upload your CV files</p>
+              <h3 className="text-xl font-semibold text-white mb-2">Upload CV Files</h3>
+              <p className="text-gray-300">Drag and drop your files here, or click to browse</p>
             </div>
           ) : (
             <div>
               <h3 className="text-xl font-semibold text-white mb-2">Upload CV Files</h3>
-              <p className="text-slate-300 mb-4">
+              <p className="text-gray-300 mb-4">
                 Drag and drop your files here, or click to browse
               </p>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-gray-400">
                 Supports PDF, DOC, and DOCX files (max 10MB each)
               </p>
             </div>
@@ -210,10 +210,10 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-4">
+                <Card className="dark-card p-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-violet-500/20 rounded-lg">
-                      <FileText className="w-5 h-5 text-violet-400" />
+                    <div className="p-2 bg-orange-500/20 rounded-lg">
+                      <FileText className="w-5 h-5 text-orange-500" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -222,11 +222,11 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <Progress value={upload.progress} className="flex-1 h-2" />
-                        <span className="text-xs text-slate-300">
+                        <span className="text-xs text-gray-300">
                           {upload.progress}%
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         {upload.status === 'uploading' && 'Uploading to storage...'}
                         {upload.status === 'processing' && 'Analyzing with AI...'}
                         {upload.status === 'completed' && 'Analysis completed'}
@@ -246,7 +246,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => removeUpload(upload.id)}
-                          className="text-slate-400 hover:text-white"
+                          className="text-gray-400 hover:text-white"
                         >
                           <X className="w-4 h-4" />
                         </Button>

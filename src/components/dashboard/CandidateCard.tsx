@@ -20,9 +20,9 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
   const score = parseInt(data.score || '0');
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-yellow-400 to-yellow-600';
-    if (score >= 60) return 'from-orange-400 to-red-400';
-    return 'from-red-500 to-pink-500';
+    if (score >= 80) return 'bg-orange-500';
+    if (score >= 60) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
@@ -34,26 +34,26 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
       whileHover={{ y: -5 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="glass-card elegant-border p-6 h-full hover:bg-white/5 transition-all duration-300 cursor-pointer group">
+      <Card className="candidate-card p-6 h-full hover:bg-gray-600/20 transition-all duration-300 cursor-pointer group">
         <div className="space-y-4">
           {/* Header */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-lg border border-white/10">
-                <User className="w-5 h-5 gold-accent" />
+              <div className="p-3 bg-orange-500/20 rounded-lg border border-orange-500/30">
+                <User className="w-5 h-5 text-orange-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-white group-hover:text-yellow-400 transition-colors text-elegant">
+                <h3 className="font-semibold text-white group-hover:text-orange-400 transition-colors">
                   {data.candidate_name || 'Unknown'}
                 </h3>
-                <p className="text-sm text-white/70">{data.email_address}</p>
+                <p className="text-sm text-gray-400">{data.email_address}</p>
               </div>
             </div>
             
             {/* Score Circle */}
             <div className="relative">
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center shadow-lg`}>
-                <span className="text-black font-bold text-sm">{score}</span>
+              <div className={`w-12 h-12 rounded-full ${getScoreColor(score)} flex items-center justify-center`}>
+                <span className="text-white font-bold text-sm">{score}</span>
               </div>
             </div>
           </div>
@@ -61,14 +61,14 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
           {/* Contact Info */}
           <div className="space-y-2">
             {data.contact_number && (
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <Phone className="w-4 h-4 gold-accent" />
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <Phone className="w-4 h-4 text-orange-500" />
                 {data.contact_number}
               </div>
             )}
             {data.countries && (
-              <div className="flex items-center gap-2 text-sm text-white/70">
-                <MapPin className="w-4 h-4 gold-accent" />
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <MapPin className="w-4 h-4 text-orange-500" />
                 {data.countries}
               </div>
             )}
@@ -77,13 +77,13 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
           {/* Skills */}
           {skills.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-white/80 text-elegant tracking-wider">SKILLS</p>
+              <p className="text-sm font-medium text-white/80">SKILLS</p>
               <div className="flex flex-wrap gap-1">
                 {skills.slice(0, 3).map((skill, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="bg-white/10 text-white border-white/20 text-xs hover:bg-white/20 transition-colors"
+                    className="bg-gray-700 text-white border-gray-600 text-xs hover:bg-gray-600 transition-colors"
                   >
                     {skill}
                   </Badge>
@@ -91,7 +91,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
                 {skills.length > 3 && (
                   <Badge
                     variant="secondary"
-                    className="bg-white/10 text-white border-white/20 text-xs"
+                    className="bg-gray-700 text-white border-gray-600 text-xs"
                   >
                     +{skills.length - 3}
                   </Badge>
@@ -100,10 +100,10 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
             </div>
           )}
 
-          {/* Justification */}
+          {/* Assessment */}
           <div className="space-y-2">
-            <p className="text-sm font-medium text-white/80 text-elegant tracking-wider">ASSESSMENT</p>
-            <p className="text-sm text-white/60 line-clamp-2">
+            <p className="text-sm font-medium text-white/80">ASSESSMENT</p>
+            <p className="text-sm text-gray-400 line-clamp-2">
               {data.justification || 'No assessment available'}
             </p>
           </div>
@@ -111,7 +111,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
           {/* Score Progress */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-white/70 text-elegant tracking-wider">FIT SCORE</span>
+              <span className="text-sm text-gray-400">FIT SCORE</span>
               <span className="text-sm font-medium text-white">{score}%</span>
             </div>
             <Progress value={score} className="h-2" />
@@ -125,7 +125,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
           >
             <Button
               onClick={() => navigate(`/candidate/${upload.id}`)}
-              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-semibold text-elegant tracking-wider"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold"
             >
               <Eye className="w-4 h-4 mr-2" />
               VIEW PROFILE
