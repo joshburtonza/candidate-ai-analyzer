@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +7,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
+import { DateFilter } from '@/components/dashboard/DateFilter';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -123,8 +126,18 @@ const Dashboard = () => {
     );
   }
 
+  // Filter uploads by selected dates
+  const dateFilteredUploads = selectedDates.length > 0 
+    ? uploads.filter(upload => {
+        const uploadDate = new Date(upload.uploaded_at);
+        return selectedDates.some(selectedDate => 
+          uploadDate.toDateString() === selectedDate.toDateString()
+        );
+      })
+    : uploads;
+
   // Filter and sort uploads
-  const filteredUploads = uploads.filter(upload => {
+  const filteredUploads = dateFilteredUploads.filter(upload => {
     if (!searchQuery) return true;
     const data = upload.extracted_json;
     if (!data) return false;
@@ -184,6 +197,27 @@ const Dashboard = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <UploadSection onUploadComplete={handleUploadComplete} />
+          </motion.div>
+
+          {/* Date Filter Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-semibold text-white">Candidates</h2>
+              <DateFilter 
+                selectedDates={selectedDates}
+                onDatesChange={setSelectedDates}
+              />
+            </div>
+            {selectedDates.length > 0 && (
+              <div className="text-sm text-gray-400">
+                Showing {sortedUploads.length} candidates from {selectedDates.length} selected date{selectedDates.length !== 1 ? 's' : ''}
+              </div>
+            )}
           </motion.div>
 
           <motion.div
