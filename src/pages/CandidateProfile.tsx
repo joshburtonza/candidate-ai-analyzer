@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,7 +63,7 @@ const CandidateProfile = () => {
       // Safely handle the JSON conversion
       let extractedData: CandidateData | null = null;
       if (data.extracted_json && typeof data.extracted_json === 'object' && !Array.isArray(data.extracted_json)) {
-        extractedData = data.extracted_json as CandidateData;
+        extractedData = data.extracted_json as unknown as CandidateData;
       }
 
       // Type the upload properly
