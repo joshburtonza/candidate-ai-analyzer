@@ -57,7 +57,21 @@ serve(async (req) => {
       console.log('Using PDF.co for PDF text extraction')
       
       try {
-        // Use the direct file URL instead of base64 for PDF.co
+        // Convert file to base64 in chunks to avoid memory issues
+        const arrayBuffer = await fileData.arrayBuffer()
+        const uint8Array = new Uint8Array(arrayBuffer)
+        
+        // Convert to base64 string
+        let binary = ''
+        const chunkSize = 1024
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.slice(i, i + chunkSize)
+          binary += String.fromCharCode.apply(null, Array.from(chunk))
+        }
+        const base64Data = btoa(binary)
+        
+        console.log('PDF converted to base64, length:', base64Data.length)
+
         const pdfcoResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
           method: 'POST',
           headers: {
@@ -65,15 +79,15 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            url: fileUrl, // Use the direct URL instead of base64
-            pages: '1-3', // Extract first 3 pages to manage content size
+            file: base64Data,
+            pages: '1-3',
             inline: true
           })
         })
 
         if (pdfcoResponse.ok) {
           const pdfcoResult = await pdfcoResponse.json()
-          console.log('PDF.co response:', pdfcoResult)
+          console.log('PDF.co response success:', !!pdfcoResult.body)
           
           if (pdfcoResult.body && pdfcoResult.body.trim()) {
             extractedText = pdfcoResult.body
@@ -105,11 +119,11 @@ serve(async (req) => {
 
     // Clean and truncate the text to fit OpenAI limits
     let cleanedText = extractedText
-      .replace(/\s+/g, ' ') // Replace multiple spaces/newlines with single space
-      .replace(/[^\w\s@.,()-]/g, ' ') // Keep only alphanumeric, spaces, and common CV characters
+      .replace(/\s+/g, ' ')
+      .replace(/[^\w\s@.,()-]/g, ' ')
       .trim()
 
-    // Truncate to approximately 6000 characters to stay well under token limits
+    // Truncate to approximately 6000 characters
     const maxLength = 6000
     if (cleanedText.length > maxLength) {
       cleanedText = cleanedText.substring(0, maxLength) + '...'
@@ -117,7 +131,7 @@ serve(async (req) => {
     }
 
     console.log('Final text length for OpenAI:', cleanedText.length)
-    console.log('Sample text (first 500 chars):', cleanedText.substring(0, 500))
+    console.log('Sample text (first 200 chars):', cleanedText.substring(0, 200))
 
     // If we still don't have meaningful text, use filename analysis
     if (!cleanedText || cleanedText.length < 20) {
@@ -125,7 +139,7 @@ serve(async (req) => {
       console.log('Using filename-based analysis due to insufficient text')
     }
 
-    // Call OpenAI to analyze the CV content
+    // Call OpenAI to analyze the CV content with improved prompt
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -137,24 +151,24 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a CV/Resume analyzer. Extract the following information from the CV text and return it as a JSON object with NO markdown formatting, NO code blocks, just raw JSON:
+            content: `You are a CV/Resume analyzer. Extract information from the CV text and return ONLY a valid JSON object (no markdown, no code blocks, no extra text). Required format:
             {
-              "candidate_name": "Full name of the candidate",
-              "email_address": "Email address", 
-              "contact_number": "Phone number",
-              "educational_qualifications": "Education background summary",
-              "job_history": "Work experience summary",
-              "skill_set": "Comma-separated list of skills",
-              "score": "Numeric score from 0-100 based on overall candidate quality",
-              "justification": "Brief explanation of the score",
-              "countries": "Countries mentioned or inferred from location/experience"
+              "candidate_name": "Full name",
+              "email_address": "Email or empty string",
+              "contact_number": "Phone or empty string",
+              "educational_qualifications": "Education summary or empty string",
+              "job_history": "Work experience summary or empty string", 
+              "skill_set": "Comma-separated skills or empty string",
+              "score": 75,
+              "justification": "Brief score explanation",
+              "countries": "Location/countries or empty string"
             }
             
-            IMPORTANT: Return ONLY the JSON object. Do not wrap it in markdown code blocks or add any other text.`
+            CRITICAL: Return ONLY the JSON object. No markdown formatting. Score should be a number 0-100.`
           },
           {
             role: 'user',
-            content: `Please analyze this CV/Resume content and extract the requested information:\n\n${cleanedText}`
+            content: `Analyze this CV content:\n\n${cleanedText}`
           }
         ],
         max_tokens: 600,
@@ -169,13 +183,13 @@ serve(async (req) => {
     }
 
     const openaiResult = await openaiResponse.json()
-    let extractedResponseText = openaiResult.choices[0]?.message?.content
+    let responseText = openaiResult.choices[0]?.message?.content?.trim()
 
-    console.log('Raw OpenAI response:', extractedResponseText)
+    console.log('Raw OpenAI response:', responseText)
 
-    // Clean up the response - remove any markdown formatting
-    if (extractedResponseText) {
-      extractedResponseText = extractedResponseText
+    // Clean up any markdown formatting
+    if (responseText) {
+      responseText = responseText
         .replace(/```json\s*/g, '')
         .replace(/```\s*/g, '')
         .replace(/^```/g, '')
@@ -185,23 +199,33 @@ serve(async (req) => {
 
     let extractedData
     try {
-      extractedData = JSON.parse(extractedResponseText)
+      extractedData = JSON.parse(responseText)
       console.log('Successfully parsed JSON:', extractedData)
+      
+      // Ensure score is a number
+      if (typeof extractedData.score === 'string') {
+        extractedData.score = parseInt(extractedData.score) || 0
+      }
+      
     } catch (e) {
       console.error('Failed to parse OpenAI response as JSON:', e)
-      console.log('Cleaned response text:', extractedResponseText)
+      console.log('Response text:', responseText)
       
-      // Enhanced fallback with better defaults
+      // Try to extract name from the text if possible
+      const nameMatch = cleanedText.match(/([A-Z][a-z]+ [A-Z][a-z]+)/g)
+      const emailMatch = cleanedText.match(/[\w.-]+@[\w.-]+\.\w+/g)
+      const phoneMatch = cleanedText.match(/[\+]?[1-9][\d\s\-\(\)]{8,}/g)
+      
       extractedData = {
-        candidate_name: "Unable to extract",
-        email_address: "Not found",
-        contact_number: "Not found", 
-        educational_qualifications: "Unable to extract from document",
-        job_history: "Unable to extract from document",
-        skill_set: "Unable to extract",
-        score: "25",
+        candidate_name: nameMatch ? nameMatch[0] : "Unable to extract",
+        email_address: emailMatch ? emailMatch[0] : "",
+        contact_number: phoneMatch ? phoneMatch[0] : "",
+        educational_qualifications: "",
+        job_history: "",
+        skill_set: "",
+        score: 25,
         justification: "Could not properly analyze the CV content. The document may be image-based or have formatting issues.",
-        countries: "Unknown"
+        countries: ""
       }
     }
 
