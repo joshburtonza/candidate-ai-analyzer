@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { CVUpload } from '@/types/candidate';
+import { CVUpload, CandidateData } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,14 @@ const CandidateProfile = () => {
         return;
       }
 
-      setUpload(data as CVUpload);
+      // Properly cast the data with type assertion
+      const typedUpload: CVUpload = {
+        ...data,
+        extracted_json: data.extracted_json as CandidateData | null,
+        processing_status: data.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      };
+
+      setUpload(typedUpload);
     } catch (error: any) {
       console.error('Error fetching candidate:', error);
       toast({
