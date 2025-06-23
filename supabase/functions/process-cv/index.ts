@@ -47,9 +47,38 @@ serve(async (req) => {
 
     console.log('File downloaded successfully, size:', fileData.size)
 
-    // Convert file to text using a simple approach for PDFs
-    const fileText = await fileData.text().catch(() => '')
-    console.log('File text length:', fileText.length)
+    // Extract text content from the file
+    let fileText = ''
+    try {
+      fileText = await fileData.text()
+      console.log('Raw file text length:', fileText.length)
+    } catch (error) {
+      console.log('Could not extract text from file:', error)
+      fileText = ''
+    }
+
+    // Clean and truncate the text to fit OpenAI limits
+    // Remove excessive whitespace and formatting characters
+    let cleanedText = fileText
+      .replace(/\s+/g, ' ') // Replace multiple spaces/newlines with single space
+      .replace(/[^\w\s@.,()-]/g, ' ') // Keep only alphanumeric, spaces, and common CV characters
+      .trim()
+
+    // Truncate to approximately 8000 characters to stay well under token limits
+    // This leaves room for the system prompt and response
+    const maxLength = 8000
+    if (cleanedText.length > maxLength) {
+      cleanedText = cleanedText.substring(0, maxLength) + '...'
+      console.log('Text truncated to:', cleanedText.length, 'characters')
+    }
+
+    console.log('Final text length for OpenAI:', cleanedText.length)
+
+    // If we still don't have meaningful text, use filename analysis
+    if (!cleanedText || cleanedText.length < 50) {
+      cleanedText = `Unable to extract readable text from the file. File: ${filePath.split('/').pop()}`
+      console.log('Using filename-based analysis')
+    }
 
     // Call OpenAI to analyze the CV content
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -76,14 +105,14 @@ serve(async (req) => {
               "countries": "Countries mentioned or inferred from location/experience"
             }
             
-            If any field is not found, use appropriate default values. The score should reflect the candidate's overall suitability based on experience, skills, and qualifications.`
+            If any field is not found, use appropriate default values. The score should reflect the candidate's overall suitability based on experience, skills, and qualifications. If text is truncated or unclear, do your best with available information.`
           },
           {
             role: 'user',
-            content: `Please analyze this CV/Resume content and extract the requested information:\n\n${fileText || 'Unable to extract text from the file. Please provide a basic assessment based on the filename and file type.'}`
+            content: `Please analyze this CV/Resume content and extract the requested information:\n\n${cleanedText}`
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 800,
         temperature: 0.1
       })
     })
