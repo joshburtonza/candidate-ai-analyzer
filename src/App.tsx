@@ -10,20 +10,44 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
+import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
+const LoadingScreen = ({ message }: { message: string }) => (
+  <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
+    <div className="text-center">
+      <div className="text-white text-lg mb-2">{message}</div>
+      <div className="text-slate-300 text-sm">This should only take a moment...</div>
+    </div>
+  </div>
+);
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const [fallbackTimer, setFallbackTimer] = useState(false);
   
   console.log('ProtectedRoute: loading:', loading, 'user:', user?.id || 'null');
   
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
+  // Fallback timer in case loading gets stuck
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.log('ProtectedRoute: Loading timeout reached, showing fallback');
+        setFallbackTimer(true);
+      }
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  if (loading && !fallbackTimer) {
+    return <LoadingScreen message="Checking authentication..." />;
+  }
+  
+  if (fallbackTimer && loading) {
+    console.log('ProtectedRoute: Fallback triggered, redirecting to auth');
+    return <Navigate to="/auth" replace />;
   }
   
   if (!user) {
@@ -36,18 +60,27 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const [fallbackTimer, setFallbackTimer] = useState(false);
   
   console.log('PublicRoute: loading:', loading, 'user:', user?.id || 'null');
   
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
+  // Fallback timer in case loading gets stuck
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.log('PublicRoute: Loading timeout reached, showing content');
+        setFallbackTimer(true);
+      }
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [loading]);
+  
+  if (loading && !fallbackTimer) {
+    return <LoadingScreen message="Loading application..." />;
   }
   
-  if (user) {
+  if (user && !loading) {
     console.log('PublicRoute: User found, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
