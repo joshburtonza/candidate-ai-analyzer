@@ -59,10 +59,17 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center p-4">
-      <div className="absolute inset-0 opacity-50" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-      }}></div>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative">
+      {/* N8N-style dotted grid background */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 1px 1px, #374151 1px, transparent 0)
+          `,
+          backgroundSize: '20px 20px'
+        }}
+      />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -75,23 +82,23 @@ const Auth = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-500 to-blue-500 rounded-2xl mb-4 mx-auto"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mb-4 mx-auto shadow-lg shadow-orange-500/25"
           >
             <Brain className="w-8 h-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2 text-elegant">
             Resume Intelligence
-            <Sparkles className="w-6 h-6 text-violet-400" />
+            <Sparkles className="w-6 h-6 text-orange-400" />
           </h1>
-          <p className="text-slate-300">Enterprise-grade CV analysis powered by AI</p>
+          <p className="text-gray-300">Enterprise-grade CV analysis powered by AI</p>
         </div>
 
-        <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl">
+        <Card className="glass-card elegant-border shadow-2xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-white">
+            <CardTitle className="text-white text-elegant">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="text-gray-300">
               {isSignUp 
                 ? 'Start analyzing resumes with AI-powered insights'
                 : 'Sign in to access your dashboard'
@@ -107,7 +114,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                  className="glass-card border-white/20 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
                 />
               </div>
               <div>
@@ -117,13 +124,13 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                  className="glass-card border-white/20 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
                 />
               </div>
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 text-white font-medium py-2.5"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium py-2.5 shadow-lg shadow-orange-500/25 border-0"
               >
                 {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
               </Button>
@@ -132,7 +139,7 @@ const Auth = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-violet-300 hover:text-violet-200 transition-colors"
+                className="text-orange-400 hover:text-orange-300 transition-colors font-medium"
               >
                 {isSignUp 
                   ? 'Already have an account? Sign in' 
