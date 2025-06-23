@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle, AlertCircle } from 'lucide-react';
@@ -19,6 +20,7 @@ interface UploadingFile {
   progress: number;
   status: 'uploading' | 'processing' | 'completed' | 'error';
   id: string;
+  error?: string;
 }
 
 export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
@@ -81,34 +83,24 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           f.id === uploadFile.id ? { ...f, progress: 50, status: 'processing' } : f
         ));
 
-        // Process file with OpenAI (simulate for now)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Mock extracted data (in real implementation, this would call OpenAI)
-        const mockExtractedData = {
-          candidate_name: "John Doe",
-          email_address: "john.doe@example.com",
-          contact_number: "+1234567890",
-          educational_qualifications: "Bachelor's in Computer Science",
-          job_history: "5 years as Software Developer",
-          skill_set: "JavaScript, React, Node.js, Python",
-          score: "85",
-          justification: "Strong technical background with relevant experience",
-          countries: "United States",
-        };
+        // Call edge function to process CV with OpenAI
+        const { data: processResult, error: processError } = await supabase.functions.invoke('process-cv', {
+          body: {
+            fileUrl: urlData.publicUrl,
+            uploadId: dbData.id
+          }
+        });
 
-        // Update record with extracted data
-        const { data: updatedData, error: updateError } = await supabase
+        if (processError) throw processError;
+
+        // Fetch the updated record
+        const { data: updatedData, error: fetchError } = await supabase
           .from('cv_uploads')
-          .update({
-            extracted_json: mockExtractedData,
-            processing_status: 'completed',
-          })
+          .select('*')
           .eq('id', dbData.id)
-          .select()
           .single();
 
-        if (updateError) throw updateError;
+        if (fetchError) throw fetchError;
 
         setUploadingFiles(prev => prev.map(f => 
           f.id === uploadFile.id ? { ...f, progress: 100, status: 'completed' } : f
@@ -123,6 +115,11 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
         onUploadComplete(typedUpload);
 
+        toast({
+          title: "CV processed successfully",
+          description: `${uploadFile.file.name} has been analyzed`,
+        });
+
         // Remove from uploading list after delay
         setTimeout(() => {
           setUploadingFiles(prev => prev.filter(f => f.id !== uploadFile.id));
@@ -131,7 +128,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       } catch (error: any) {
         console.error('Upload error:', error);
         setUploadingFiles(prev => prev.map(f => 
-          f.id === uploadFile.id ? { ...f, status: 'error' } : f
+          f.id === uploadFile.id ? { ...f, status: 'error', error: error.message } : f
         ));
         
         toast({
@@ -151,6 +148,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
     },
     multiple: true,
+    maxSize: 10 * 1024 * 1024, // 10MB limit
   });
 
   const removeUpload = (id: string) => {
@@ -190,7 +188,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                 Drag and drop your files here, or click to browse
               </p>
               <p className="text-sm text-slate-400">
-                Supports PDF, DOC, and DOCX files
+                Supports PDF, DOC, and DOCX files (max 10MB each)
               </p>
             </div>
           )}
@@ -229,10 +227,10 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-1">
-                        {upload.status === 'uploading' && 'Uploading...'}
-                        {upload.status === 'processing' && 'Processing with AI...'}
-                        {upload.status === 'completed' && 'Completed'}
-                        {upload.status === 'error' && 'Error occurred'}
+                        {upload.status === 'uploading' && 'Uploading to storage...'}
+                        {upload.status === 'processing' && 'Analyzing with AI...'}
+                        {upload.status === 'completed' && 'Analysis completed'}
+                        {upload.status === 'error' && `Error: ${upload.error || 'Unknown error'}`}
                       </p>
                     </div>
 
