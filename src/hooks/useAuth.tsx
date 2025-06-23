@@ -24,74 +24,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('useAuth: Starting auth initialization');
     
     let mounted = true;
-    let authTimeout: NodeJS.Timeout;
 
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('useAuth: Auth state changed:', event, session?.user?.id || 'No session');
         
-        if (!mounted) {
-          console.log('useAuth: Component unmounted, ignoring auth state change');
-          return;
-        }
-
-        // Clear any existing timeout
-        if (authTimeout) {
-          clearTimeout(authTimeout);
-        }
+        if (!mounted) return;
 
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           console.log('useAuth: User found, fetching profile');
-          // Use setTimeout to prevent potential deadlocks
+          // Fetch profile with a small delay to prevent potential race conditions
           setTimeout(() => {
             if (mounted) {
               fetchProfile(session.user.id);
             }
-          }, 0);
+          }, 100);
         } else {
           console.log('useAuth: No user, clearing profile');
           setProfile(null);
+          setLoading(false);
         }
-        
-        // Set loading to false after processing
-        setTimeout(() => {
-          if (mounted) {
-            console.log('useAuth: Setting loading to false');
-            setLoading(false);
-          }
-        }, 100);
       }
     );
 
-    // THEN get initial session with timeout
+    // Get initial session
     const getInitialSession = async () => {
       try {
         console.log('useAuth: Getting initial session');
         
-        // Set a timeout to prevent infinite loading
-        authTimeout = setTimeout(() => {
-          if (mounted) {
-            console.log('useAuth: Session check timed out, setting loading to false');
-            setLoading(false);
-          }
-        }, 5000);
-
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!mounted) {
-          console.log('useAuth: Component unmounted during session check');
-          return;
-        }
+        if (!mounted) return;
         
-        // Clear timeout since we got a response
-        if (authTimeout) {
-          clearTimeout(authTimeout);
-        }
-
         if (error) {
           console.error('useAuth: Error getting session:', error);
           setLoading(false);
@@ -104,9 +72,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (session?.user) {
           await fetchProfile(session.user.id);
+        } else {
+          setLoading(false);
         }
-        
-        setLoading(false);
       } catch (error) {
         console.error('useAuth: Error in getInitialSession:', error);
         if (mounted) {
@@ -120,9 +88,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       console.log('useAuth: Cleaning up subscription');
       mounted = false;
-      if (authTimeout) {
-        clearTimeout(authTimeout);
-      }
       subscription.unsubscribe();
     };
   }, []);
@@ -135,22 +100,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('useAuth: Error fetching profile:', error);
-        if (error.code === 'PGRST116') {
-          console.log('useAuth: Profile not found, user might be new');
-          setProfile(null);
-        }
+        setProfile(null);
+        setLoading(false);
         return;
       }
       
-      console.log('useAuth: Profile fetched successfully:', profileData?.email);
-      setProfile(profileData);
+      if (!profileData) {
+        console.log('useAuth: No profile found, creating one');
+        // Create a basic profile if none exists
+        const newProfile = {
+          id: userId,
+          email: user?.email || '',
+          full_name: user?.email || '',
+          is_admin: false
+        };
+        
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([newProfile])
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error('useAuth: Error creating profile:', createError);
+          setProfile(null);
+        } else {
+          console.log('useAuth: Profile created successfully');
+          setProfile(createdProfile);
+        }
+      } else {
+        console.log('useAuth: Profile fetched successfully:', profileData?.email);
+        setProfile(profileData);
+      }
+      
+      setLoading(false);
     } catch (error) {
       console.error('useAuth: Error in fetchProfile:', error);
       setProfile(null);
+      setLoading(false);
     }
   };
 
