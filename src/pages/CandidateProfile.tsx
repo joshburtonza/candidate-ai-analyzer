@@ -61,10 +61,16 @@ const CandidateProfile = () => {
       console.log('CandidateProfile: Processing status:', data.processing_status);
       console.log('CandidateProfile: Extracted JSON:', data.extracted_json);
 
+      // Safely handle the JSON conversion
+      let extractedData: CandidateData | null = null;
+      if (data.extracted_json && typeof data.extracted_json === 'object' && !Array.isArray(data.extracted_json)) {
+        extractedData = data.extracted_json as CandidateData;
+      }
+
       // Type the upload properly
       const typedUpload: CVUpload = {
         ...data,
-        extracted_json: data.extracted_json as CandidateData | null,
+        extracted_json: extractedData,
         processing_status: data.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       };
 
