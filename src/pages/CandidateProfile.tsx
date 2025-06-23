@@ -66,19 +66,23 @@ const CandidateProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white">Loading candidate profile...</div>
+      <div className="min-h-screen elegant-gradient flex items-center justify-center">
+        <div className="text-white text-elegant tracking-wider">ANALYZING CANDIDATE PROFILE...</div>
       </div>
     );
   }
 
   if (!upload || !upload.extracted_json) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen elegant-gradient flex items-center justify-center">
         <div className="text-center text-white">
-          <h2 className="text-xl font-semibold mb-2">Candidate not found</h2>
-          <Button onClick={() => navigate('/dashboard')} variant="outline">
-            Back to Dashboard
+          <h2 className="text-2xl font-semibold mb-4 text-elegant tracking-wider">CANDIDATE NOT FOUND</h2>
+          <Button 
+            onClick={() => navigate('/dashboard')} 
+            variant="outline"
+            className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
+          >
+            RETURN TO DASHBOARD
           </Button>
         </div>
       </div>
@@ -90,18 +94,18 @@ const CandidateProfile = () => {
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-green-500 to-emerald-500';
+    if (score >= 80) return 'from-yellow-400 to-yellow-600';
     if (score >= 60) return 'from-yellow-500 to-orange-500';
     return 'from-red-500 to-pink-500';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900">
-      <div className="absolute inset-0 opacity-50" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+    <div className="min-h-screen elegant-gradient">
+      <div className="absolute inset-0 opacity-5" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
       
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-auto px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,50 +114,50 @@ const CandidateProfile = () => {
           <Button
             onClick={() => navigate('/dashboard')}
             variant="outline"
-            className="mb-6 border-white/20 text-white hover:bg-white/10"
+            className="mb-8 border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            RETURN TO DASHBOARD
           </Button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Basic Info & Score */}
             <div className="space-y-6">
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-6">
+              <Card className="glass-card elegant-border p-8">
                 <div className="text-center">
-                  <div className="p-4 bg-violet-500/20 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                    <User className="w-10 h-10 text-violet-400" />
+                  <div className="p-6 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <User className="w-12 h-12 gold-accent" />
                   </div>
-                  <h1 className="text-2xl font-bold text-white mb-2">
-                    {data.candidate_name || 'Unknown Candidate'}
+                  <h1 className="text-3xl font-bold text-white mb-4 text-elegant tracking-wider">
+                    {data.candidate_name || 'UNKNOWN CANDIDATE'}
                   </h1>
                   
                   {/* Score Circle */}
-                  <div className="mb-6">
-                    <div className={`w-24 h-24 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-2`}>
-                      <span className="text-white font-bold text-2xl">{score}</span>
+                  <div className="mb-8">
+                    <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
+                      <span className="text-black font-bold text-3xl">{score}</span>
                     </div>
-                    <p className="text-slate-300">Fit Score</p>
-                    <Progress value={score} className="mt-2" />
+                    <p className="text-white/80 text-elegant tracking-wider">ASSESSMENT SCORE</p>
+                    <Progress value={score} className="mt-4 h-2" />
                   </div>
 
                   {/* Contact Info */}
-                  <div className="space-y-3 text-left">
+                  <div className="space-y-4 text-left">
                     {data.email_address && (
-                      <div className="flex items-center gap-3 text-slate-300">
-                        <Mail className="w-5 h-5 text-violet-400" />
+                      <div className="flex items-center gap-4 text-white/90">
+                        <Mail className="w-5 h-5 gold-accent" />
                         <span>{data.email_address}</span>
                       </div>
                     )}
                     {data.contact_number && (
-                      <div className="flex items-center gap-3 text-slate-300">
-                        <Phone className="w-5 h-5 text-violet-400" />
+                      <div className="flex items-center gap-4 text-white/90">
+                        <Phone className="w-5 h-5 gold-accent" />
                         <span>{data.contact_number}</span>
                       </div>
                     )}
                     {data.countries && (
-                      <div className="flex items-center gap-3 text-slate-300">
-                        <MapPin className="w-5 h-5 text-violet-400" />
+                      <div className="flex items-center gap-4 text-white/90">
+                        <MapPin className="w-5 h-5 gold-accent" />
                         <span>{data.countries}</span>
                       </div>
                     )}
@@ -163,17 +167,17 @@ const CandidateProfile = () => {
 
               {/* Skills */}
               {skills.length > 0 && (
-                <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Star className="w-5 h-5 text-violet-400" />
-                    <h3 className="text-lg font-semibold text-white">Skills</h3>
+                <Card className="glass-card elegant-border p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Star className="w-6 h-6 gold-accent" />
+                    <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">EXPERTISE</h3>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {skills.map((skill, index) => (
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="bg-white/10 text-white border-white/20"
+                        className="bg-white/10 text-white border-white/20 px-3 py-1"
                       >
                         {skill}
                       </Badge>
@@ -186,21 +190,21 @@ const CandidateProfile = () => {
             {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Assessment */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Assessment</h3>
-                <p className="text-slate-300 leading-relaxed">
-                  {data.justification || 'No assessment available'}
+              <Card className="glass-card elegant-border p-8">
+                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
+                <p className="text-white/90 leading-relaxed text-lg">
+                  {data.justification || 'Assessment pending analysis'}
                 </p>
               </Card>
 
               {/* Education */}
               {data.educational_qualifications && (
-                <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <GraduationCap className="w-5 h-5 text-violet-400" />
-                    <h3 className="text-lg font-semibold text-white">Education</h3>
+                <Card className="glass-card elegant-border p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <GraduationCap className="w-6 h-6 gold-accent" />
+                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
                   </div>
-                  <div className="text-slate-300 whitespace-pre-line">
+                  <div className="text-white/90 whitespace-pre-line leading-relaxed">
                     {data.educational_qualifications}
                   </div>
                 </Card>
@@ -208,42 +212,42 @@ const CandidateProfile = () => {
 
               {/* Work Experience */}
               {data.job_history && (
-                <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Briefcase className="w-5 h-5 text-violet-400" />
-                    <h3 className="text-lg font-semibold text-white">Work Experience</h3>
+                <Card className="glass-card elegant-border p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Briefcase className="w-6 h-6 gold-accent" />
+                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
                   </div>
-                  <div className="text-slate-300 whitespace-pre-line">
+                  <div className="text-white/90 whitespace-pre-line leading-relaxed">
                     {data.job_history}
                   </div>
                 </Card>
               )}
 
               {/* File Info */}
-              <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">File Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <Card className="glass-card elegant-border p-8">
+                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <span className="text-slate-400">Original Filename:</span>
-                    <p className="text-white">{upload.original_filename}</p>
+                    <span className="text-white/60 text-sm tracking-wider">ORIGINAL FILENAME:</span>
+                    <p className="text-white font-medium">{upload.original_filename}</p>
                   </div>
                   <div>
-                    <span className="text-slate-400">Upload Date:</span>
-                    <p className="text-white">
+                    <span className="text-white/60 text-sm tracking-wider">UPLOAD DATE:</span>
+                    <p className="text-white font-medium">
                       {new Date(upload.uploaded_at).toLocaleDateString()}
                     </p>
                   </div>
                   {upload.file_size && (
                     <div>
-                      <span className="text-slate-400">File Size:</span>
-                      <p className="text-white">
+                      <span className="text-white/60 text-sm tracking-wider">FILE SIZE:</span>
+                      <p className="text-white font-medium">
                         {(upload.file_size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   )}
                   <div>
-                    <span className="text-slate-400">Processing Status:</span>
-                    <p className="text-white capitalize">{upload.processing_status}</p>
+                    <span className="text-white/60 text-sm tracking-wider">PROCESSING STATUS:</span>
+                    <p className="text-white font-medium capitalize">{upload.processing_status}</p>
                   </div>
                 </div>
               </Card>
