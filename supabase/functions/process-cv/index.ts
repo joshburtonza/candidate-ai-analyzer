@@ -57,11 +57,7 @@ serve(async (req) => {
       console.log('Using PDF.co for PDF text extraction')
       
       try {
-        // Convert file to base64 for PDF.co API
-        const arrayBuffer = await fileData.arrayBuffer()
-        const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
-        
-        // Call PDF.co text extraction API
+        // Use the direct file URL instead of base64 for PDF.co
         const pdfcoResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/text', {
           method: 'POST',
           headers: {
@@ -69,23 +65,26 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            file: `data:application/pdf;base64,${base64Data}`,
-            pages: '1-5', // Extract first 5 pages to manage content size
+            url: fileUrl, // Use the direct URL instead of base64
+            pages: '1-3', // Extract first 3 pages to manage content size
             inline: true
           })
         })
 
         if (pdfcoResponse.ok) {
           const pdfcoResult = await pdfcoResponse.json()
-          if (pdfcoResult.body) {
+          console.log('PDF.co response:', pdfcoResult)
+          
+          if (pdfcoResult.body && pdfcoResult.body.trim()) {
             extractedText = pdfcoResult.body
             console.log('PDF.co extraction successful, text length:', extractedText.length)
           } else {
-            console.log('PDF.co extraction failed, falling back to basic extraction')
+            console.log('PDF.co returned empty text, falling back to basic extraction')
             extractedText = await fileData.text().catch(() => '')
           }
         } else {
-          console.log('PDF.co API error, falling back to basic extraction')
+          const errorText = await pdfcoResponse.text()
+          console.log('PDF.co API error:', pdfcoResponse.status, errorText)
           extractedText = await fileData.text().catch(() => '')
         }
       } catch (error) {
@@ -110,19 +109,20 @@ serve(async (req) => {
       .replace(/[^\w\s@.,()-]/g, ' ') // Keep only alphanumeric, spaces, and common CV characters
       .trim()
 
-    // Truncate to approximately 8000 characters to stay well under token limits
-    const maxLength = 8000
+    // Truncate to approximately 6000 characters to stay well under token limits
+    const maxLength = 6000
     if (cleanedText.length > maxLength) {
       cleanedText = cleanedText.substring(0, maxLength) + '...'
       console.log('Text truncated to:', cleanedText.length, 'characters')
     }
 
     console.log('Final text length for OpenAI:', cleanedText.length)
+    console.log('Sample text (first 500 chars):', cleanedText.substring(0, 500))
 
     // If we still don't have meaningful text, use filename analysis
-    if (!cleanedText || cleanedText.length < 50) {
-      cleanedText = `Unable to extract readable text from the file. File: ${fileName}`
-      console.log('Using filename-based analysis')
+    if (!cleanedText || cleanedText.length < 20) {
+      cleanedText = `Unable to extract readable text from the file. File: ${fileName}. Please try uploading a text-based PDF or Word document.`
+      console.log('Using filename-based analysis due to insufficient text')
     }
 
     // Call OpenAI to analyze the CV content
@@ -137,10 +137,10 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a CV/Resume analyzer. Extract the following information from the CV text and return it as a JSON object ONLY (no markdown formatting):
+            content: `You are a CV/Resume analyzer. Extract the following information from the CV text and return it as a JSON object with NO markdown formatting, NO code blocks, just raw JSON:
             {
               "candidate_name": "Full name of the candidate",
-              "email_address": "Email address",
+              "email_address": "Email address", 
               "contact_number": "Phone number",
               "educational_qualifications": "Education background summary",
               "job_history": "Work experience summary",
@@ -150,14 +150,14 @@ serve(async (req) => {
               "countries": "Countries mentioned or inferred from location/experience"
             }
             
-            Return ONLY the JSON object without any markdown code blocks or additional text. If any field is not found, use appropriate default values.`
+            IMPORTANT: Return ONLY the JSON object. Do not wrap it in markdown code blocks or add any other text.`
           },
           {
             role: 'user',
             content: `Please analyze this CV/Resume content and extract the requested information:\n\n${cleanedText}`
           }
         ],
-        max_tokens: 800,
+        max_tokens: 600,
         temperature: 0.1
       })
     })
@@ -171,38 +171,41 @@ serve(async (req) => {
     const openaiResult = await openaiResponse.json()
     let extractedResponseText = openaiResult.choices[0]?.message?.content
 
-    console.log('OpenAI response received:', extractedResponseText)
+    console.log('Raw OpenAI response:', extractedResponseText)
 
-    // Clean up the response if it's wrapped in markdown
+    // Clean up the response - remove any markdown formatting
     if (extractedResponseText) {
-      // Remove markdown code blocks if present
       extractedResponseText = extractedResponseText
         .replace(/```json\s*/g, '')
         .replace(/```\s*/g, '')
+        .replace(/^```/g, '')
+        .replace(/```$/g, '')
         .trim()
     }
 
     let extractedData
     try {
       extractedData = JSON.parse(extractedResponseText)
+      console.log('Successfully parsed JSON:', extractedData)
     } catch (e) {
       console.error('Failed to parse OpenAI response as JSON:', e)
-      console.log('Raw response:', extractedResponseText)
-      // Fallback if JSON parsing fails
+      console.log('Cleaned response text:', extractedResponseText)
+      
+      // Enhanced fallback with better defaults
       extractedData = {
         candidate_name: "Unable to extract",
         email_address: "Not found",
-        contact_number: "Not found",
-        educational_qualifications: "Unable to extract",
-        job_history: "Unable to extract",
+        contact_number: "Not found", 
+        educational_qualifications: "Unable to extract from document",
+        job_history: "Unable to extract from document",
         skill_set: "Unable to extract",
-        score: "50",
-        justification: "Could not properly analyze the CV",
+        score: "25",
+        justification: "Could not properly analyze the CV content. The document may be image-based or have formatting issues.",
         countries: "Unknown"
       }
     }
 
-    console.log('Extracted data:', extractedData)
+    console.log('Final extracted data:', extractedData)
 
     // Update the database record with extracted data
     const { error: updateError } = await supabase
