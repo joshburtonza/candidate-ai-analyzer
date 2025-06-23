@@ -47,10 +47,19 @@ serve(async (req) => {
 
     console.log('File downloaded successfully, size:', fileData.size)
 
-    // Convert file to base64 for OpenAI
+    // Convert file to base64 for OpenAI using a more efficient method
     const arrayBuffer = await fileData.arrayBuffer()
-    const fileBuffer = new Uint8Array(arrayBuffer)
-    const base64Content = btoa(String.fromCharCode(...fileBuffer))
+    const uint8Array = new Uint8Array(arrayBuffer)
+    
+    // Use btoa with chunks to avoid call stack overflow for large files
+    let base64Content = ''
+    const chunkSize = 1024 * 1024 // 1MB chunks
+    
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize)
+      const binaryString = Array.from(chunk, byte => String.fromCharCode(byte)).join('')
+      base64Content += btoa(binaryString)
+    }
 
     console.log('File converted to base64, calling OpenAI...')
 
