@@ -44,7 +44,7 @@ const Index = () => {
     <div className="min-h-screen elegant-gradient relative overflow-hidden">
       {/* Elegant pattern overlay */}
       <div className="absolute inset-0 opacity-5" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ea580c' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
       
       <div className="relative z-10">
@@ -52,15 +52,15 @@ const Index = () => {
         <header className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl shadow-lg">
-                <Brain className="w-7 h-7 text-black" />
+              <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+                <Brain className="w-7 h-7 text-white" />
               </div>
               <span className="text-2xl font-bold text-white text-elegant tracking-wider">RESUME INTELLIGENCE</span>
             </div>
             <Button
               onClick={() => navigate('/auth')}
               variant="outline"
-              className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border px-6 py-2 text-elegant"
+              className="border-orange-500/30 text-orange-500 hover:bg-orange-500/10 elegant-border px-6 py-2 text-elegant"
             >
               ENTER
             </Button>
@@ -75,14 +75,14 @@ const Index = () => {
             transition={{ duration: 1 }}
           >
             <div className="inline-flex items-center gap-3 glass-card rounded-full px-6 py-3 mb-8">
-              <Sparkles className="w-4 h-4 gold-accent" />
+              <Sparkles className="w-4 h-4 text-orange-500" />
               <span className="text-sm text-white/90 text-elegant tracking-wider">ELITE TALENT ASSESSMENT</span>
             </div>
             
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight text-elegant">
               BORN TO BE
               <br />
-              <span className="gold-accent">CURIOUS</span>
+              <span className="text-orange-500">CURIOUS</span>
             </h1>
             
             <p className="text-xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -93,7 +93,7 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button
                 onClick={() => navigate('/auth')}
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black px-10 py-4 text-lg font-semibold text-elegant tracking-wider shadow-xl"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-4 text-lg font-semibold text-elegant tracking-wider shadow-xl"
               >
                 BEGIN ASSESSMENT
                 <ArrowRight className="w-5 h-5 ml-3" />
@@ -133,8 +133,8 @@ const Index = () => {
                 transition={{ duration: 0.6, delay: 0.1 * index }}
               >
                 <Card className="glass-card p-8 h-full hover:bg-white/5 transition-all duration-500 group elegant-border">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 w-fit mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 gold-accent" />
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/20 w-fit mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <feature.icon className="w-7 h-7 text-orange-500" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-4 text-elegant">{feature.title}</h3>
                   <p className="text-white/70 leading-relaxed">{feature.description}</p>
@@ -168,7 +168,7 @@ const Index = () => {
                     transition={{ duration: 0.6, delay: 0.1 * index }}
                     className="flex items-center gap-4"
                   >
-                    <CheckCircle className="w-6 h-6 gold-accent" />
+                    <CheckCircle className="w-6 h-6 text-orange-500" />
                     <span className="text-white/90 text-lg">{benefit}</span>
                   </motion.div>
                 ))}
@@ -182,7 +182,7 @@ const Index = () => {
             >
               <Card className="glass-card p-10 elegant-border">
                 <div className="text-center">
-                  <Quote className="w-12 h-12 gold-accent mx-auto mb-6" />
+                  <Quote className="w-12 h-12 text-orange-500 mx-auto mb-6" />
                   <h3 className="text-3xl font-bold text-white mb-6 text-elegant">READY TO ELEVATE?</h3>
                   <p className="text-white/80 mb-8 text-lg leading-relaxed">
                     Join the ranks of elite organizations leveraging artificial intelligence 
@@ -190,7 +190,7 @@ const Index = () => {
                   </p>
                   <Button
                     onClick={() => navigate('/auth')}
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black px-8 py-3 font-semibold text-elegant tracking-wider"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-3 font-semibold text-elegant tracking-wider"
                   >
                     COMMENCE JOURNEY
                     <ArrowRight className="w-5 h-5 ml-3" />
