@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,9 +6,10 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
-import { DateFilter } from '@/components/dashboard/DateFilter';
+import { UploadHistory } from '@/components/dashboard/UploadHistory';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { isSameDay } from 'date-fns';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,6 +84,15 @@ const Dashboard = () => {
     setUploads(prev => [newUpload, ...prev]);
   };
 
+  const handleDateSelect = (date: Date) => {
+    if (selectedDate && isSameDay(selectedDate, date)) {
+      // If clicking the same date, deselect it
+      setSelectedDate(null);
+    } else {
+      setSelectedDate(date);
+    }
+  };
+
   // Show loading only if auth is loading
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
@@ -126,14 +135,11 @@ const Dashboard = () => {
     );
   }
 
-  // Filter uploads by selected dates
-  const dateFilteredUploads = selectedDates.length > 0 
-    ? uploads.filter(upload => {
-        const uploadDate = new Date(upload.uploaded_at);
-        return selectedDates.some(selectedDate => 
-          uploadDate.toDateString() === selectedDate.toDateString()
-        );
-      })
+  // Filter uploads by selected date from upload history
+  const dateFilteredUploads = selectedDate 
+    ? uploads.filter(upload => 
+        isSameDay(new Date(upload.uploaded_at), selectedDate)
+      )
     : uploads;
 
   // Filter and sort uploads
@@ -155,8 +161,8 @@ const Dashboard = () => {
   const sortedUploads = [...filteredUploads].sort((a, b) => {
     switch (sortBy) {
       case 'score':
-        const scoreA = parseInt(a.extracted_json?.score || '0');
-        const scoreB = parseInt(b.extracted_json?.score || '0');
+        const scoreA = parseFloat(a.extracted_json?.score || '0');
+        const scoreB = parseFloat(b.extracted_json?.score || '0');
         return scoreB - scoreA;
       case 'name':
         const nameA = a.extracted_json?.candidate_name || '';
@@ -199,31 +205,34 @@ const Dashboard = () => {
             <UploadSection onUploadComplete={handleUploadComplete} />
           </motion.div>
 
-          {/* Date Filter Section */}
+          {/* Upload History Section */}
+          <UploadHistory 
+            uploads={uploads} 
+            onDateSelect={handleDateSelect}
+            selectedDate={selectedDate}
+          />
+
+          {/* Candidates Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-semibold text-white">Candidates</h2>
-              <DateFilter 
-                selectedDates={selectedDates}
-                onDatesChange={setSelectedDates}
-              />
+              {selectedDate && (
+                <div className="text-sm text-gray-400">
+                  Showing {sortedUploads.length} candidates from {selectedDate.toDateString()}
+                </div>
+              )}
             </div>
-            {selectedDates.length > 0 && (
-              <div className="text-sm text-gray-400">
-                Showing {sortedUploads.length} candidates from {selectedDates.length} selected date{selectedDates.length !== 1 ? 's' : ''}
-              </div>
-            )}
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
           >
             <CandidateGrid uploads={sortedUploads} viewMode={viewMode} />
           </motion.div>
