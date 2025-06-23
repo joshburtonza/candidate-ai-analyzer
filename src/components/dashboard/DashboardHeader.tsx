@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Profile } from '@/types/candidate';
 
 interface DashboardHeaderProps {
@@ -28,6 +29,7 @@ export const DashboardHeader = ({
   onSortChange,
 }: DashboardHeaderProps) => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="bg-white/10 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50">
@@ -94,13 +96,9 @@ export const DashboardHeader = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/account')}>
                   <User className="w-4 h-4 mr-2" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                  Account Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="w-4 h-4 mr-2" />
