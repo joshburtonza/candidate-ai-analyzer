@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!profileData) {
         console.log('useAuth: No profile found, creating basic one');
         // Create a basic profile if none exists
-        const newProfile: Partial<Profile> = {
+        const newProfile = {
           id: userId,
           email: user?.email || '',
           full_name: user?.email?.split('@')[0] || 'User',
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         const { data: createdProfile, error: createError } = await supabase
           .from('profiles')
-          .insert([newProfile])
+          .insert(newProfile)
           .select()
           .maybeSingle();
         
