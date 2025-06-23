@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle, AlertCircle } from 'lucide-react';
@@ -118,7 +117,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         // Cast the database response to our CVUpload type
         const typedUpload: CVUpload = {
           ...updatedData,
-          extracted_json: updatedData.extracted_json as any, // Cast Json to CandidateData | null
+          extracted_json: updatedData.extracted_json as any,
+          processing_status: updatedData.processing_status as 'pending' | 'processing' | 'completed' | 'error'
         };
 
         onUploadComplete(typedUpload);

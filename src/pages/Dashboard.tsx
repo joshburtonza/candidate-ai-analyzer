@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,7 +36,8 @@ const Dashboard = () => {
       // Cast the database response to our CVUpload type
       const typedUploads: CVUpload[] = (data || []).map(upload => ({
         ...upload,
-        extracted_json: upload.extracted_json as any, // Cast Json to CandidateData | null
+        extracted_json: upload.extracted_json as any,
+        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       }));
       
       setUploads(typedUploads);
