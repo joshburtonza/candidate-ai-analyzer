@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,9 +93,10 @@ const CandidateProfile = () => {
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-yellow-400 to-yellow-600';
-    if (score >= 60) return 'from-yellow-500 to-orange-500';
-    return 'from-red-500 to-pink-500';
+    if (score >= 80) return 'from-orange-600 to-orange-400';
+    if (score >= 60) return 'from-yellow-600 to-orange-500';
+    if (score >= 40) return 'from-red-600 to-yellow-600';
+    return 'from-gray-600 to-red-600';
   };
 
   return (
@@ -135,10 +135,10 @@ const CandidateProfile = () => {
                   {/* Score Circle */}
                   <div className="mb-8">
                     <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
-                      <span className="text-black font-bold text-3xl">{score}</span>
+                      <span className="text-white font-bold text-3xl">{score}</span>
                     </div>
                     <p className="text-white/80 text-elegant tracking-wider">ASSESSMENT SCORE</p>
-                    <Progress value={score} className="mt-4 h-2" />
+                    <Progress value={score} scoreValue={score} className="mt-4 h-2" />
                   </div>
 
                   {/* Contact Info */}

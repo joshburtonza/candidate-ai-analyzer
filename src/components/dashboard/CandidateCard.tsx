@@ -20,9 +20,10 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
   const score = parseInt(data.score || '0');
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-orange-500';
-    if (score >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (score >= 80) return 'bg-gradient-to-r from-orange-600 to-orange-400';
+    if (score >= 60) return 'bg-gradient-to-r from-yellow-600 to-orange-500';
+    if (score >= 40) return 'bg-gradient-to-r from-red-600 to-yellow-600';
+    return 'bg-gradient-to-r from-gray-600 to-red-600';
   };
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
@@ -114,7 +115,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
               <span className="text-sm text-gray-400">FIT SCORE</span>
               <span className="text-sm font-medium text-white">{score}%</span>
             </div>
-            <Progress value={score} className="h-2" />
+            <Progress value={score} scoreValue={score} className="h-2" />
           </div>
 
           {/* Action Button */}
