@@ -55,7 +55,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
             {/* Score Circle */}
             <div className="relative flex-shrink-0">
               <div className={`w-12 h-12 rounded-full ${getScoreColor(score)} flex items-center justify-center`}>
-                <span className="text-white font-bold text-sm">{score}</span>
+                <span className="text-white font-bold text-sm">{score.toFixed(1)}</span>
               </div>
             </div>
           </div>
@@ -114,9 +114,9 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
           <div className="space-y-2 flex-shrink-0">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-400">FIT SCORE</span>
-              <span className="text-sm font-medium text-white">{score}/10</span>
+              <span className="text-sm font-medium text-white">{score.toFixed(1)}/10</span>
             </div>
-            <Progress value={score * 10} scoreValue={score * 10} className="h-2" />
+            <Progress value={score * 10} scoreValue={score} className="h-2" />
           </div>
 
           {/* Action Button */}

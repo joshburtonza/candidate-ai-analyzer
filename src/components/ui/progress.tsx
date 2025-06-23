@@ -14,9 +14,9 @@ const Progress = React.forwardRef<
   ProgressProps
 >(({ className, value, scoreValue, ...props }, ref) => {
   const getProgressColor = (score: number) => {
-    if (score >= 80) return 'bg-gradient-to-r from-orange-600 to-orange-400';
-    if (score >= 60) return 'bg-gradient-to-r from-yellow-600 to-orange-500';
-    if (score >= 40) return 'bg-gradient-to-r from-red-600 to-yellow-600';
+    if (score >= 8) return 'bg-gradient-to-r from-orange-600 to-orange-400';
+    if (score >= 6) return 'bg-gradient-to-r from-yellow-600 to-orange-500';
+    if (score >= 4) return 'bg-gradient-to-r from-red-600 to-yellow-600';
     return 'bg-gradient-to-r from-gray-600 to-red-600';
   };
 

@@ -227,10 +227,10 @@ const CandidateProfile = () => {
                   {/* Score Circle */}
                   <div className="mb-8">
                     <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
-                      <span className="text-white font-bold text-3xl">{score}</span>
+                      <span className="text-white font-bold text-3xl">{score.toFixed(1)}</span>
                     </div>
                     <p className="text-white/80">Assessment Score (out of 10)</p>
-                    <Progress value={score * 10} scoreValue={score * 10} className="mt-4 h-2" />
+                    <Progress value={score * 10} scoreValue={score} className="mt-4 h-2" />
                   </div>
 
                   {/* Contact Info */}

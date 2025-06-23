@@ -72,7 +72,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
         {/* Score */}
         <div className="text-center">
           <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
-            {score}/10
+            {score.toFixed(1)}/10
           </div>
           <div className="text-xs text-gray-400">FIT SCORE</div>
         </div>
