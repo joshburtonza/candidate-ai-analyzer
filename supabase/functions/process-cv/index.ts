@@ -15,6 +15,7 @@ serve(async (req) => {
 
   try {
     const { fileUrl, uploadId } = await req.json()
+    console.log('Processing CV for uploadId:', uploadId, 'fileUrl:', fileUrl)
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -22,17 +23,36 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Download the file content
-    const fileResponse = await fetch(fileUrl)
-    if (!fileResponse.ok) {
-      throw new Error('Failed to download file')
+    // Extract the file path from the URL
+    const urlParts = fileUrl.split('/storage/v1/object/public/cv-uploads/')
+    if (urlParts.length !== 2) {
+      throw new Error('Invalid file URL format')
+    }
+    const filePath = urlParts[1]
+    console.log('Extracted file path:', filePath)
+
+    // Download the file using Supabase storage client
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('cv-uploads')
+      .download(filePath)
+
+    if (downloadError) {
+      console.error('Storage download error:', downloadError)
+      throw new Error(`Failed to download file: ${downloadError.message}`)
     }
 
-    const fileBuffer = await fileResponse.arrayBuffer()
-    const fileContent = new Uint8Array(fileBuffer)
+    if (!fileData) {
+      throw new Error('No file data received')
+    }
 
-    // Convert to base64 for OpenAI
-    const base64Content = btoa(String.fromCharCode(...fileContent))
+    console.log('File downloaded successfully, size:', fileData.size)
+
+    // Convert file to base64 for OpenAI
+    const arrayBuffer = await fileData.arrayBuffer()
+    const fileBuffer = new Uint8Array(arrayBuffer)
+    const base64Content = btoa(String.fromCharCode(...fileBuffer))
+
+    console.log('File converted to base64, calling OpenAI...')
 
     // Call OpenAI to analyze the CV
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -84,16 +104,21 @@ serve(async (req) => {
     })
 
     if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`)
+      const errorText = await openaiResponse.text()
+      console.error('OpenAI API error:', openaiResponse.status, errorText)
+      throw new Error(`OpenAI API error: ${openaiResponse.status} - ${errorText}`)
     }
 
     const openaiResult = await openaiResponse.json()
     const extractedText = openaiResult.choices[0]?.message?.content
 
+    console.log('OpenAI response received:', extractedText)
+
     let extractedData
     try {
       extractedData = JSON.parse(extractedText)
     } catch (e) {
+      console.error('Failed to parse OpenAI response as JSON:', e)
       // Fallback if JSON parsing fails
       extractedData = {
         candidate_name: "Unable to extract",
@@ -108,6 +133,8 @@ serve(async (req) => {
       }
     }
 
+    console.log('Extracted data:', extractedData)
+
     // Update the database record with extracted data
     const { error: updateError } = await supabase
       .from('cv_uploads')
@@ -118,8 +145,11 @@ serve(async (req) => {
       .eq('id', uploadId)
 
     if (updateError) {
+      console.error('Database update error:', updateError)
       throw updateError
     }
+
+    console.log('Database updated successfully')
 
     return new Response(
       JSON.stringify({ success: true, data: extractedData }),
