@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,25 +14,39 @@ const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
   const [uploads, setUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    console.log('Dashboard: Auth state changed - authLoading:', authLoading, 'user:', user?.id || 'null');
+    
+    if (!authLoading && user) {
       fetchUploads();
+    } else if (!authLoading && !user) {
+      console.log('Dashboard: No user found after auth loaded');
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchUploads = async () => {
     try {
+      console.log('Dashboard: Fetching uploads for user:', user?.id);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('cv_uploads')
         .select('*')
         .order('uploaded_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Dashboard: Error fetching uploads:', error);
+        throw error;
+      }
+      
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
       
       // Cast the database response to our CVUpload type
       const typedUploads: CVUpload[] = (data || []).map(upload => ({
@@ -42,6 +57,8 @@ const Dashboard = () => {
       
       setUploads(typedUploads);
     } catch (error: any) {
+      console.error('Dashboard: Error in fetchUploads:', error);
+      setError(error.message);
       toast({
         title: "Error",
         description: "Failed to fetch uploads",
@@ -53,13 +70,47 @@ const Dashboard = () => {
   };
 
   const handleUploadComplete = (newUpload: CVUpload) => {
+    console.log('Dashboard: New upload completed:', newUpload.id);
     setUploads(prev => [newUpload, ...prev]);
   };
 
-  if (authLoading || loading) {
+  // Show loading only if auth is loading or we're fetching data
+  if (authLoading) {
+    console.log('Dashboard: Showing auth loading screen');
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white">Loading authentication...</div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    console.log('Dashboard: Showing data loading screen');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
+        <div className="text-white">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.log('Dashboard: Showing error screen:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 mb-4">Error loading dashboard</div>
+          <div className="text-white text-sm">{error}</div>
+          <button 
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              fetchUploads();
+            }}
+            className="mt-4 px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -94,6 +145,8 @@ const Dashboard = () => {
         return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
     }
   });
+
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900">
