@@ -16,39 +16,39 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
   const score = parseInt(data.score || '0');
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
+    if (score >= 80) return 'text-yellow-400';
+    if (score >= 60) return 'text-orange-400';
     return 'text-red-400';
   };
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
 
   return (
-    <Card className="bg-white/10 backdrop-blur-xl border-white/20 p-4 hover:bg-white/15 transition-all duration-300">
+    <Card className="glass-card elegant-border p-6 hover:bg-white/5 transition-all duration-300">
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3 bg-violet-500/20 rounded-lg">
-            <User className="w-6 h-6 text-violet-400" />
+          <div className="p-3 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-lg border border-white/10">
+            <User className="w-6 h-6 gold-accent" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-white truncate">
+            <h3 className="font-semibold text-white truncate text-elegant">
               {data.candidate_name || 'Unknown'}
             </h3>
-            <div className="flex items-center gap-4 mt-1 text-sm text-slate-300">
+            <div className="flex items-center gap-4 mt-1 text-sm text-white/70">
               <div className="flex items-center gap-1">
-                <Mail className="w-3 h-3" />
+                <Mail className="w-3 h-3 gold-accent" />
                 <span className="truncate">{data.email_address}</span>
               </div>
               {data.contact_number && (
                 <div className="flex items-center gap-1">
-                  <Phone className="w-3 h-3" />
+                  <Phone className="w-3 h-3 gold-accent" />
                   <span>{data.contact_number}</span>
                 </div>
               )}
               {data.countries && (
                 <div className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
+                  <MapPin className="w-3 h-3 gold-accent" />
                   <span>{data.countries}</span>
                 </div>
               )}
@@ -62,7 +62,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
             <Badge
               key={index}
               variant="secondary"
-              className="bg-white/10 text-white border-white/20 text-xs"
+              className="bg-white/10 text-white border-white/20 text-xs hover:bg-white/20 transition-colors"
             >
               {skill}
             </Badge>
@@ -74,7 +74,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
           <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
             {score}%
           </div>
-          <div className="text-xs text-slate-400">Fit Score</div>
+          <div className="text-xs text-white/60 text-elegant tracking-wider">FIT SCORE</div>
         </div>
 
         {/* Action */}
@@ -82,10 +82,10 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
           onClick={() => navigate(`/candidate/${upload.id}`)}
           variant="outline"
           size="sm"
-          className="border-white/20 text-white hover:bg-white/10"
+          className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
         >
           <Eye className="w-4 h-4 mr-2" />
-          View
+          VIEW
         </Button>
       </div>
     </Card>

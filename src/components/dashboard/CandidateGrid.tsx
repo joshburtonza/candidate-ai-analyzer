@@ -22,18 +22,18 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
         animate={{ opacity: 1 }}
         className="text-center py-16"
       >
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4">
-          <FileText className="w-8 h-8 text-slate-400" />
+        <div className="inline-flex items-center justify-center w-20 h-20 glass-card rounded-2xl mb-6 elegant-border">
+          <FileText className="w-10 h-10 gold-accent" />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">No candidates yet</h3>
-        <p className="text-slate-300">Upload some CV files to get started with AI analysis</p>
+        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">NO CANDIDATES YET</h3>
+        <p className="text-white/70 text-lg">Upload some CV files to begin elite AI analysis</p>
       </motion.div>
     );
   }
 
   if (viewMode === 'list') {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {completedUploads.map((upload, index) => (
           <motion.div
             key={upload.id}

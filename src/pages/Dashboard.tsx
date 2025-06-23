@@ -86,8 +86,8 @@ const Dashboard = () => {
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white">Loading authentication...</div>
+      <div className="min-h-screen elegant-gradient flex items-center justify-center">
+        <div className="text-white text-elegant tracking-wider">LOADING AUTHENTICATION...</div>
       </div>
     );
   }
@@ -96,8 +96,8 @@ const Dashboard = () => {
   if (loading && user) {
     console.log('Dashboard: Showing data loading screen');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
-        <div className="text-white">Loading dashboard...</div>
+      <div className="min-h-screen elegant-gradient flex items-center justify-center">
+        <div className="text-white text-elegant tracking-wider">LOADING DASHBOARD...</div>
       </div>
     );
   }
@@ -105,9 +105,9 @@ const Dashboard = () => {
   if (error) {
     console.log('Dashboard: Showing error screen:', error);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen elegant-gradient flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-400 mb-4">Error loading dashboard</div>
+          <div className="text-red-400 mb-4 text-elegant tracking-wider">ERROR LOADING DASHBOARD</div>
           <div className="text-white text-sm">{error}</div>
           <button 
             onClick={() => {
@@ -115,9 +115,9 @@ const Dashboard = () => {
               setLoading(true);
               fetchUploads();
             }}
-            className="mt-4 px-4 py-2 bg-violet-600 text-white rounded hover:bg-violet-700"
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black rounded-lg hover:from-yellow-500 hover:to-yellow-700 font-semibold text-elegant tracking-wider"
           >
-            Retry
+            RETRY
           </button>
         </div>
       </div>
@@ -158,9 +158,10 @@ const Dashboard = () => {
   console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900">
-      <div className="absolute inset-0 opacity-50" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+    <div className="min-h-screen elegant-gradient">
+      {/* Elegant pattern overlay */}
+      <div className="absolute inset-0 opacity-5" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
       
       <div className="relative z-10">
@@ -174,7 +175,7 @@ const Dashboard = () => {
           onSortChange={setSortBy}
         />
 
-        <div className="container mx-auto px-4 py-8 space-y-8">
+        <div className="container mx-auto px-6 py-8 space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
