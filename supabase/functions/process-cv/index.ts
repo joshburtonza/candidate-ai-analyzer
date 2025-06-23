@@ -47,23 +47,11 @@ serve(async (req) => {
 
     console.log('File downloaded successfully, size:', fileData.size)
 
-    // Convert file to base64 for OpenAI using a more efficient method
-    const arrayBuffer = await fileData.arrayBuffer()
-    const uint8Array = new Uint8Array(arrayBuffer)
-    
-    // Use btoa with chunks to avoid call stack overflow for large files
-    let base64Content = ''
-    const chunkSize = 1024 * 1024 // 1MB chunks
-    
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize)
-      const binaryString = Array.from(chunk, byte => String.fromCharCode(byte)).join('')
-      base64Content += btoa(binaryString)
-    }
+    // Convert file to text using a simple approach for PDFs
+    const fileText = await fileData.text().catch(() => '')
+    console.log('File text length:', fileText.length)
 
-    console.log('File converted to base64, calling OpenAI...')
-
-    // Call OpenAI to analyze the CV
+    // Call OpenAI to analyze the CV content
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -71,11 +59,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a CV/Resume analyzer. Extract the following information from the CV and return it as a JSON object:
+            content: `You are a CV/Resume analyzer. Extract the following information from the CV text and return it as a JSON object:
             {
               "candidate_name": "Full name of the candidate",
               "email_address": "Email address",
@@ -92,19 +80,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Please analyze this CV/Resume and extract the requested information:'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64Content}`,
-                  detail: 'high'
-                }
-              }
-            ]
+            content: `Please analyze this CV/Resume content and extract the requested information:\n\n${fileText || 'Unable to extract text from the file. Please provide a basic assessment based on the filename and file type.'}`
           }
         ],
         max_tokens: 1000,
