@@ -68,7 +68,7 @@ const Dashboard = () => {
     });
 
     return {
-      availableSkills: Array.from(skills).slice(0, 50), // Limit for performance
+      availableSkills: Array.from(skills).slice(0, 50),
       availableCountries: Array.from(countries).slice(0, 50),
       availableTags: Array.from(tags),
     };
@@ -172,6 +172,17 @@ const Dashboard = () => {
       default:
         return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
     }
+  });
+
+  // Debug information
+  console.log('Dashboard Debug:', {
+    totalUploads: uploads.length,
+    completedUploads: uploads.filter(u => u.processing_status === 'completed').length,
+    filteredUploads: filteredUploads.length,
+    dateFilteredUploads: dateFilteredUploads.length,
+    sortedUploads: sortedUploads.length,
+    hasFilters: searchQuery || Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== undefined),
+    selectedDate: selectedDate?.toDateString(),
   });
 
   if (authLoading) {
@@ -302,6 +313,12 @@ const Dashboard = () => {
               {(searchQuery || Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== undefined)) && (
                 <div className="text-sm text-gray-400">
                   {sortedUploads.length} results found
+                </div>
+              )}
+              {/* Debug info */}
+              {uploads.length > 0 && sortedUploads.length === 0 && (
+                <div className="text-sm text-yellow-400">
+                  Debug: {uploads.length} total uploads, {uploads.filter(u => u.processing_status === 'completed').length} completed
                 </div>
               )}
             </div>

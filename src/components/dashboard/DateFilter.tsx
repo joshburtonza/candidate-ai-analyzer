@@ -10,9 +10,10 @@ import { cn } from '@/lib/utils';
 interface DateFilterProps {
   selectedDates: Date[];
   onDatesChange: (dates: Date[]) => void;
+  className?: string;
 }
 
-export const DateFilter = ({ selectedDates, onDatesChange }: DateFilterProps) => {
+export const DateFilter = ({ selectedDates, onDatesChange, className }: DateFilterProps) => {
   const [open, setOpen] = useState(false);
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -38,7 +39,7 @@ export const DateFilter = ({ selectedDates, onDatesChange }: DateFilterProps) =>
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("flex items-center gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button

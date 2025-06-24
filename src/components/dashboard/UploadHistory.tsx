@@ -25,6 +25,7 @@ export const UploadHistory = ({ uploads, onDateSelect, selectedDate }: UploadHis
 
   const getDayName = (date: Date) => format(date, 'EEE');
   const getDayNumber = (date: Date) => format(date, 'd');
+  const getMonthYear = (date: Date) => format(date, 'MMMM yyyy');
 
   return (
     <motion.div
@@ -33,11 +34,19 @@ export const UploadHistory = ({ uploads, onDateSelect, selectedDate }: UploadHis
       transition={{ duration: 0.6, delay: 0.15 }}
     >
       <Card className="glass-card p-6 elegant-border">
-        <div className="flex items-center gap-3 mb-6">
-          <Calendar className="w-5 h-5 gold-accent" />
-          <h3 className="text-lg font-semibold text-white text-elegant tracking-wider">
-            UPLOAD HISTORY
-          </h3>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5 gold-accent" />
+            <h3 className="text-lg font-semibold text-white text-elegant tracking-wider">
+              UPLOAD HISTORY
+            </h3>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-400">Current Week</div>
+            <div className="text-lg font-semibold text-white">
+              {getMonthYear(new Date())}
+            </div>
+          </div>
         </div>
         
         <div className="grid grid-cols-7 gap-3">

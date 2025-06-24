@@ -13,6 +13,7 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
     countries: [],
     candidateStatus: [],
     tags: [],
+    selectedDates: [], // Add selected dates for date filtering
   });
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
   const { user } = useAuth();
@@ -54,14 +55,15 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
           from: filters.dateRange.from.toISOString(),
           to: filters.dateRange.to.toISOString(),
         } : undefined,
+        selectedDates: filters.selectedDates?.map(date => date.toISOString()),
       };
 
       const { error } = await supabase
         .from('saved_searches')
         .insert({
-          user_id: user.id,  // Added user_id
+          user_id: user.id,
           name,
-          search_criteria: searchCriteria as any,  // Cast to any for Json compatibility
+          search_criteria: searchCriteria as any,
         });
 
       if (error) throw error;
@@ -84,6 +86,7 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
         from: new Date(searchCriteria.dateRange.from),
         to: new Date(searchCriteria.dateRange.to),
       } : undefined,
+      selectedDates: searchCriteria.selectedDates?.map(date => new Date(date)) || [],
     });
   };
 
@@ -155,6 +158,15 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
         if (uploadDate < filters.dateRange.from || uploadDate > filters.dateRange.to) {
           return false;
         }
+      }
+
+      // Selected dates filter
+      if (filters.selectedDates && filters.selectedDates.length > 0) {
+        const uploadDate = new Date(upload.uploaded_at);
+        const hasMatchingDate = filters.selectedDates.some(selectedDate => 
+          uploadDate.toDateString() === selectedDate.toDateString()
+        );
+        if (!hasMatchingDate) return false;
       }
 
       return true;
