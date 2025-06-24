@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +13,8 @@ import { User, Mail, Shield, Activity, Calendar, FileText, Settings } from 'luci
 import { ProfileSettings } from '@/components/account/ProfileSettings';
 import { UsageStats } from '@/components/account/UsageStats';
 import { SecuritySettings } from '@/components/account/SecuritySettings';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HomeButton } from '@/components/ui/home-button';
 
 const Account = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -36,12 +37,10 @@ const Account = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900">
-      <div className="absolute inset-0 opacity-50" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-      }}></div>
+    <div className="min-h-screen dot-grid-bg">
+      <HomeButton />
       
-      <div className="relative z-10">
+      <div className="relative z-10 container mx-auto px-6 py-8">
         {/* Header */}
         <header className="bg-white/10 backdrop-blur-xl border-b border-white/20">
           <div className="container mx-auto px-4 py-6">

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, CheckCircle, Code, FileText, Upload, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { HomeButton } from '@/components/ui/home-button';
 
 const ApiDocs = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -149,6 +150,7 @@ for cv_file in cv_files:
   if (!user) {
     return (
       <div className="min-h-screen dot-grid-bg flex items-center justify-center">
+        <HomeButton />
         <div className="text-center text-white">
           <h2 className="text-2xl font-semibold mb-4">Authentication Required</h2>
           <p className="text-gray-400">Please log in to access the API documentation.</p>
@@ -159,6 +161,8 @@ for cv_file in cv_files:
 
   return (
     <div className="min-h-screen dot-grid-bg">
+      <HomeButton />
+      
       <div className="relative z-10 container mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-4 text-elegant tracking-wider">API Documentation</h1>
