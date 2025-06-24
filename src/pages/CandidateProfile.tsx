@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -99,6 +99,53 @@ const CandidateProfile = () => {
     }
   };
 
+  const handleEmailCandidate = () => {
+    if (upload?.extracted_json?.email_address) {
+      const subject = encodeURIComponent(`Regarding your application - ${upload.extracted_json.candidate_name || 'Candidate'}`);
+      const body = encodeURIComponent(`Dear ${upload.extracted_json.candidate_name || 'Candidate'},\n\nThank you for your interest in our position.\n\nBest regards,`);
+      window.open(`mailto:${upload.extracted_json.email_address}?subject=${subject}&body=${body}`, '_blank');
+    } else {
+      toast({
+        title: "No email available",
+        description: "This candidate's email address is not available.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadCV = async () => {
+    if (upload?.file_url) {
+      try {
+        // Create a download link
+        const link = document.createElement('a');
+        link.href = upload.file_url;
+        link.download = upload.original_filename || 'CV.pdf';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download started",
+          description: "The CV download has been initiated.",
+        });
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({
+          title: "Download failed",
+          description: "Failed to download the CV. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "No file available",
+        description: "The CV file is not available for download.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Helper function to safely render text or structured data
   const renderTextOrStructuredData = (data: any): string => {
     if (typeof data === 'string') {
@@ -185,7 +232,9 @@ const CandidateProfile = () => {
   }
 
   const data = upload.extracted_json;
-  const score = parseFloat(data.score || '0');
+  // Normalize score to be out of 10 (handle cases where score might be stored as larger values)
+  const rawScore = parseFloat(data.score || '0');
+  const score = rawScore > 10 ? rawScore / 10 : rawScore;
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
@@ -231,6 +280,27 @@ const CandidateProfile = () => {
                     </div>
                     <p className="text-white/80">Assessment Score (out of 10)</p>
                     <Progress value={score * 10} scoreValue={score} className="mt-4 h-2" />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3 mb-8">
+                    <Button
+                      onClick={handleEmailCandidate}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold"
+                      disabled={!data.email_address}
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Email Candidate
+                    </Button>
+                    <Button
+                      onClick={handleDownloadCV}
+                      variant="outline"
+                      className="w-full border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                      disabled={!upload.file_url}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download CV
+                    </Button>
                   </div>
 
                   {/* Contact Info */}
