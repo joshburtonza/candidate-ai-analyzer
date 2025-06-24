@@ -68,6 +68,7 @@ export const BatchUploadDialog = ({ onBatchComplete }: BatchUploadDialogProps) =
       const { data: batch, error: batchError } = await supabase
         .from('batch_uploads')
         .insert({
+          user_id: user.id,  // Added user_id
           batch_name: batchName,
           total_files: files.length,
           status: 'processing',
@@ -101,6 +102,7 @@ export const BatchUploadDialog = ({ onBatchComplete }: BatchUploadDialogProps) =
           const { error: cvError } = await supabase
             .from('cv_uploads')
             .insert({
+              user_id: user.id,  // Added user_id
               file_url: publicUrl,
               original_filename: file.name,
               file_size: file.size,

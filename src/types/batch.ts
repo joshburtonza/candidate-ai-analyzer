@@ -30,6 +30,7 @@ export interface SavedSearch {
 }
 
 export interface SearchCriteria {
+  [key: string]: any;  // Added index signature for Json compatibility
   query?: string;
   minScore?: number;
   maxScore?: number;

@@ -19,14 +19,14 @@ export interface CVUpload {
   original_filename: string;
   uploaded_at: string;
   source_email?: string;
-  file_size?: number;
+  file_size?: number | null;
   processing_status: 'pending' | 'processing' | 'completed' | 'error';
-  candidate_status?: string;
-  notes?: string;
-  tags?: string[];
-  score_breakdown?: Record<string, any>;
-  batch_id?: string;
-  last_updated_by?: string;
+  candidate_status?: string | null;
+  notes?: string | null;
+  tags?: string[] | null;
+  score_breakdown?: any;  // Changed from Record<string, any> to any to match Json type
+  batch_id?: string | null;
+  last_updated_by?: string | null;
 }
 
 export interface Profile {

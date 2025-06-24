@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { SearchCriteria, AdvancedFilters } from '@/types/batch';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export const useAdvancedSearch = (uploads: CVUpload[]) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,11 +15,14 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
     tags: [],
   });
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
+  const { user } = useAuth();
 
   // Load saved searches
   useEffect(() => {
-    loadSavedSearches();
-  }, []);
+    if (user) {
+      loadSavedSearches();
+    }
+  }, [user]);
 
   const loadSavedSearches = async () => {
     try {
@@ -35,6 +39,8 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
   };
 
   const saveSearch = async (name: string) => {
+    if (!user) return;
+    
     try {
       const searchCriteria: SearchCriteria = {
         query: searchQuery,
@@ -53,8 +59,9 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
       const { error } = await supabase
         .from('saved_searches')
         .insert({
+          user_id: user.id,  // Added user_id
           name,
-          search_criteria: searchCriteria,
+          search_criteria: searchCriteria as any,  // Cast to any for Json compatibility
         });
 
       if (error) throw error;
