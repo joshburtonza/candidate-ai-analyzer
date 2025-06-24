@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -152,9 +153,10 @@ const Dashboard = () => {
 
   // Apply date filter to the already filtered uploads
   const dateFilteredUploads = selectedDate 
-    ? filteredUploads.filter(upload => 
-        isSameDay(new Date(upload.uploaded_at), selectedDate)
-      )
+    ? filteredUploads.filter(upload => {
+        const uploadDate = new Date(upload.uploaded_at);
+        return isSameDay(uploadDate, selectedDate);
+      })
     : filteredUploads;
 
   // Sort the final filtered uploads
@@ -172,6 +174,29 @@ const Dashboard = () => {
         return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
     }
   });
+
+  // Debug logging for date filtering
+  useEffect(() => {
+    if (selectedDate) {
+      console.log('Selected date:', selectedDate);
+      console.log('Total uploads:', uploads.length);
+      console.log('Filtered uploads (before date):', filteredUploads.length);
+      console.log('Date filtered uploads:', dateFilteredUploads.length);
+      
+      // Check uploads for the selected date
+      const uploadsForDate = uploads.filter(upload => {
+        const uploadDate = new Date(upload.uploaded_at);
+        return isSameDay(uploadDate, selectedDate);
+      });
+      console.log('Raw uploads for selected date:', uploadsForDate.length);
+      
+      // Check completed uploads for the selected date
+      const completedUploadsForDate = uploadsForDate.filter(upload => 
+        upload.processing_status === 'completed' && upload.extracted_json
+      );
+      console.log('Completed uploads for selected date:', completedUploadsForDate.length);
+    }
+  }, [selectedDate, uploads, filteredUploads, dateFilteredUploads]);
 
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
