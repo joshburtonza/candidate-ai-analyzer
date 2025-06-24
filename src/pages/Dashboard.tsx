@@ -174,17 +174,6 @@ const Dashboard = () => {
     }
   });
 
-  // Debug information
-  console.log('Dashboard Debug:', {
-    totalUploads: uploads.length,
-    completedUploads: uploads.filter(u => u.processing_status === 'completed').length,
-    filteredUploads: filteredUploads.length,
-    dateFilteredUploads: dateFilteredUploads.length,
-    sortedUploads: sortedUploads.length,
-    hasFilters: searchQuery || Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== undefined),
-    selectedDate: selectedDate?.toDateString(),
-  });
-
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
     return (
@@ -307,18 +296,12 @@ const Dashboard = () => {
               <h2 className="text-2xl font-semibold text-white">Candidates</h2>
               {selectedDate && (
                 <div className="text-sm text-gray-400">
-                  Showing {sortedUploads.length} candidates from {selectedDate.toDateString()}
+                  Showing {sortedUploads.length} candidates from {selectedDate.toLocaleDateString()}
                 </div>
               )}
-              {(searchQuery || Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== undefined)) && (
+              {(searchQuery || Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== undefined)) && !selectedDate && (
                 <div className="text-sm text-gray-400">
                   {sortedUploads.length} results found
-                </div>
-              )}
-              {/* Debug info */}
-              {uploads.length > 0 && sortedUploads.length === 0 && (
-                <div className="text-sm text-yellow-400">
-                  Debug: {uploads.length} total uploads, {uploads.filter(u => u.processing_status === 'completed').length} completed
                 </div>
               )}
             </div>

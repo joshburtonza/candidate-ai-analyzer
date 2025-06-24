@@ -13,7 +13,7 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
     countries: [],
     candidateStatus: [],
     tags: [],
-    selectedDates: [], // Add selected dates for date filtering
+    selectedDates: [], // Initialize as empty array
   });
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
   const { user } = useAuth();
@@ -152,7 +152,7 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
         if (!hasMatchingTag) return false;
       }
 
-      // Date range filter
+      // Date range filter (separate from selectedDates)
       if (filters.dateRange) {
         const uploadDate = new Date(upload.uploaded_at);
         if (uploadDate < filters.dateRange.from || uploadDate > filters.dateRange.to) {
@@ -160,14 +160,7 @@ export const useAdvancedSearch = (uploads: CVUpload[]) => {
         }
       }
 
-      // Selected dates filter
-      if (filters.selectedDates && filters.selectedDates.length > 0) {
-        const uploadDate = new Date(upload.uploaded_at);
-        const hasMatchingDate = filters.selectedDates.some(selectedDate => 
-          uploadDate.toDateString() === selectedDate.toDateString()
-        );
-        if (!hasMatchingDate) return false;
-      }
+      // Note: selectedDates filter is not applied here since it's handled separately in Dashboard
 
       return true;
     });

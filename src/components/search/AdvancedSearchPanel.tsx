@@ -115,6 +115,7 @@ export const AdvancedSearchPanel = ({
       countries: [],
       candidateStatus: [],
       tags: [],
+      selectedDates: [], // Clear selected dates
     });
   };
 
@@ -151,6 +152,7 @@ export const AdvancedSearchPanel = ({
     ...filters.tags,
     ...(filters.scoreRange[0] > 0 || filters.scoreRange[1] < 10 ? ['score'] : []),
     ...(filters.dateRange ? ['date'] : []),
+    ...(filters.selectedDates && filters.selectedDates.length > 0 ? ['selectedDates'] : []),
   ].length;
 
   return (
