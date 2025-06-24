@@ -1,37 +1,89 @@
+
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Brain, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Brain, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HomeButton } from '@/components/ui/home-button';
+import { useToast } from '@/hooks/use-toast';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const { signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleAuth = async () => {
+  const handleSignIn = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password, fullName);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        toast({
+          title: "Success",
+          description: "Signed in successfully!",
+        });
+        navigate('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || 'Sign in failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        toast({
+          title: "Success",
+          description: "Account created successfully! Please check your email to confirm your account.",
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || 'Sign up failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAuth = async () => {
+    if (isLogin) {
+      await handleSignIn();
+    } else {
+      await handleSignUp();
     }
   };
 
@@ -86,8 +138,8 @@ const Auth = () => {
             <CardContent className="p-6">
               <Tabs defaultValue={isLogin ? "login" : "register"} className="space-y-4">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login" onClick={() => setIsLogin(true)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">{isLogin ? 'Login' : 'Login'}</TabsTrigger>
-                  <TabsTrigger value="register" onClick={() => setIsLogin(false)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">{isLogin ? 'Register' : 'Register'}</TabsTrigger>
+                  <TabsTrigger value="login" onClick={() => setIsLogin(true)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">Login</TabsTrigger>
+                  <TabsTrigger value="register" onClick={() => setIsLogin(false)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">Register</TabsTrigger>
                 </TabsList>
                 <TabsContent value="login" className="space-y-4">
                   <div className="space-y-2">

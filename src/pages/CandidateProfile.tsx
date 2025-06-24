@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -63,33 +64,6 @@ const CandidateProfile = () => {
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!upload) return;
-
-    try {
-      const { error } = await supabase
-        .from('cv_uploads')
-        .update({ candidate_status: newStatus })
-        .eq('id', upload.id);
-
-      if (error) {
-        throw error;
-      }
-
-      setUpload({ ...upload, candidate_status: newStatus });
-      toast({
-        title: "Success",
-        description: "Candidate status updated successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to update candidate status",
-        variant: "destructive",
-      });
-    }
-  };
-
   const downloadFile = async () => {
     if (!upload) return;
 
@@ -122,6 +96,7 @@ const CandidateProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen elegant-gradient flex items-center justify-center">
+        <HomeButton />
         <div className="text-white text-elegant tracking-wider">LOADING CANDIDATE PROFILE...</div>
       </div>
     );
@@ -130,6 +105,7 @@ const CandidateProfile = () => {
   if (error) {
     return (
       <div className="min-h-screen elegant-gradient flex items-center justify-center">
+        <HomeButton />
         <div className="text-center">
           <div className="text-red-400 mb-4 text-elegant tracking-wider">ERROR LOADING CANDIDATE PROFILE</div>
           <div className="text-white text-sm">{error}</div>
@@ -144,6 +120,7 @@ const CandidateProfile = () => {
   if (!upload) {
     return (
       <div className="min-h-screen elegant-gradient flex items-center justify-center">
+        <HomeButton />
         <div className="text-center">
           <div className="text-white mb-4 text-elegant tracking-wider">CANDIDATE PROFILE NOT FOUND</div>
           <Button onClick={() => navigate('/dashboard')} className="mt-4">
@@ -257,8 +234,8 @@ const CandidateProfile = () => {
                 </TabsContent>
                 <TabsContent value="status">
                   <CandidateStatusManager
-                    currentStatus={upload.candidate_status || 'new'}
-                    onStatusChange={handleStatusChange}
+                    upload={upload}
+                    onUpdate={fetchUpload}
                   />
                 </TabsContent>
                 <TabsContent value="notes">
@@ -274,7 +251,6 @@ const CandidateProfile = () => {
                   <Download className="w-4 h-4 mr-2" />
                   Download CV
                 </Button>
-                {/* Add any additional actions here */}
               </div>
             </CardContent>
           </Card>
