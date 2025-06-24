@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -238,14 +237,16 @@ const Dashboard = () => {
             <DashboardStats uploads={uploads} />
           </motion.div>
 
+          {/* Upload Actions - Stacked Vertically */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex justify-between items-center"
+            className="space-y-4"
           >
-            <div className="flex gap-4">
-              <UploadSection onUploadComplete={handleUploadComplete} />
+            <UploadSection onUploadComplete={handleUploadComplete} />
+            
+            <div className="flex flex-col sm:flex-row gap-4">
               <BatchUploadDialog onBatchComplete={handleBatchComplete} />
               <Button
                 onClick={() => navigate('/api-docs')}
@@ -279,20 +280,26 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Upload History Section */}
-          <UploadHistory 
-            uploads={uploads} 
-            onDateSelect={handleDateSelect}
-            selectedDate={selectedDate}
-          />
-
-          {/* Candidates Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex items-center justify-between"
           >
-            <div className="flex items-center gap-4">
+            <UploadHistory 
+              uploads={uploads} 
+              onDateSelect={handleDateSelect}
+              selectedDate={selectedDate}
+            />
+          </motion.div>
+
+          {/* Candidates Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="space-y-4"
+          >
+            <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-semibold text-white">Candidates</h2>
               {selectedDate && (
                 <div className="text-sm text-gray-400">
@@ -307,10 +314,11 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
+          {/* Candidates Grid */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
             <CandidateGrid uploads={sortedUploads} viewMode={viewMode} />
           </motion.div>
