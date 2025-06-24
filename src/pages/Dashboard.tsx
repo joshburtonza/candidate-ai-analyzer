@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -7,9 +8,15 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
 import { UploadHistory } from '@/components/dashboard/UploadHistory';
+import { AdvancedSearchPanel } from '@/components/search/AdvancedSearchPanel';
+import { BatchUploadDialog } from '@/components/batch/BatchUploadDialog';
+import { useAdvancedSearch } from '@/hooks/useAdvancedSearch';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { isSameDay } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Code } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -17,15 +24,59 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilters,
+    filteredUploads,
+    savedSearches,
+    saveSearch,
+    loadSearch,
+  } = useAdvancedSearch(uploads);
+
+  // Extract available options for filters
+  const { availableSkills, availableCountries, availableTags } = useMemo(() => {
+    const skills = new Set<string>();
+    const countries = new Set<string>();
+    const tags = new Set<string>();
+
+    uploads.forEach(upload => {
+      if (upload.extracted_json) {
+        // Skills
+        if (upload.extracted_json.skill_set) {
+          upload.extracted_json.skill_set.split(',').forEach(skill => {
+            skills.add(skill.trim());
+          });
+        }
+        
+        // Countries
+        if (upload.extracted_json.countries) {
+          countries.add(upload.extracted_json.countries.trim());
+        }
+      }
+      
+      // Tags
+      if (upload.tags) {
+        upload.tags.forEach(tag => tags.add(tag));
+      }
+    });
+
+    return {
+      availableSkills: Array.from(skills).slice(0, 50), // Limit for performance
+      availableCountries: Array.from(countries).slice(0, 50),
+      availableTags: Array.from(tags),
+    };
+  }, [uploads]);
 
   useEffect(() => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null');
     
-    // Only fetch uploads when we have a user and auth is not loading
     if (!authLoading && user) {
       console.log('Dashboard: User authenticated, fetching uploads');
       fetchUploads();
@@ -58,7 +109,6 @@ const Dashboard = () => {
       
       console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
       
-      // Cast the database response to our CVUpload type
       const typedUploads: CVUpload[] = (data || []).map(upload => ({
         ...upload,
         extracted_json: upload.extracted_json as any,
@@ -84,16 +134,46 @@ const Dashboard = () => {
     setUploads(prev => [newUpload, ...prev]);
   };
 
+  const handleBatchComplete = (batchId: string) => {
+    console.log('Dashboard: Batch upload completed:', batchId);
+    fetchUploads(); // Refresh the list
+    toast({
+      title: "Batch upload completed",
+      description: "All files have been processed successfully",
+    });
+  };
+
   const handleDateSelect = (date: Date) => {
     if (selectedDate && isSameDay(selectedDate, date)) {
-      // If clicking the same date, deselect it
       setSelectedDate(null);
     } else {
       setSelectedDate(date);
     }
   };
 
-  // Show loading only if auth is loading
+  // Apply date filter to the already filtered uploads
+  const dateFilteredUploads = selectedDate 
+    ? filteredUploads.filter(upload => 
+        isSameDay(new Date(upload.uploaded_at), selectedDate)
+      )
+    : filteredUploads;
+
+  // Sort the final filtered uploads
+  const sortedUploads = [...dateFilteredUploads].sort((a, b) => {
+    switch (sortBy) {
+      case 'score':
+        const scoreA = parseFloat(a.extracted_json?.score || '0');
+        const scoreB = parseFloat(b.extracted_json?.score || '0');
+        return scoreB - scoreA;
+      case 'name':
+        const nameA = a.extracted_json?.candidate_name || '';
+        const nameB = b.extracted_json?.candidate_name || '';
+        return nameA.localeCompare(nameB);
+      default:
+        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+    }
+  });
+
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
     return (
@@ -103,7 +183,6 @@ const Dashboard = () => {
     );
   }
 
-  // Show loading screen only for data loading (not auth loading)
   if (loading && user) {
     console.log('Dashboard: Showing data loading screen');
     return (
@@ -135,44 +214,6 @@ const Dashboard = () => {
     );
   }
 
-  // Filter uploads by selected date from upload history
-  const dateFilteredUploads = selectedDate 
-    ? uploads.filter(upload => 
-        isSameDay(new Date(upload.uploaded_at), selectedDate)
-      )
-    : uploads;
-
-  // Filter and sort uploads
-  const filteredUploads = dateFilteredUploads.filter(upload => {
-    if (!searchQuery) return true;
-    const data = upload.extracted_json;
-    if (!data) return false;
-    
-    const searchFields = [
-      data.candidate_name,
-      data.email_address,
-      data.skill_set,
-      data.countries
-    ].join(' ').toLowerCase();
-    
-    return searchFields.includes(searchQuery.toLowerCase());
-  });
-
-  const sortedUploads = [...filteredUploads].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        const scoreA = parseFloat(a.extracted_json?.score || '0');
-        const scoreB = parseFloat(b.extracted_json?.score || '0');
-        return scoreB - scoreA;
-      case 'name':
-        const nameA = a.extracted_json?.candidate_name || '';
-        const nameB = b.extracted_json?.candidate_name || '';
-        return nameA.localeCompare(nameB);
-      default:
-        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
-    }
-  });
-
   console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads');
 
   return (
@@ -201,8 +242,40 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
+            className="flex justify-between items-center"
           >
-            <UploadSection onUploadComplete={handleUploadComplete} />
+            <div className="flex gap-4">
+              <UploadSection onUploadComplete={handleUploadComplete} />
+              <BatchUploadDialog onBatchComplete={handleBatchComplete} />
+              <Button
+                onClick={() => navigate('/api-docs')}
+                variant="outline"
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+              >
+                <Code className="w-4 h-4 mr-2" />
+                API Docs
+              </Button>
+            </div>
+          </motion.div>
+
+          {/* Advanced Search Panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            <AdvancedSearchPanel
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filters={filters}
+              onFiltersChange={setFilters}
+              savedSearches={savedSearches}
+              onSaveSearch={saveSearch}
+              onLoadSearch={loadSearch}
+              availableSkills={availableSkills}
+              availableCountries={availableCountries}
+              availableTags={availableTags}
+            />
           </motion.div>
 
           {/* Upload History Section */}
@@ -224,6 +297,11 @@ const Dashboard = () => {
               {selectedDate && (
                 <div className="text-sm text-gray-400">
                   Showing {sortedUploads.length} candidates from {selectedDate.toDateString()}
+                </div>
+              )}
+              {(searchQuery || Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== undefined)) && (
+                <div className="text-sm text-gray-400">
+                  {sortedUploads.length} results found
                 </div>
               )}
             </div>

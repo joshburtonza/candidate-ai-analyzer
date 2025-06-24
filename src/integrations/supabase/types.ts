@@ -9,41 +9,141 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      batch_uploads: {
+        Row: {
+          batch_name: string
+          completed_at: string | null
+          created_at: string | null
+          failed_files: number
+          id: string
+          metadata: Json | null
+          processed_files: number
+          status: string
+          total_files: number
+          user_id: string
+        }
+        Insert: {
+          batch_name: string
+          completed_at?: string | null
+          created_at?: string | null
+          failed_files?: number
+          id?: string
+          metadata?: Json | null
+          processed_files?: number
+          status?: string
+          total_files?: number
+          user_id: string
+        }
+        Update: {
+          batch_name?: string
+          completed_at?: string | null
+          created_at?: string | null
+          failed_files?: number
+          id?: string
+          metadata?: Json | null
+          processed_files?: number
+          status?: string
+          total_files?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      candidate_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          note_text: string
+          note_type: string | null
+          upload_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          note_text: string
+          note_type?: string | null
+          upload_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          note_text?: string
+          note_type?: string | null
+          upload_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_notes_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "cv_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_uploads: {
         Row: {
+          batch_id: string | null
+          candidate_status: string | null
           extracted_json: Json | null
           file_size: number | null
           file_url: string
           id: string
+          last_updated_by: string | null
+          notes: string | null
           original_filename: string
           processing_status: string | null
+          score_breakdown: Json | null
           source_email: string | null
+          tags: string[] | null
           uploaded_at: string | null
           user_id: string
         }
         Insert: {
+          batch_id?: string | null
+          candidate_status?: string | null
           extracted_json?: Json | null
           file_size?: number | null
           file_url: string
           id?: string
+          last_updated_by?: string | null
+          notes?: string | null
           original_filename: string
           processing_status?: string | null
+          score_breakdown?: Json | null
           source_email?: string | null
+          tags?: string[] | null
           uploaded_at?: string | null
           user_id: string
         }
         Update: {
+          batch_id?: string | null
+          candidate_status?: string | null
           extracted_json?: Json | null
           file_size?: number | null
           file_url?: string
           id?: string
+          last_updated_by?: string | null
+          notes?: string | null
           original_filename?: string
           processing_status?: string | null
+          score_breakdown?: Json | null
           source_email?: string | null
+          tags?: string[] | null
           uploaded_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cv_uploads_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batch_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -69,6 +169,30 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          search_criteria: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          search_criteria: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          search_criteria?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -77,6 +201,10 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      update_batch_progress: {
+        Args: { batch_uuid: string }
+        Returns: undefined
       }
     }
     Enums: {

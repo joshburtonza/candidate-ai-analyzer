@@ -7,7 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star, Download } from 'lucide-react';
+import { CandidateStatusManager } from '@/components/candidate/CandidateStatusManager';
+import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star, Download, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -61,13 +62,11 @@ const CandidateProfile = () => {
       console.log('CandidateProfile: Processing status:', data.processing_status);
       console.log('CandidateProfile: Extracted JSON:', data.extracted_json);
 
-      // Safely handle the JSON conversion
       let extractedData: CandidateData | null = null;
       if (data.extracted_json && typeof data.extracted_json === 'object' && !Array.isArray(data.extracted_json)) {
         extractedData = data.extracted_json as unknown as CandidateData;
       }
 
-      // Type the upload properly
       const typedUpload: CVUpload = {
         ...data,
         extracted_json: extractedData,
@@ -77,7 +76,6 @@ const CandidateProfile = () => {
       console.log('CandidateProfile: Typed upload:', typedUpload);
       setUpload(typedUpload);
 
-      // Check if the candidate data is properly extracted
       if (!typedUpload.extracted_json) {
         console.warn('CandidateProfile: No extracted JSON data found');
         toast({
@@ -116,7 +114,6 @@ const CandidateProfile = () => {
   const handleDownloadCV = async () => {
     if (upload?.file_url) {
       try {
-        // Create a download link
         const link = document.createElement('a');
         link.href = upload.file_url;
         link.download = upload.original_filename || 'CV.pdf';
@@ -146,7 +143,6 @@ const CandidateProfile = () => {
     }
   };
 
-  // Helper function to safely render text or structured data
   const renderTextOrStructuredData = (data: any): string => {
     if (typeof data === 'string') {
       return data;
@@ -156,7 +152,6 @@ const CandidateProfile = () => {
         return data.map(item => {
           if (typeof item === 'string') return item;
           if (typeof item === 'object') {
-            // Handle structured job history or education entries
             if (item.company || item.position) {
               return `${item.company || ''} - ${item.position || ''} (${item.dates || ''})${item.responsibilities ? '\n' + item.responsibilities : ''}`;
             }
@@ -168,7 +163,6 @@ const CandidateProfile = () => {
           return String(item);
         }).join('\n\n');
       }
-      // Single object case
       if (data.company || data.position) {
         return `${data.company || ''} - ${data.position || ''} (${data.dates || ''})${data.responsibilities ? '\n' + data.responsibilities : ''}`;
       }
@@ -178,6 +172,19 @@ const CandidateProfile = () => {
       return JSON.stringify(data, null, 2);
     }
     return String(data || '');
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      new: { label: 'New', color: 'bg-blue-500' },
+      reviewing: { label: 'Reviewing', color: 'bg-yellow-500' },
+      shortlisted: { label: 'Shortlisted', color: 'bg-green-500' },
+      interviewed: { label: 'Interviewed', color: 'bg-purple-500' },
+      hired: { label: 'Hired', color: 'bg-emerald-500' },
+      rejected: { label: 'Rejected', color: 'bg-red-500' },
+    }[status] || { label: 'New', color: 'bg-blue-500' };
+    
+    return statusConfig;
   };
 
   if (loading) {
@@ -232,7 +239,6 @@ const CandidateProfile = () => {
   }
 
   const data = upload.extracted_json;
-  // Normalize score to be out of 10 (handle cases where score might be stored as larger values)
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? rawScore / 10 : rawScore;
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
@@ -243,6 +249,8 @@ const CandidateProfile = () => {
     if (score >= 4) return 'from-red-600 to-yellow-600';
     return 'from-gray-600 to-red-600';
   };
+
+  const currentStatus = getStatusBadge(upload.candidate_status || 'new');
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -273,6 +281,13 @@ const CandidateProfile = () => {
                     {data.candidate_name || 'Unknown Candidate'}
                   </h1>
                   
+                  {/* Status Badge */}
+                  <div className="mb-6">
+                    <Badge className={`${currentStatus.color} text-white px-4 py-2`}>
+                      {currentStatus.label}
+                    </Badge>
+                  </div>
+                  
                   {/* Score Circle */}
                   <div className="mb-8">
                     <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
@@ -284,6 +299,7 @@ const CandidateProfile = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-3 mb-8">
+                    <CandidateStatusManager upload={upload} onUpdate={fetchCandidate} />
                     <Button
                       onClick={handleEmailCandidate}
                       className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold"
@@ -347,6 +363,27 @@ const CandidateProfile = () => {
                   </div>
                 </Card>
               )}
+
+              {/* Tags */}
+              {upload.tags && upload.tags.length > 0 && (
+                <Card className="bg-gray-900/50 border-gray-700/50 p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Tag className="w-6 h-6 text-orange-500" />
+                    <h3 className="text-xl font-semibold text-white">Tags</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {upload.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="border-orange-500/30 text-orange-400 px-3 py-1"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </Card>
+              )}
             </div>
 
             {/* Right Column - Detailed Info */}
@@ -358,6 +395,16 @@ const CandidateProfile = () => {
                   {data.justification || 'Assessment pending analysis'}
                 </p>
               </Card>
+
+              {/* General Notes */}
+              {upload.notes && (
+                <Card className="bg-gray-900/50 border-gray-700/50 p-8">
+                  <h3 className="text-2xl font-semibold text-white mb-6">General Notes</h3>
+                  <p className="text-white/90 leading-relaxed whitespace-pre-line">
+                    {upload.notes}
+                  </p>
+                </Card>
+              )}
 
               {/* Education */}
               {data.educational_qualifications && (

@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Account from "./pages/Account";
 import CandidateProfile from "./pages/CandidateProfile";
+import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,11 @@ const AppRoutes = () => {
       <Route path="/account" element={
         <ProtectedRoute>
           <Account />
+        </ProtectedRoute>
+      } />
+      <Route path="/api-docs" element={
+        <ProtectedRoute>
+          <ApiDocs />
         </ProtectedRoute>
       } />
       <Route path="*" element={<NotFound />} />

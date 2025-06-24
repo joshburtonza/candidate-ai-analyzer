@@ -21,6 +21,12 @@ export interface CVUpload {
   source_email?: string;
   file_size?: number;
   processing_status: 'pending' | 'processing' | 'completed' | 'error';
+  candidate_status?: string;
+  notes?: string;
+  tags?: string[];
+  score_breakdown?: Record<string, any>;
+  batch_id?: string;
+  last_updated_by?: string;
 }
 
 export interface Profile {
