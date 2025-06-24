@@ -1,17 +1,17 @@
-
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Copy, CheckCircle, Code, FileText, Upload, Zap } from 'lucide-react';
+import { Copy, CheckCircle, Code, FileText, Upload, Zap, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { HomeButton } from '@/components/ui/home-button';
 
 const ApiDocs = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const { user } = useAuth();
+  const [showToken, setShowToken] = useState(false);
+  const { user, session } = useAuth();
   const { toast } = useToast();
 
   const copyToClipboard = (text: string, id: string) => {
@@ -25,7 +25,10 @@ const ApiDocs = () => {
   };
 
   const baseUrl = "https://rlimpmsifpllmjglhpbl.supabase.co/functions/v1";
-  const authToken = "your-supabase-auth-token"; // This would be dynamic in real usage
+  const userToken = session?.access_token || "your-supabase-auth-token";
+  
+  // Use actual user token in examples if available
+  const authToken = session?.access_token || "your-supabase-auth-token";
 
   const singleUploadCurl = `curl -X POST "${baseUrl}/upload-cv-webhook" \\
   -H "Authorization: Bearer ${authToken}" \\
@@ -145,7 +148,7 @@ batch_id = batch['batch_id']
 cv_files = ["/path/to/cv1.pdf", "/path/to/cv2.pdf"]
 for cv_file in cv_files:
     result = upload_cv(cv_file, batch_id=batch_id)
-    print(f"Uploaded {cv_file}: {result}")`;
+    print(f"Uploaded {cv_file}: {result}"`;
 
   if (!user) {
     return (
@@ -261,28 +264,82 @@ for cv_file in cv_files:
                     All API requests require authentication using a Bearer token in the Authorization header.
                   </p>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    {/* Your Current Token */}
+                    <div className="bg-green-500/10 border border-green-500/30 p-6 rounded-lg">
+                      <h3 className="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                        🔑 Your Authentication Token
+                      </h3>
+                      <p className="text-white/80 mb-4">
+                        This is your current authentication token. Use this in the Authorization header for all API requests.
+                      </p>
+                      <div className="relative bg-gray-800 p-4 rounded-lg mb-4">
+                        <div className="flex items-center gap-2">
+                          <code className="text-green-400 flex-1 break-all">
+                            {showToken ? userToken : userToken.replace(/./g, '•')}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowToken(!showToken)}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyToClipboard(userToken, "user-token")}
+                          >
+                            {copiedCode === "user-token" ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-yellow-400 text-sm">
+                        ⚠️ Keep this token secure and never share it publicly. It provides access to your account.
+                      </div>
+                    </div>
+
                     <div>
                       <h3 className="text-white font-semibold mb-2">Getting Your Token</h3>
-                      <p className="text-white/80 mb-4">
-                        Your authentication token is automatically generated when you log in. 
-                        For production use, create a service account token in your account settings.
-                      </p>
+                      <div className="space-y-3 text-white/80">
+                        <p>Your authentication token is automatically generated when you log in to the platform.</p>
+                        <div className="bg-gray-800 p-4 rounded-lg">
+                          <h4 className="text-white font-medium mb-2">How to get your token:</h4>
+                          <ol className="list-decimal list-inside space-y-1 text-sm">
+                            <li>Log in to your account (you're already logged in!)</li>
+                            <li>Visit this API documentation page</li>
+                            <li>Your token is displayed above and automatically used in all examples</li>
+                            <li>For production use, consider creating a service account token in your account settings</li>
+                          </ol>
+                        </div>
+                      </div>
                     </div>
                     
                     <div>
                       <h3 className="text-white font-semibold mb-2">Header Format</h3>
                       <div className="relative bg-gray-800 p-4 rounded-lg">
-                        <code className="text-green-400">Authorization: Bearer your-token-here</code>
+                        <code className="text-green-400">Authorization: Bearer {showToken ? userToken : 'your-token-here'}</code>
                         <Button
                           size="sm"
                           variant="ghost"
                           className="absolute top-2 right-2"
-                          onClick={() => copyToClipboard("Authorization: Bearer your-token-here", "auth-header")}
+                          onClick={() => copyToClipboard(`Authorization: Bearer ${userToken}`, "auth-header")}
                         >
                           {copiedCode === "auth-header" ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         </Button>
                       </div>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                      <h4 className="text-blue-400 font-semibold mb-2">Token Security Best Practices</h4>
+                      <ul className="text-white/80 space-y-1 text-sm">
+                        <li>• Never commit tokens to version control</li>
+                        <li>• Use environment variables in production</li>
+                        <li>• Rotate tokens regularly</li>
+                        <li>• Use different tokens for different environments</li>
+                        <li>• Monitor token usage for unusual activity</li>
+                      </ul>
                     </div>
                   </div>
                 </Card>
