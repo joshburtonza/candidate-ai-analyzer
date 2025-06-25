@@ -60,7 +60,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative">
-      {/* N8N-style dotted grid background */}
+      {/* Dotted grid background */}
       <div 
         className="absolute inset-0 opacity-20"
         style={{
@@ -86,16 +86,16 @@ const Auth = () => {
           >
             <Brain className="w-8 h-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2 text-elegant">
-            Resume Intelligence
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+            APPLICHUB
             <Sparkles className="w-6 h-6 text-orange-400" />
           </h1>
           <p className="text-gray-300">Enterprise-grade CV analysis powered by AI</p>
         </div>
 
-        <Card className="glass-card elegant-border shadow-2xl">
+        <Card className="bg-white/5 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
           <CardHeader className="text-center">
-            <CardTitle className="text-white text-elegant">
+            <CardTitle className="text-white">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </CardTitle>
             <CardDescription className="text-gray-300">
@@ -114,7 +114,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="glass-card border-white/20 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
+                  className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
                 />
               </div>
               <div>
@@ -124,7 +124,7 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="glass-card border-white/20 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
+                  className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
                 />
               </div>
               <Button
