@@ -54,7 +54,6 @@ export const GmailIntegration = () => {
   const handleGmailConnect = async () => {
     setConnecting(true);
     try {
-      // Use the correct callback URL that matches your Google OAuth configuration
       const callbackUrl = `${window.location.origin}/gmail-callback`;
       
       console.log('Initiating OAuth with callback URL:', callbackUrl);
@@ -68,8 +67,39 @@ export const GmailIntegration = () => {
 
       console.log('OAuth URL generated:', data.auth_url);
 
-      // Force redirect in the current window to avoid popup blocking
-      window.location.replace(data.auth_url);
+      // Open OAuth in a new window to bypass iframe restrictions
+      const authWindow = window.open(
+        data.auth_url,
+        'gmail-oauth',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      );
+
+      if (!authWindow) {
+        // Fallback: try direct navigation if popup was blocked
+        console.log('Popup blocked, trying direct navigation');
+        window.location.href = data.auth_url;
+        return;
+      }
+
+      // Monitor the popup window
+      const checkClosed = setInterval(() => {
+        if (authWindow.closed) {
+          clearInterval(checkClosed);
+          setConnecting(false);
+          // Refresh integrations to see if connection was successful
+          fetchIntegrations();
+        }
+      }, 1000);
+
+      // Set a timeout to stop checking after 5 minutes
+      setTimeout(() => {
+        clearInterval(checkClosed);
+        if (!authWindow.closed) {
+          authWindow.close();
+        }
+        setConnecting(false);
+      }, 300000); // 5 minutes
+
     } catch (error: any) {
       console.error('Error initiating Gmail OAuth:', error);
       toast({
