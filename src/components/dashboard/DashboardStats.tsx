@@ -1,87 +1,71 @@
 
-import { Users, FileText, TrendingUp, MapPin, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Upload, Users, TrendingUp, Calendar } from 'lucide-react';
 import { CVUpload } from '@/types/candidate';
-import { motion } from 'framer-motion';
+import { GmailIntegrationCard } from './GmailIntegrationCard';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
 }
 
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
-  const completedUploads = uploads.filter(u => u.processing_status === 'completed' && u.extracted_json);
-  
-  const stats = {
-    totalCandidates: completedUploads.length,
-    todayUploads: uploads.filter(u => {
-      const today = new Date().toDateString();
-      return new Date(u.uploaded_at).toDateString() === today;
-    }).length,
-    averageScore: completedUploads.length > 0 
-      ? Math.round((completedUploads.reduce((sum, upload) => {
-          return sum + parseFloat(upload.extracted_json?.score || '0');
-        }, 0) / completedUploads.length) * 10) / 10
-      : 0,
-    uniqueCountries: new Set(
-      completedUploads
-        .map(u => u.extracted_json?.countries)
-        .filter(Boolean)
-        .join(',')
-        .split(',')
-        .map(c => c.trim())
-        .filter(Boolean)
-    ).size,
-  };
+  const totalUploads = uploads.length;
+  const completedUploads = uploads.filter(upload => upload.processing_status === 'completed').length;
+  const pendingUploads = uploads.filter(upload => upload.processing_status === 'pending' || upload.processing_status === 'processing').length;
+  const todayUploads = uploads.filter(upload => {
+    const today = new Date();
+    const uploadDate = new Date(upload.uploaded_at || '');
+    return uploadDate.toDateString() === today.toDateString();
+  }).length;
 
-  const statCards = [
+  const stats = [
     {
-      title: 'TOTAL CANDIDATES',
-      value: stats.totalCandidates,
+      title: 'Total CVs',
+      value: totalUploads,
+      icon: Upload,
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/20'
+    },
+    {
+      title: 'Processed',
+      value: completedUploads,
       icon: Users,
-      color: 'bg-blue-600',
+      color: 'text-green-400',
+      bgColor: 'bg-green-500/20'
     },
     {
-      title: "TODAY'S UPLOADS",
-      value: stats.todayUploads,
-      icon: Calendar,
-      color: 'bg-green-600',
-    },
-    {
-      title: 'AVERAGE FIT SCORE',
-      value: `${stats.averageScore}/10`,
+      title: 'Processing',
+      value: pendingUploads,
       icon: TrendingUp,
-      color: 'bg-yellow-600',
+      color: 'text-orange-400',
+      bgColor: 'bg-orange-500/20'
     },
     {
-      title: 'UNIQUE COUNTRIES',
-      value: stats.uniqueCountries,
-      icon: MapPin,
-      color: 'bg-red-600',
-    },
+      title: 'Today',
+      value: todayUploads,
+      icon: Calendar,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/20'
+    }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statCards.map((stat, index) => (
-        <motion.div
-          key={stat.title}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-        >
-          <Card className="stat-card p-6 hover:bg-gray-700/50 transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/70 text-sm font-medium">{stat.title}</p>
-                <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
-              </div>
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+      {stats.map((stat, index) => (
+        <Card key={index} className="dark-card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-300">{stat.title}</p>
+              <p className="text-2xl font-bold text-white">{stat.value}</p>
             </div>
-          </Card>
-        </motion.div>
+            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            </div>
+          </div>
+        </Card>
       ))}
+      
+      <GmailIntegrationCard />
     </div>
   );
 };

@@ -145,6 +145,95 @@ export type Database = {
           },
         ]
       }
+      gmail_integrations: {
+        Row: {
+          access_token: string
+          created_at: string
+          gmail_email: string
+          history_id: string | null
+          id: string
+          is_active: boolean
+          refresh_token: string
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+          watch_expiration: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          gmail_email: string
+          history_id?: string | null
+          id?: string
+          is_active?: boolean
+          refresh_token: string
+          token_expires_at: string
+          updated_at?: string
+          user_id: string
+          watch_expiration?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          gmail_email?: string
+          history_id?: string | null
+          id?: string
+          is_active?: boolean
+          refresh_token?: string
+          token_expires_at?: string
+          updated_at?: string
+          user_id?: string
+          watch_expiration?: string | null
+        }
+        Relationships: []
+      }
+      processed_emails: {
+        Row: {
+          cv_upload_ids: string[] | null
+          error_message: string | null
+          gmail_integration_id: string
+          gmail_message_id: string
+          id: string
+          processed_at: string
+          processing_status: string
+          sender_email: string | null
+          subject: string | null
+          user_id: string
+        }
+        Insert: {
+          cv_upload_ids?: string[] | null
+          error_message?: string | null
+          gmail_integration_id: string
+          gmail_message_id: string
+          id?: string
+          processed_at?: string
+          processing_status?: string
+          sender_email?: string | null
+          subject?: string | null
+          user_id: string
+        }
+        Update: {
+          cv_upload_ids?: string[] | null
+          error_message?: string | null
+          gmail_integration_id?: string
+          gmail_message_id?: string
+          id?: string
+          processed_at?: string
+          processing_status?: string
+          sender_email?: string | null
+          subject?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processed_emails_gmail_integration_id_fkey"
+            columns: ["gmail_integration_id"]
+            isOneToOne: false
+            referencedRelation: "gmail_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -202,8 +291,24 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      refresh_gmail_token: {
+        Args: {
+          integration_id: string
+          new_access_token: string
+          new_expires_at: string
+        }
+        Returns: undefined
+      }
       update_batch_progress: {
         Args: { batch_uuid: string }
+        Returns: undefined
+      }
+      update_gmail_watch: {
+        Args: {
+          integration_id: string
+          new_expiration: string
+          new_history_id?: string
+        }
         Returns: undefined
       }
     }
