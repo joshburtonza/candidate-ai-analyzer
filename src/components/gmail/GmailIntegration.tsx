@@ -68,8 +68,8 @@ export const GmailIntegration = () => {
 
       console.log('OAuth URL generated:', data.auth_url);
 
-      // Redirect to Google OAuth
-      window.location.href = data.auth_url;
+      // Force redirect in the current window to avoid popup blocking
+      window.location.replace(data.auth_url);
     } catch (error: any) {
       console.error('Error initiating Gmail OAuth:', error);
       toast({
