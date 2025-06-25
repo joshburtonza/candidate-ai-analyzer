@@ -58,30 +58,6 @@ const Auth = () => {
     }
   };
 
-  // Floating animation variants
-  const floatingVariants = {
-    animate: {
-      y: [0, -20, 0],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
-  const extractionVariants = {
-    animate: {
-      opacity: [0.4, 1, 0.4],
-      scale: [1, 1.05, 1],
-      transition: {
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden">
       {/* Dotted grid background */}
@@ -97,8 +73,14 @@ const Auth = () => {
       
       {/* Floating extraction elements */}
       <motion.div
-        variants={floatingVariants}
-        animate="animate"
+        animate={{
+          y: [0, -20, 0],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1]
+        }}
         className="absolute top-20 left-10 text-orange-400/30 text-sm font-mono"
         style={{ animationDelay: '0s' }}
       >
@@ -106,52 +88,90 @@ const Auth = () => {
       </motion.div>
       
       <motion.div
-        variants={floatingVariants}
-        animate="animate"
+        animate={{
+          y: [0, -20, 0],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1],
+          delay: 1
+        }}
         className="absolute top-32 right-20 text-orange-400/40 text-sm font-mono"
-        style={{ animationDelay: '1s' }}
       >
         parsing: experience.json
       </motion.div>
       
       <motion.div
-        variants={floatingVariants}
-        animate="animate"
+        animate={{
+          y: [0, -20, 0],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1],
+          delay: 2
+        }}
         className="absolute bottom-40 left-20 text-orange-400/35 text-sm font-mono"
-        style={{ animationDelay: '2s' }}
       >
         analyzing: education.xml
       </motion.div>
       
       <motion.div
-        variants={floatingVariants}
-        animate="animate"
+        animate={{
+          y: [0, -20, 0],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1],
+          delay: 0.5
+        }}
         className="absolute bottom-20 right-10 text-orange-400/30 text-sm font-mono"
-        style={{ animationDelay: '0.5s' }}
       >
         processing: achievements.csv
       </motion.div>
 
       {/* Floating geometric shapes */}
       <motion.div
-        variants={extractionVariants}
-        animate="animate"
+        animate={{
+          opacity: [0.4, 1, 0.4],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1]
+        }}
         className="absolute top-1/4 left-1/4 w-2 h-2 bg-orange-500/20 rounded-full"
-        style={{ animationDelay: '0s' }}
       />
       
       <motion.div
-        variants={extractionVariants}
-        animate="animate"
+        animate={{
+          opacity: [0.4, 1, 0.4],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1],
+          delay: 1.5
+        }}
         className="absolute top-1/3 right-1/3 w-3 h-3 bg-orange-400/15 rounded-full"
-        style={{ animationDelay: '1.5s' }}
       />
       
       <motion.div
-        variants={extractionVariants}
-        animate="animate"
+        animate={{
+          opacity: [0.4, 1, 0.4],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: [0.4, 0, 0.6, 1],
+          delay: 2.5
+        }}
         className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-orange-600/25 rounded-full"
-        style={{ animationDelay: '2.5s' }}
       />
       
       <motion.div
