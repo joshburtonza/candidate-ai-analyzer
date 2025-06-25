@@ -9,230 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      batch_uploads: {
-        Row: {
-          batch_name: string
-          completed_at: string | null
-          created_at: string | null
-          failed_files: number
-          id: string
-          metadata: Json | null
-          processed_files: number
-          status: string
-          total_files: number
-          user_id: string
-        }
-        Insert: {
-          batch_name: string
-          completed_at?: string | null
-          created_at?: string | null
-          failed_files?: number
-          id?: string
-          metadata?: Json | null
-          processed_files?: number
-          status?: string
-          total_files?: number
-          user_id: string
-        }
-        Update: {
-          batch_name?: string
-          completed_at?: string | null
-          created_at?: string | null
-          failed_files?: number
-          id?: string
-          metadata?: Json | null
-          processed_files?: number
-          status?: string
-          total_files?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      candidate_notes: {
-        Row: {
-          created_at: string | null
-          id: string
-          note_text: string
-          note_type: string | null
-          upload_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          note_text: string
-          note_type?: string | null
-          upload_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          note_text?: string
-          note_type?: string | null
-          upload_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "candidate_notes_upload_id_fkey"
-            columns: ["upload_id"]
-            isOneToOne: false
-            referencedRelation: "cv_uploads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       cv_uploads: {
         Row: {
-          batch_id: string | null
-          candidate_status: string | null
           extracted_json: Json | null
           file_size: number | null
           file_url: string
           id: string
-          last_updated_by: string | null
-          notes: string | null
           original_filename: string
           processing_status: string | null
-          score_breakdown: Json | null
           source_email: string | null
-          tags: string[] | null
           uploaded_at: string | null
           user_id: string
         }
         Insert: {
-          batch_id?: string | null
-          candidate_status?: string | null
           extracted_json?: Json | null
           file_size?: number | null
           file_url: string
           id?: string
-          last_updated_by?: string | null
-          notes?: string | null
           original_filename: string
           processing_status?: string | null
-          score_breakdown?: Json | null
           source_email?: string | null
-          tags?: string[] | null
           uploaded_at?: string | null
           user_id: string
         }
         Update: {
-          batch_id?: string | null
-          candidate_status?: string | null
           extracted_json?: Json | null
           file_size?: number | null
           file_url?: string
           id?: string
-          last_updated_by?: string | null
-          notes?: string | null
           original_filename?: string
           processing_status?: string | null
-          score_breakdown?: Json | null
           source_email?: string | null
-          tags?: string[] | null
           uploaded_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "cv_uploads_batch_id_fkey"
-            columns: ["batch_id"]
-            isOneToOne: false
-            referencedRelation: "batch_uploads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gmail_integrations: {
-        Row: {
-          access_token: string
-          created_at: string
-          gmail_email: string
-          history_id: string | null
-          id: string
-          is_active: boolean
-          refresh_token: string
-          token_expires_at: string
-          updated_at: string
-          user_id: string
-          watch_expiration: string | null
-        }
-        Insert: {
-          access_token: string
-          created_at?: string
-          gmail_email: string
-          history_id?: string | null
-          id?: string
-          is_active?: boolean
-          refresh_token: string
-          token_expires_at: string
-          updated_at?: string
-          user_id: string
-          watch_expiration?: string | null
-        }
-        Update: {
-          access_token?: string
-          created_at?: string
-          gmail_email?: string
-          history_id?: string | null
-          id?: string
-          is_active?: boolean
-          refresh_token?: string
-          token_expires_at?: string
-          updated_at?: string
-          user_id?: string
-          watch_expiration?: string | null
-        }
         Relationships: []
-      }
-      processed_emails: {
-        Row: {
-          cv_upload_ids: string[] | null
-          error_message: string | null
-          gmail_integration_id: string
-          gmail_message_id: string
-          id: string
-          processed_at: string
-          processing_status: string
-          sender_email: string | null
-          subject: string | null
-          user_id: string
-        }
-        Insert: {
-          cv_upload_ids?: string[] | null
-          error_message?: string | null
-          gmail_integration_id: string
-          gmail_message_id: string
-          id?: string
-          processed_at?: string
-          processing_status?: string
-          sender_email?: string | null
-          subject?: string | null
-          user_id: string
-        }
-        Update: {
-          cv_upload_ids?: string[] | null
-          error_message?: string | null
-          gmail_integration_id?: string
-          gmail_message_id?: string
-          id?: string
-          processed_at?: string
-          processing_status?: string
-          sender_email?: string | null
-          subject?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "processed_emails_gmail_integration_id_fkey"
-            columns: ["gmail_integration_id"]
-            isOneToOne: false
-            referencedRelation: "gmail_integrations"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       profiles: {
         Row: {
@@ -258,30 +69,6 @@ export type Database = {
         }
         Relationships: []
       }
-      saved_searches: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          search_criteria: Json
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          search_criteria: Json
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          search_criteria?: Json
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -290,26 +77,6 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      refresh_gmail_token: {
-        Args: {
-          integration_id: string
-          new_access_token: string
-          new_expires_at: string
-        }
-        Returns: undefined
-      }
-      update_batch_progress: {
-        Args: { batch_uuid: string }
-        Returns: undefined
-      }
-      update_gmail_watch: {
-        Args: {
-          integration_id: string
-          new_expiration: string
-          new_history_id?: string
-        }
-        Returns: undefined
       }
     }
     Enums: {

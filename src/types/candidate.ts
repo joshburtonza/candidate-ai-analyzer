@@ -19,14 +19,8 @@ export interface CVUpload {
   original_filename: string;
   uploaded_at: string;
   source_email?: string;
-  file_size?: number | null;
+  file_size?: number;
   processing_status: 'pending' | 'processing' | 'completed' | 'error';
-  candidate_status?: string | null;
-  notes?: string | null;
-  tags?: string[] | null;
-  score_breakdown?: any;  // Changed from Record<string, any> to any to match Json type
-  batch_id?: string | null;
-  last_updated_by?: string | null;
 }
 
 export interface Profile {
@@ -35,5 +29,4 @@ export interface Profile {
   full_name: string;
   is_admin: boolean;
   created_at: string;
-  avatar_url?: string;
 }

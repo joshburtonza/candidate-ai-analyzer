@@ -13,11 +13,11 @@ interface CandidateListItemProps {
 export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
   const navigate = useNavigate();
   const data = upload.extracted_json!;
-  const score = parseFloat(data.score || '0');
+  const score = parseInt(data.score || '0');
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-orange-400';
-    if (score >= 6) return 'text-yellow-400';
+    if (score >= 80) return 'text-orange-400';
+    if (score >= 60) return 'text-yellow-400';
     return 'text-red-400';
   };
 
@@ -72,7 +72,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
         {/* Score */}
         <div className="text-center">
           <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
-            {score.toFixed(1)}/10
+            {score}%
           </div>
           <div className="text-xs text-gray-400">FIT SCORE</div>
         </div>

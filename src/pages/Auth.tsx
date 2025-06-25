@@ -1,285 +1,155 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Brain, ArrowRight, Code, FileText, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { HomeButton } from '@/components/ui/home-button';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
+import { Brain, Sparkles } from 'lucide-react';
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSignIn = async () => {
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        toast({
-          title: "Success",
-          description: "Signed in successfully!",
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`
+          }
         });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
         navigate('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'Sign in failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignUp = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
-
-      if (error) throw error;
-
-      if (data.user) {
-        toast({
-          title: "Success",
-          description: "Account created successfully! Please check your email to confirm your account.",
-        });
-      }
-    } catch (err: any) {
-      setError(err.message || 'Sign up failed');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleAuth = async () => {
-    if (isLogin) {
-      await handleSignIn();
-    } else {
-      await handleSignUp();
-    }
-  };
-
-  const codeSnippets = [
-    "function extractSkills(cv_text) {",
-    "  return ai.parse(cv_text);",
-    "}",
-  ];
-
-  const textExtractionElements = [
-    "● Python Developer",
-    "● Machine Learning Engineer", 
-    "● 5+ years experience",
-  ];
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      <HomeButton />
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative">
+      {/* N8N-style dotted grid background */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 1px 1px, #374151 1px, transparent 0)
+          `,
+          backgroundSize: '20px 20px'
+        }}
+      />
       
-      {/* Chrome glass code snippets with orange highlights */}
-      {codeSnippets.map((snippet, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-white/90 font-mono text-sm border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-4 py-3 rounded-lg"
-          style={{
-            left: `${Math.random() * 70 + 15}%`,
-            top: `${Math.random() * 70 + 15}%`,
-            boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          }}
-          initial={{ opacity: 0, x: -100, scale: 0.9 }}
-          animate={{ 
-            opacity: [0, 0.8, 0.6, 0],
-            x: ["-100px", "30px", "150px", "250px"],
-            y: [0, -20, 5, -10],
-            scale: [0.9, 1, 0.95, 0.8]
-          }}
-          transition={{ 
-            duration: Math.random() * 6 + 10,
-            repeat: Infinity,
-            delay: Math.random() * 4,
-            ease: "easeInOut"
-          }}
-        >
-          {snippet}
-        </motion.div>
-      ))}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl mb-4 mx-auto shadow-lg shadow-orange-500/25"
+          >
+            <Brain className="w-8 h-8 text-white" />
+          </motion.div>
+          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2 text-elegant">
+            Resume Intelligence
+            <Sparkles className="w-6 h-6 text-orange-400" />
+          </h1>
+          <p className="text-gray-300">Enterprise-grade CV analysis powered by AI</p>
+        </div>
 
-      {/* Chrome glass text extraction elements with orange highlights */}
-      {textExtractionElements.map((text, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-white/90 font-semibold text-sm border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-4 py-2 rounded-lg"
-          style={{
-            right: `${Math.random() * 70 + 15}%`,
-            top: `${Math.random() * 70 + 15}%`,
-            boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          }}
-          initial={{ opacity: 0, scale: 0.5, rotate: -5 }}
-          animate={{ 
-            opacity: [0, 0.8, 0.6, 0],
-            scale: [0.5, 1, 0.9, 0.7],
-            rotate: [-5, 2, -2, 5, 0],
-            x: [80, -10, 30, -80]
-          }}
-          transition={{ 
-            duration: Math.random() * 8 + 12,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: "easeInOut"
-          }}
-        >
-          {text}
-        </motion.div>
-      ))}
-
-      <div className="relative z-10 flex justify-center items-center min-h-screen">
-        <motion.div 
-          className="w-full max-w-md p-6"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
-                style={{
-                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                }}>
-            <CardHeader className="flex flex-col space-y-1 p-8 pb-6">
-              <CardTitle className="text-2xl font-semibold text-center tracking-tight">
-                <div className="flex items-center justify-center gap-3">
-                  <Brain className="w-7 h-7 text-orange-500" />
-                  <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
-                </div>
-              </CardTitle>
-              <CardDescription className="text-slate-400 text-center text-base">
-                {isLogin ? 'Welcome back!' : 'Join our community.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <Tabs defaultValue={isLogin ? "login" : "register"} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm rounded-xl p-1">
-                  <TabsTrigger 
-                    value="login" 
-                    onClick={() => setIsLogin(true)} 
-                    className="text-slate-300 data-[state=active]:bg-orange-500 data-[state=active]:text-black rounded-lg font-medium py-2"
-                  >
-                    Login
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="register" 
-                    onClick={() => setIsLogin(false)} 
-                    className="text-slate-300 data-[state=active]:bg-orange-500 data-[state=active]:text-black rounded-lg font-medium py-2"
-                  >
-                    Register
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="login" className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-300 text-sm font-medium">Email</Label>
-                    <Input 
-                      id="email" 
-                      placeholder="Enter your email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-slate-300 text-sm font-medium">Password</Label>
-                    <Input 
-                      id="password" 
-                      placeholder="Enter your password" 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
-                    />
-                  </div>
-                  {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <Button 
-                    className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl h-12 text-base" 
-                    onClick={handleAuth} 
-                    disabled={loading}
-                  >
-                    {loading ? 'Loading...' : 'Sign In'}
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </TabsContent>
-                <TabsContent value="register" className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-slate-300 text-sm font-medium">Full Name</Label>
-                    <Input 
-                      id="fullName" 
-                      placeholder="Enter your full name" 
-                      type="text" 
-                      value={fullName} 
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-300 text-sm font-medium">Email</Label>
-                    <Input 
-                      id="email" 
-                      placeholder="Enter your email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-slate-300 text-sm font-medium">Password</Label>
-                    <Input 
-                      id="password" 
-                      placeholder="Enter your password" 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
-                    />
-                  </div>
-                  {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <Button 
-                    className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl h-12 text-base" 
-                    onClick={handleAuth} 
-                    disabled={loading}
-                  >
-                    {loading ? 'Loading...' : 'Sign Up'}
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+        <Card className="glass-card elegant-border shadow-2xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-white text-elegant">
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
+            </CardTitle>
+            <CardDescription className="text-gray-300">
+              {isSignUp 
+                ? 'Start analyzing resumes with AI-powered insights'
+                : 'Sign in to access your dashboard'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div>
+                <Input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="glass-card border-white/20 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
+                />
+              </div>
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="glass-card border-white/20 text-white placeholder:text-gray-400 focus:border-orange-400 focus:ring-orange-400/20"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium py-2.5 shadow-lg shadow-orange-500/25 border-0"
+              >
+                {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
+              </Button>
+            </form>
+            
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-orange-400 hover:text-orange-300 transition-colors font-medium"
+              >
+                {isSignUp 
+                  ? 'Already have an account? Sign in' 
+                  : "Don't have an account? Sign up"
+                }
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };
