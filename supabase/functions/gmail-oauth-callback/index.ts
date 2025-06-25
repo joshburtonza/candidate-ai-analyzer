@@ -41,10 +41,16 @@ serve(async (req) => {
       throw new Error('No authorization code provided')
     }
 
+    console.log('Processing OAuth callback with code:', code?.substring(0, 10) + '...')
+
     // Exchange code for tokens
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
     const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/gmail-oauth-callback`
+    
+    // Use the same redirect URI that was used in the initial request
+    const redirectUri = `${Deno.env.get('SUPABASE_URL')?.replace('/functions/v1', '')}/gmail-callback`
+
+    console.log('Using redirect URI for token exchange:', redirectUri)
 
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -63,8 +69,11 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json()
 
     if (!tokenResponse.ok) {
+      console.error('Token exchange failed:', tokenData)
       throw new Error(`Token exchange failed: ${tokenData.error_description || tokenData.error}`)
     }
+
+    console.log('Token exchange successful')
 
     // Get user's Gmail address
     const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -78,6 +87,8 @@ serve(async (req) => {
     if (!userInfoResponse.ok) {
       throw new Error('Failed to get user info')
     }
+
+    console.log('Retrieved user info for:', userInfo.email)
 
     // Calculate token expiration
     const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000))
@@ -102,6 +113,8 @@ serve(async (req) => {
       throw new Error(`Failed to store integration: ${insertError.message}`)
     }
 
+    console.log('Gmail integration stored successfully')
+
     // Set up Gmail push notifications
     const watchResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/watch', {
       method: 'POST',
@@ -118,6 +131,7 @@ serve(async (req) => {
 
     if (watchResponse.ok) {
       const watchData = await watchResponse.json()
+      console.log('Gmail watch set up successfully')
       
       // Update integration with watch details
       await supabaseClient
@@ -127,6 +141,8 @@ serve(async (req) => {
           history_id: watchData.historyId,
         })
         .eq('id', integration.id)
+    } else {
+      console.warn('Failed to set up Gmail watch:', await watchResponse.text())
     }
 
     return new Response(
