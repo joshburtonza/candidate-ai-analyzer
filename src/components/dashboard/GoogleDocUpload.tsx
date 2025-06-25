@@ -3,8 +3,16 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Drive, FileText } from 'lucide-react';
+import { Mail, HardDrive, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+// TypeScript declarations for Google APIs
+declare global {
+  interface Window {
+    google: any;
+    gapi: any;
+  }
+}
 
 interface GoogleDocUploadProps {
   onUploadComplete: (files: File[]) => void;
@@ -157,7 +165,7 @@ export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
               variant="outline"
               className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white hover:bg-white/10 font-medium py-6 flex flex-col items-center gap-2"
             >
-              <Drive className="w-6 h-6 text-orange-500" />
+              <HardDrive className="w-6 h-6 text-orange-500" />
               <div>
                 <div className="font-semibold">Google Drive</div>
                 <div className="text-xs text-gray-400">Select CV files</div>
