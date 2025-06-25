@@ -71,65 +71,75 @@ const Auth = () => {
         }}
       />
       
-      {/* Floating extraction elements */}
+      {/* Floating extraction elements that move across screen */}
       <motion.div
         animate={{
+          x: [-100, window.innerWidth + 100],
           y: [0, -20, 0],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1]
+          x: { duration: 12, repeat: Infinity, ease: "linear" },
+          y: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
         }}
-        className="absolute top-20 left-10 text-orange-400/30 text-sm font-mono"
-        style={{ animationDelay: '0s' }}
+        className="absolute top-20 text-orange-400/60 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
-        extracting: skills.js
+        🔍 Extracting skills...
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -20, 0],
+          x: [window.innerWidth + 100, -100],
+          y: [0, -15, 0],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 1
+          x: { duration: 15, repeat: Infinity, ease: "linear", delay: 2 },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 }
         }}
-        className="absolute top-32 right-20 text-orange-400/40 text-sm font-mono"
+        className="absolute top-32 text-orange-400/50 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
-        parsing: experience.json
+        📊 Processing CVs...
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -20, 0],
+          x: [-150, window.innerWidth + 150],
+          y: [0, -25, 0],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 2
+          x: { duration: 18, repeat: Infinity, ease: "linear", delay: 4 },
+          y: { duration: 3.5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
         }}
-        className="absolute bottom-40 left-20 text-orange-400/35 text-sm font-mono"
+        className="absolute bottom-40 text-orange-400/55 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
-        analyzing: education.xml
+        🎯 Analyzing experience...
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -20, 0],
+          x: [window.innerWidth + 120, -120],
+          y: [0, -18, 0],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 0.5
+          x: { duration: 14, repeat: Infinity, ease: "linear", delay: 6 },
+          y: { duration: 2.8, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.5 }
         }}
-        className="absolute bottom-20 right-10 text-orange-400/30 text-sm font-mono"
+        className="absolute bottom-20 text-orange-400/45 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
-        processing: achievements.csv
+        🚀 5+ years experience
+      </motion.div>
+
+      <motion.div
+        animate={{
+          x: [-80, window.innerWidth + 80],
+          y: [0, -22, 0],
+        }}
+        transition={{
+          x: { duration: 16, repeat: Infinity, ease: "linear", delay: 8 },
+          y: { duration: 3.2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
+        }}
+        className="absolute top-1/2 text-orange-400/40 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
+      >
+        💼 Senior Developer
       </motion.div>
 
       {/* Floating geometric shapes */}
@@ -137,41 +147,42 @@ const Auth = () => {
         animate={{
           opacity: [0.4, 1, 0.4],
           scale: [1, 1.05, 1],
+          x: [-50, window.innerWidth + 50],
         }}
         transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1]
+          opacity: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          scale: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          x: { duration: 20, repeat: Infinity, ease: "linear" }
         }}
-        className="absolute top-1/4 left-1/4 w-2 h-2 bg-orange-500/20 rounded-full"
+        className="absolute top-1/4 w-2 h-2 bg-orange-500/20 rounded-full"
       />
       
       <motion.div
         animate={{
           opacity: [0.4, 1, 0.4],
           scale: [1, 1.05, 1],
+          x: [window.innerWidth + 30, -30],
         }}
         transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 1.5
+          opacity: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
+          scale: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
+          x: { duration: 25, repeat: Infinity, ease: "linear", delay: 3 }
         }}
-        className="absolute top-1/3 right-1/3 w-3 h-3 bg-orange-400/15 rounded-full"
+        className="absolute top-1/3 w-3 h-3 bg-orange-400/15 rounded-full"
       />
       
       <motion.div
         animate={{
           opacity: [0.4, 1, 0.4],
           scale: [1, 1.05, 1],
+          x: [-40, window.innerWidth + 40],
         }}
         transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 2.5
+          opacity: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 },
+          scale: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 },
+          x: { duration: 22, repeat: Infinity, ease: "linear", delay: 6 }
         }}
-        className="absolute bottom-1/3 left-1/3 w-1 h-1 bg-orange-600/25 rounded-full"
+        className="absolute bottom-1/3 w-1 h-1 bg-orange-600/25 rounded-full"
       />
       
       <motion.div

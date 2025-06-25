@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Brain, Upload, BarChart3, Users, ArrowRight, CheckCircle, Sparkles, Quote } from "lucide-react";
@@ -47,77 +46,73 @@ const Index = () => {
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff6b35' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
       
-      {/* Floating extraction elements */}
+      {/* Floating extraction elements that move across screen */}
       <motion.div
         animate={{
+          x: [-120, window.innerWidth + 120],
           y: [0, -15, 0],
         }}
         transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1]
+          x: { duration: 14, repeat: Infinity, ease: "linear" },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
         }}
-        className="absolute top-16 left-8 text-orange-400/40 text-xs font-mono z-5"
+        className="absolute top-16 text-orange-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30 z-5"
       >
         → extracting: candidate_profile.json
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -15, 0],
+          x: [window.innerWidth + 100, -100],
+          y: [0, -18, 0],
         }}
         transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 2
+          x: { duration: 16, repeat: Infinity, ease: "linear", delay: 2 },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
         }}
-        className="absolute top-28 right-16 text-orange-400/35 text-xs font-mono z-5"
+        className="absolute top-28 text-orange-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30 z-5"
       >
         → parsing: work_experience.xml
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -15, 0],
+          x: [-80, window.innerWidth + 80],
+          y: [0, -12, 0],
         }}
         transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 1
+          x: { duration: 18, repeat: Infinity, ease: "linear", delay: 1 },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 }
         }}
-        className="absolute top-1/2 left-12 text-orange-400/30 text-xs font-mono z-5"
+        className="absolute top-1/2 text-orange-400/40 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30 z-5"
       >
         → analyzing: technical_skills.csv
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -15, 0],
+          x: [window.innerWidth + 150, -150],
+          y: [0, -20, 0],
         }}
         transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 3
+          x: { duration: 20, repeat: Infinity, ease: "linear", delay: 3 },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 }
         }}
-        className="absolute bottom-32 right-8 text-orange-400/40 text-xs font-mono z-5"
+        className="absolute bottom-32 text-orange-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30 z-5"
       >
         → processing: education_history.json
       </motion.div>
       
       <motion.div
         animate={{
-          y: [0, -15, 0],
+          x: [-90, window.innerWidth + 90],
+          y: [0, -16, 0],
         }}
         transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 0.5
+          x: { duration: 15, repeat: Infinity, ease: "linear", delay: 0.5 },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.5 }
         }}
-        className="absolute bottom-16 left-1/4 text-orange-400/35 text-xs font-mono z-5"
+        className="absolute bottom-16 text-orange-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30 z-5"
       >
         → validating: certifications.xml
       </motion.div>
@@ -127,55 +122,56 @@ const Index = () => {
         animate={{
           opacity: [0.3, 0.8, 0.3],
           scale: [1, 1.1, 1],
+          x: [-30, window.innerWidth + 30],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1]
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          x: { duration: 25, repeat: Infinity, ease: "linear" }
         }}
-        className="absolute top-1/4 left-1/5 w-2 h-2 bg-orange-500/20 rounded-full z-5"
+        className="absolute top-1/4 w-2 h-2 bg-orange-500/20 rounded-full z-5"
       />
       
       <motion.div
         animate={{
           opacity: [0.3, 0.8, 0.3],
           scale: [1, 1.1, 1],
+          x: [window.innerWidth + 20, -20],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 1.5
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
+          x: { duration: 22, repeat: Infinity, ease: "linear", delay: 4 }
         }}
-        className="absolute top-1/3 right-1/4 w-1 h-1 bg-orange-400/25 rounded-full z-5"
+        className="absolute top-1/3 w-1 h-1 bg-orange-400/25 rounded-full z-5"
       />
       
       <motion.div
         animate={{
           opacity: [0.3, 0.8, 0.3],
           scale: [1, 1.1, 1],
+          x: [-40, window.innerWidth + 40],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 2.5
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 },
+          x: { duration: 28, repeat: Infinity, ease: "linear", delay: 8 }
         }}
-        className="absolute bottom-1/3 left-1/3 w-3 h-3 bg-orange-600/15 rounded-full z-5"
+        className="absolute bottom-1/3 w-3 h-3 bg-orange-600/15 rounded-full z-5"
       />
       
       <motion.div
         animate={{
           opacity: [0.3, 0.8, 0.3],
           scale: [1, 1.1, 1],
+          x: [window.innerWidth + 25, -25],
         }}
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: [0.4, 0, 0.6, 1],
-          delay: 1
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 },
+          x: { duration: 26, repeat: Infinity, ease: "linear", delay: 6 }
         }}
-        className="absolute top-2/3 right-1/5 w-1.5 h-1.5 bg-orange-500/30 rounded-full z-5"
+        className="absolute top-2/3 w-1.5 h-1.5 bg-orange-500/30 rounded-full z-5"
       />
       
       <div className="relative z-10">
