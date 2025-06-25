@@ -24,7 +24,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
 
   return (
-    <Card className="candidate-card p-6 hover:bg-gray-600/20 transition-all duration-300">
+    <Card className="chrome-glass chrome-glass-hover p-6 rounded-xl">
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -62,7 +62,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
             <Badge
               key={index}
               variant="secondary"
-              className="bg-gray-700 text-white border-gray-600 text-xs hover:bg-gray-600 transition-colors"
+              className="bg-gray-700/50 text-white border-orange-500/30 text-xs hover:bg-gray-600/50 transition-colors backdrop-blur-sm"
             >
               {skill}
             </Badge>
@@ -82,7 +82,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
           onClick={() => navigate(`/candidate/${upload.id}`)}
           variant="outline"
           size="sm"
-          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 backdrop-blur-sm"
         >
           <Eye className="w-4 h-4 mr-2" />
           VIEW

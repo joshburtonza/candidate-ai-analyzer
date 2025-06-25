@@ -34,7 +34,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
       whileHover={{ y: -5 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="candidate-card p-6 h-full hover:bg-gray-600/20 transition-all duration-300 cursor-pointer group">
+      <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group">
         <div className="space-y-4">
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -83,7 +83,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="bg-gray-700 text-white border-gray-600 text-xs hover:bg-gray-600 transition-colors"
+                    className="bg-gray-700/50 text-white border-orange-500/30 text-xs hover:bg-gray-600/50 transition-colors backdrop-blur-sm"
                   >
                     {skill}
                   </Badge>
@@ -91,7 +91,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
                 {skills.length > 3 && (
                   <Badge
                     variant="secondary"
-                    className="bg-gray-700 text-white border-gray-600 text-xs"
+                    className="bg-gray-700/50 text-white border-orange-500/30 text-xs backdrop-blur-sm"
                   >
                     +{skills.length - 3}
                   </Badge>

@@ -157,13 +157,13 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
   return (
     <div className="space-y-6">
-      <Card className="dark-card p-8">
+      <Card className="chrome-glass p-8 rounded-xl">
         <div
           {...getRootProps()}
-          className={`upload-area p-12 text-center cursor-pointer transition-all duration-300 ${
+          className={`p-12 text-center cursor-pointer transition-all duration-300 rounded-lg border-2 border-dashed ${
             isDragActive
               ? 'border-orange-500 bg-orange-500/10'
-              : 'hover:border-orange-500 hover:bg-gray-800/50'
+              : 'border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/5'
           }`}
         >
           <input {...getInputProps()} />
@@ -210,9 +210,9 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <Card className="dark-card p-4">
+                <Card className="chrome-glass p-4 rounded-xl">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-orange-500/20 rounded-lg">
+                    <div className="p-2 bg-orange-500/20 rounded-lg border border-orange-500/30">
                       <FileText className="w-5 h-5 text-orange-500" />
                     </div>
                     

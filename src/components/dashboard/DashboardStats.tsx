@@ -69,7 +69,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
         >
-          <Card className="stat-card p-6 hover:bg-gray-700/50 transition-all duration-300">
+          <Card className="chrome-glass chrome-glass-hover p-6 rounded-xl">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/70 text-sm font-medium">{stat.title}</p>
