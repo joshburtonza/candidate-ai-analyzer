@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Brain, ArrowRight } from 'lucide-react';
+import { Brain, ArrowRight, Code, FileText, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { HomeButton } from '@/components/ui/home-button';
 import { useToast } from '@/hooks/use-toast';
@@ -87,34 +86,132 @@ const Auth = () => {
     }
   };
 
+  const codeSnippets = [
+    "extractSkills(cv_text)",
+    "parseExperience(resume)",
+    "analyzeEducation(document)",
+    "matchKeywords(job_desc)",
+    "scoreCandidate(profile)",
+    "validateEmail(contact)",
+    "processDocument(file)",
+    "generateSummary(data)"
+  ];
+
+  const textExtractionElements = [
+    "Python Developer",
+    "Machine Learning",
+    "5+ years experience",
+    "React.js, Node.js",
+    "Bachelor's Degree",
+    "AI Specialist",
+    "Full Stack Engineer",
+    "Data Science"
+  ];
+
   return (
-    <div className="min-h-screen elegant-gradient relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       <HomeButton />
       
-      {/* Background animation */}
-      <motion.div 
-        className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-violet-900 via-purple-900 to-blue-900 opacity-30"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.3, scale: 1 }}
-        transition={{ duration: 1.2, ease: "easeInOut" }}
-      />
-
-      {/* Animated bubbles */}
-      {[...Array(5)].map((_, i) => (
+      {/* Animated code snippets floating in background */}
+      {codeSnippets.map((snippet, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full bg-white/10 backdrop-blur-sm"
+          className="absolute text-green-400/20 font-mono text-sm"
           style={{
-            width: `${Math.random() * 100 + 50}px`,
-            height: `${Math.random() * 100 + 50}px`,
-            left: `${Math.random() * 100}vw`,
-            top: `${Math.random() * 100}vh`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
           }}
-          initial={{ y: -200, opacity: 0 }}
-          animate={{ y: "100vh", opacity: 1 }}
-          transition={{ duration: Math.random() * 5 + 5, repeat: Infinity, repeatType: 'loop' }}
-        />
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ 
+            opacity: [0, 0.3, 0],
+            x: ["-100px", "100vw"],
+            y: [0, -50, 0]
+          }}
+          transition={{ 
+            duration: Math.random() * 10 + 15,
+            repeat: Infinity,
+            delay: Math.random() * 5
+          }}
+        >
+          {snippet}
+        </motion.div>
       ))}
+
+      {/* Animated text extraction elements */}
+      {textExtractionElements.map((text, i) => (
+        <motion.div
+          key={i}
+          className="absolute text-blue-400/20 font-semibold text-xs"
+          style={{
+            right: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ 
+            opacity: [0, 0.4, 0],
+            scale: [0.5, 1, 0.8],
+            rotate: [0, 5, -5, 0]
+          }}
+          transition={{ 
+            duration: Math.random() * 8 + 12,
+            repeat: Infinity,
+            delay: Math.random() * 3
+          }}
+        >
+          {text}
+        </motion.div>
+      ))}
+
+      {/* Animated binary/matrix rain effect */}
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute text-green-300/10 font-mono text-xs"
+          style={{
+            left: `${(i * 5) % 100}%`,
+          }}
+          initial={{ y: -100 }}
+          animate={{ y: "100vh" }}
+          transition={{ 
+            duration: Math.random() * 3 + 2,
+            repeat: Infinity,
+            delay: Math.random() * 2
+          }}
+        >
+          {Math.random() > 0.5 ? '1' : '0'}
+        </motion.div>
+      ))}
+
+      {/* Animated processing indicators */}
+      <motion.div
+        className="absolute top-10 right-10 flex items-center space-x-2 text-orange-400/30"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <Code className="w-4 h-4" />
+        <span className="text-xs font-mono">Processing...</span>
+      </motion.div>
+
+      <motion.div
+        className="absolute bottom-10 left-10 flex items-center space-x-2 text-blue-400/30"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+      >
+        <FileText className="w-4 h-4" />
+        <span className="text-xs font-mono">Extracting data...</span>
+      </motion.div>
+
+      <motion.div
+        className="absolute top-1/2 left-10 flex items-center space-x-2 text-purple-400/30"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+      >
+        <Zap className="w-4 h-4" />
+        <span className="text-xs font-mono">AI Analysis...</span>
+      </motion.div>
 
       <div className="relative z-10 flex justify-center items-center min-h-screen">
         <motion.div 
@@ -123,7 +220,7 @@ const Auth = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Card className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 text-white">
+          <Card className="bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-white shadow-2xl">
             <CardHeader className="flex flex-col space-y-1 p-6">
               <CardTitle className="text-2xl font-semibold text-center tracking-tight">
                 <div className="flex items-center justify-center gap-2">
@@ -137,75 +234,75 @@ const Auth = () => {
             </CardHeader>
             <CardContent className="p-6">
               <Tabs defaultValue={isLogin ? "login" : "register"} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-800">
                   <TabsTrigger value="login" onClick={() => setIsLogin(true)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">Login</TabsTrigger>
                   <TabsTrigger value="register" onClick={() => setIsLogin(false)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">Register</TabsTrigger>
                 </TabsList>
                 <TabsContent value="login" className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-gray-300">Email</Label>
                     <Input 
                       id="email" 
                       placeholder="Enter your email" 
                       type="email" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="text-gray-300">Password</Label>
                     <Input 
                       id="password" 
                       placeholder="Enter your password" 
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
                     />
                   </div>
-                  {error && <p className="text-red-500 text-sm">{error}</p>}
-                  <Button className="w-full bg-orange-500 text-black hover:bg-orange-600" onClick={handleAuth} disabled={loading}>
+                  {error && <p className="text-red-400 text-sm">{error}</p>}
+                  <Button className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold" onClick={handleAuth} disabled={loading}>
                     {loading ? 'Loading...' : 'Sign In'}
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </TabsContent>
                 <TabsContent value="register" className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName" className="text-gray-300">Full Name</Label>
                     <Input 
                       id="fullName" 
                       placeholder="Enter your full name" 
                       type="text" 
                       value={fullName} 
                       onChange={(e) => setFullName(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-gray-300">Email</Label>
                     <Input 
                       id="email" 
                       placeholder="Enter your email" 
                       type="email" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="text-gray-300">Password</Label>
                     <Input 
                       id="password" 
                       placeholder="Enter your password" 
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
                     />
                   </div>
-                  {error && <p className="text-red-500 text-sm">{error}</p>}
-                  <Button className="w-full bg-orange-500 text-black hover:bg-orange-600" onClick={handleAuth} disabled={loading}>
+                  {error && <p className="text-red-400 text-sm">{error}</p>}
+                  <Button className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold" onClick={handleAuth} disabled={loading}>
                     {loading ? 'Loading...' : 'Sign Up'}
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
