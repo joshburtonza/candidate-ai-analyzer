@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,12 +54,19 @@ export const GmailIntegration = () => {
   const handleGmailConnect = async () => {
     setConnecting(true);
     try {
+      // Use the correct callback URL that matches your Google OAuth configuration
+      const callbackUrl = `${window.location.origin}/gmail-callback`;
+      
+      console.log('Initiating OAuth with callback URL:', callbackUrl);
+
       // Call edge function to initiate OAuth flow
       const { data, error } = await supabase.functions.invoke('gmail-oauth-init', {
-        body: { redirect_uri: window.location.origin + '/gmail-callback' }
+        body: { redirect_uri: callbackUrl }
       });
 
       if (error) throw error;
+
+      console.log('OAuth URL generated:', data.auth_url);
 
       // Redirect to Google OAuth
       window.location.href = data.auth_url;

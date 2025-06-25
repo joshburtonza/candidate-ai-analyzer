@@ -22,6 +22,8 @@ serve(async (req) => {
       throw new Error('Google OAuth credentials not configured')
     }
 
+    console.log('Using redirect URI:', redirect_uri)
+
     // Generate state parameter for security
     const state = crypto.randomUUID()
 
@@ -41,6 +43,8 @@ serve(async (req) => {
     authUrl.searchParams.set('access_type', 'offline')
     authUrl.searchParams.set('prompt', 'consent')
     authUrl.searchParams.set('state', state)
+
+    console.log('Generated auth URL:', authUrl.toString())
 
     return new Response(
       JSON.stringify({
