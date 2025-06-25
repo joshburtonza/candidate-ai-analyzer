@@ -25,7 +25,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
           setIsConnected(true);
           toast({
             title: "Connected to Google",
-            description: "You can now import documents from Gmail and Google Drive",
+            description: "You're now signed in with Google. You can import documents from Gmail and Google Drive.",
           });
         }
       } catch (error) {
@@ -42,10 +42,9 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
     try {
       console.log('Starting Google authentication...');
       
-      // Show user-friendly message about what's happening
       toast({
         title: "Connecting to Google",
-        description: "Opening authentication window...",
+        description: "Please sign in with your Google account in the popup window.",
       });
 
       await googleApi.initialize();
@@ -56,8 +55,8 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
       if (isSignedIn) {
         setIsConnected(true);
         toast({
-          title: "Connected to Google",
-          description: "You can now import documents from Gmail and Google Drive",
+          title: "Successfully connected!",
+          description: "You can now import CVs from Gmail and Google Drive. Additional permissions will be requested when you use each service.",
         });
         console.log('Successfully connected to Google');
       } else {
@@ -71,8 +70,10 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
       let errorMessage = "Connection failed";
       let description = "Unable to connect to Google services. ";
       
-      if (error.message.includes('popup') || error.message.includes('Popup') || error.message.includes('timeout')) {
-        description += "This might be due to popup blocking. The page should redirect you to Google for authentication.";
+      if (error.message.includes('popup') || error.message.includes('blocked')) {
+        description += "This might be due to popup blocking. Please allow popups for this site and try again.";
+      } else if (error.message.includes('access_denied')) {
+        description += "Access was denied. Please make sure to allow the requested permissions.";
       } else {
         description += "Please try again or check your internet connection.";
       }
@@ -106,8 +107,8 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
     setIsImporting(prev => ({ ...prev, gmail: true }));
     try {
       toast({
-        title: "Gmail import started",
-        description: "Searching for CV attachments in your Gmail...",
+        title: "Requesting Gmail access",
+        description: "Please grant permission to access your Gmail in the popup window...",
       });
       
       const files = await googleApi.searchGmailAttachments();
@@ -128,7 +129,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
       console.error('Gmail import error:', error);
       toast({
         title: "Gmail import failed",
-        description: error.message || "Failed to import from Gmail. Please try again.",
+        description: error.message || "Failed to import from Gmail. Please try again and make sure to grant the necessary permissions.",
         variant: "destructive",
       });
     } finally {
@@ -140,8 +141,8 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
     setIsImporting(prev => ({ ...prev, drive: true }));
     try {
       toast({
-        title: "Opening Google Drive picker",
-        description: "Select CV files from your Google Drive...",
+        title: "Requesting Drive access",
+        description: "Please grant permission to access your Google Drive in the popup window...",
       });
       
       const files = await googleApi.openDrivePicker();
@@ -162,7 +163,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
       console.error('Drive import error:', error);
       toast({
         title: "Drive import failed",
-        description: error.message || "Failed to import from Google Drive. Please try again.",
+        description: error.message || "Failed to import from Google Drive. Please try again and make sure to grant the necessary permissions.",
         variant: "destructive",
       });
     } finally {
@@ -190,8 +191,8 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
         <div className="text-center">
           <p className="text-xs text-gray-400">
             {isConnecting 
-              ? 'Please check for popup windows or wait for redirect...' 
-              : 'Import CVs from Gmail and Google Drive'
+              ? 'Please complete the sign-in process in the popup window...' 
+              : 'Import CVs from Gmail and Google Drive with secure authentication'
             }
           </p>
           {isConnecting && (
@@ -221,7 +222,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
         variant="outline"
         className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
       >
-        {isImporting.gmail ? 'Searching Gmail...' : 'Import from Gmail'}
+        {isImporting.gmail ? 'Requesting Gmail access...' : 'Import from Gmail'}
       </Button>
       <Button
         onClick={handleDriveImport}
@@ -229,7 +230,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
         variant="outline"
         className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
       >
-        {isImporting.drive ? 'Opening Drive...' : 'Import from Drive'}
+        {isImporting.drive ? 'Requesting Drive access...' : 'Import from Drive'}
       </Button>
       <Button
         onClick={handleDisconnect}

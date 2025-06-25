@@ -60,34 +60,28 @@ export class GoogleAuthService {
         throw new Error('Google Client ID not available');
       }
 
-      console.log('Starting Google sign-in with popup...');
+      console.log('Starting Google sign-in with basic profile scopes...');
 
-      // Try popup first - this happens immediately on user click
-      try {
-        const result = await this.signInWithPopup();
-        return result;
-      } catch (popupError) {
-        console.log('Popup failed, falling back to redirect:', popupError);
-        // Automatically fall back to redirect
-        return this.signInWithRedirect();
-      }
+      // Start with basic profile scopes only
+      const result = await this.signInWithBasicScopes();
+      return result;
     } catch (error) {
       console.error('Google sign-in failed:', error);
       throw new Error(`Failed to sign in to Google: ${error.message}`);
     }
   }
 
-  private signInWithPopup(): Promise<boolean> {
+  private signInWithBasicScopes(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
           client_id: this.clientId,
-          scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly',
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
           callback: (response: any) => {
-            console.log('OAuth popup response received:', response);
+            console.log('Basic OAuth response received:', response);
             
             if (response.error) {
-              console.error('OAuth popup error:', response.error);
+              console.error('OAuth error:', response.error);
               reject(new Error(`OAuth error: ${response.error}`));
               return;
             }
@@ -95,58 +89,75 @@ export class GoogleAuthService {
             if (response.access_token) {
               this.accessToken = response.access_token;
               window.gapi.client.setToken({ access_token: response.access_token });
-              console.log('Access token set successfully via popup');
+              console.log('Basic access token set successfully');
               resolve(true);
             } else {
-              console.error('No access token in popup response:', response);
+              console.error('No access token in response:', response);
               reject(new Error('No access token received from Google'));
             }
           },
           error_callback: (error: any) => {
-            console.error('Token client popup error:', error);
-            reject(new Error(`Popup authentication failed`));
+            console.error('Token client error:', error);
+            reject(new Error(`Authentication failed: ${error.type || 'Unknown error'}`));
           }
         });
 
-        console.log('Requesting access token with popup...');
-        // Set a timeout to catch popup failures
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Popup timeout - likely blocked'));
-        }, 3000);
-
-        // Clear timeout if callback is called
-        const originalCallback = tokenClient.callback;
-        tokenClient.callback = (response: any) => {
-          clearTimeout(timeoutId);
-          originalCallback(response);
-        };
-
+        console.log('Requesting basic profile access...');
         tokenClient.requestAccessToken({ 
           prompt: 'consent',
           include_granted_scopes: true
         });
       } catch (error) {
-        console.error('Error creating token client for popup:', error);
+        console.error('Error creating token client:', error);
         reject(error);
       }
     });
   }
 
-  private signInWithRedirect(): boolean {
-    const redirectUri = `${window.location.origin}/dashboard`;
-    const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
-    
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${this.clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=token&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `include_granted_scopes=true&` +
-      `state=${Date.now()}`;
-    
-    console.log('Redirecting to Google OAuth (popup fallback):', authUrl);
-    window.location.href = authUrl;
-    return true;
+  async requestAdditionalScopes(scopes: string[]): Promise<boolean> {
+    if (!this.clientId) {
+      throw new Error('Google Client ID not available');
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: this.clientId,
+          scope: scopes.join(' '),
+          callback: (response: any) => {
+            console.log('Additional scopes response:', response);
+            
+            if (response.error) {
+              console.error('Additional scopes error:', response.error);
+              reject(new Error(`Failed to get additional permissions: ${response.error}`));
+              return;
+            }
+            
+            if (response.access_token) {
+              this.accessToken = response.access_token;
+              window.gapi.client.setToken({ access_token: response.access_token });
+              console.log('Additional scopes granted successfully');
+              resolve(true);
+            } else {
+              reject(new Error('No access token received for additional scopes'));
+            }
+          },
+          error_callback: (error: any) => {
+            console.error('Additional scopes token client error:', error);
+            reject(new Error(`Failed to get additional permissions: ${error.type || 'Unknown error'}`));
+          }
+        });
+
+        console.log('Requesting additional scopes:', scopes);
+        tokenClient.requestAccessToken({ 
+          prompt: 'consent',
+          include_granted_scopes: true
+        });
+      } catch (error) {
+        console.error('Error requesting additional scopes:', error);
+        reject(error);
+      }
+    });
   }
 
   handleRedirectCallback(): boolean {

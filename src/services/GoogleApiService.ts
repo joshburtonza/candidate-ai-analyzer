@@ -31,9 +31,17 @@ export class GoogleApiService {
       throw new Error('Not authenticated with Google');
     }
     
-    const accessToken = this.authService.getAccessToken();
-    const gmailService = new GmailService(accessToken);
-    return await gmailService.searchAttachments();
+    try {
+      // Request Gmail permissions if not already granted
+      await this.authService.requestAdditionalScopes(['https://www.googleapis.com/auth/gmail.readonly']);
+      
+      const accessToken = this.authService.getAccessToken();
+      const gmailService = new GmailService(accessToken);
+      return await gmailService.searchAttachments();
+    } catch (error: any) {
+      console.error('Gmail access error:', error);
+      throw new Error(`Gmail access denied: ${error.message}`);
+    }
   }
 
   async openDrivePicker(): Promise<File[]> {
@@ -41,9 +49,17 @@ export class GoogleApiService {
       throw new Error('Not authenticated with Google');
     }
     
-    const accessToken = this.authService.getAccessToken();
-    const clientId = this.authService.getClientId();
-    const driveService = new DriveService(clientId, accessToken);
-    return await driveService.openPicker();
+    try {
+      // Request Drive permissions if not already granted
+      await this.authService.requestAdditionalScopes(['https://www.googleapis.com/auth/drive.readonly']);
+      
+      const accessToken = this.authService.getAccessToken();
+      const clientId = this.authService.getClientId();
+      const driveService = new DriveService(clientId, accessToken);
+      return await driveService.openPicker();
+    } catch (error: any) {
+      console.error('Drive access error:', error);
+      throw new Error(`Drive access denied: ${error.message}`);
+    }
   }
 }
