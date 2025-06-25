@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,9 +93,6 @@ const Auth = () => {
     "}",
     "const skills = parseExperience(resume);",
     "analyzeEducation(document)",
-    "if (matchKeywords(job_desc)) {",
-    "  scoreCandidate(profile);",
-    "}",
   ];
 
   const textExtractionElements = [
@@ -103,25 +101,25 @@ const Auth = () => {
     "● 5+ years experience",
     "● React.js • Node.js • MongoDB",
     "● Bachelor's in Computer Science",
-    "● AI/ML Specialist",
   ];
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <HomeButton />
       
-      {/* Reduced floating code snippets - white only */}
+      {/* Chrome glass code snippets with orange highlights */}
       {codeSnippets.map((snippet, i) => (
         <motion.div
           key={i}
-          className="absolute text-white/60 font-mono text-sm border border-white/20 bg-black/40 px-3 py-2 rounded backdrop-blur-sm"
+          className="absolute text-white/90 font-mono text-sm border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-4 py-3 rounded-lg"
           style={{
             left: `${Math.random() * 70 + 15}%`,
             top: `${Math.random() * 70 + 15}%`,
+            boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
           }}
           initial={{ opacity: 0, x: -100, scale: 0.9 }}
           animate={{ 
-            opacity: [0, 0.6, 0.4, 0],
+            opacity: [0, 0.8, 0.6, 0],
             x: ["-100px", "30px", "150px", "250px"],
             y: [0, -20, 5, -10],
             scale: [0.9, 1, 0.95, 0.8]
@@ -137,18 +135,19 @@ const Auth = () => {
         </motion.div>
       ))}
 
-      {/* Reduced text extraction elements - white only */}
+      {/* Chrome glass text extraction elements with orange highlights */}
       {textExtractionElements.map((text, i) => (
         <motion.div
           key={i}
-          className="absolute text-white/70 font-semibold text-sm bg-white/10 border border-white/30 px-3 py-1 rounded-lg backdrop-blur-sm"
+          className="absolute text-white/90 font-semibold text-sm border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-4 py-2 rounded-lg"
           style={{
             right: `${Math.random() * 70 + 15}%`,
             top: `${Math.random() * 70 + 15}%`,
+            boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
           }}
           initial={{ opacity: 0, scale: 0.5, rotate: -5 }}
           animate={{ 
-            opacity: [0, 0.7, 0.5, 0],
+            opacity: [0, 0.8, 0.6, 0],
             scale: [0.5, 1, 0.9, 0.7],
             rotate: [-5, 2, -2, 5, 0],
             x: [80, -10, 30, -80]
@@ -164,18 +163,18 @@ const Auth = () => {
         </motion.div>
       ))}
 
-      {/* Reduced binary rain effect - white only */}
-      {[...Array(15)].map((_, i) => (
+      {/* Binary rain effect */}
+      {[...Array(10)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute text-white/40 font-mono text-lg font-bold"
+          className="absolute text-white/30 font-mono text-lg font-bold"
           style={{
-            left: `${(i * 7) % 100}%`,
+            left: `${(i * 10) % 100}%`,
           }}
           initial={{ y: -50, opacity: 0 }}
           animate={{ 
             y: ["0vh", "110vh"], 
-            opacity: [0, 0.4, 0.3, 0]
+            opacity: [0, 0.3, 0.2, 0]
           }}
           transition={{ 
             duration: Math.random() * 3 + 4,
@@ -188,40 +187,46 @@ const Auth = () => {
         </motion.div>
       ))}
 
-      {/* Reduced processing indicators - white only */}
+      {/* Chrome glass processing indicators with orange highlights */}
       <motion.div
-        className="absolute top-10 right-10 flex items-center space-x-3 text-white/80 bg-white/10 border border-white/30 px-4 py-2 rounded-lg backdrop-blur-sm"
+        className="absolute top-10 right-10 flex items-center space-x-3 text-white/90 border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-5 py-3 rounded-lg"
+        style={{
+          boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        }}
         initial={{ opacity: 0, x: 50 }}
         animate={{ 
-          opacity: [0.3, 0.8, 0.5, 0.8],
+          opacity: [0.3, 0.9, 0.7, 0.9],
           x: [50, 0, -5, 0],
           scale: [0.95, 1.02, 1]
         }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Code className="w-5 h-5" />
+        <Code className="w-5 h-5 text-orange-400" />
         <span className="text-sm font-mono font-semibold">Processing CVs...</span>
       </motion.div>
 
       <motion.div
-        className="absolute bottom-10 left-10 flex items-center space-x-3 text-white/80 bg-white/10 border border-white/30 px-4 py-2 rounded-lg backdrop-blur-sm"
+        className="absolute bottom-10 left-10 flex items-center space-x-3 text-white/90 border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-5 py-3 rounded-lg"
+        style={{
+          boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        }}
         initial={{ opacity: 0, y: 50 }}
         animate={{ 
-          opacity: [0.3, 0.8, 0.6, 0.8],
+          opacity: [0.3, 0.9, 0.7, 0.9],
           y: [50, 0, 5, 0],
           scale: [0.95, 1.02, 1]
         }}
         transition={{ duration: 5, repeat: Infinity, delay: 1.5, ease: "easeInOut" }}
       >
-        <FileText className="w-5 h-5" />
+        <FileText className="w-5 h-5 text-orange-400" />
         <span className="text-sm font-mono font-semibold">Extracting Skills...</span>
       </motion.div>
 
-      {/* Reduced floating particles - white only */}
-      {[...Array(8)].map((_, i) => (
+      {/* Floating particles */}
+      {[...Array(6)].map((_, i) => (
         <motion.div
           key={`particle-${i}`}
-          className="absolute w-2 h-2 bg-white/40 rounded-full"
+          className="absolute w-2 h-2 bg-white/20 rounded-full"
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
@@ -229,7 +234,7 @@ const Auth = () => {
           animate={{
             x: [0, Math.random() * 150 - 75],
             y: [0, Math.random() * 150 - 75],
-            opacity: [0, 0.4, 0],
+            opacity: [0, 0.2, 0],
             scale: [0.5, 1.2, 0.5]
           }}
           transition={{
