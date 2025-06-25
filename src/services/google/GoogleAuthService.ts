@@ -5,7 +5,6 @@ export class GoogleAuthService {
   private clientId: string = '';
   private accessToken: string = '';
   private isInitialized = false;
-  private authInstance: any = null;
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
@@ -35,7 +34,7 @@ export class GoogleAuthService {
       // Initialize GAPI client
       console.log('Initializing GAPI client...');
       await window.gapi.client.init({
-        apiKey: '', // We don't need API key for OAuth flow
+        apiKey: '',
         discoveryDocs: [
           'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest',
           'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
@@ -61,26 +60,24 @@ export class GoogleAuthService {
         throw new Error('Google Client ID not available');
       }
 
-      console.log('Starting Google sign-in process...');
+      console.log('Starting Google sign-in with popup...');
 
-      // Check if popup will be blocked
-      const testPopup = window.open('', '_blank', 'width=1,height=1');
-      if (!testPopup || testPopup.closed || typeof testPopup.closed === 'undefined') {
-        console.log('Popup blocked, using redirect method');
-        testPopup?.close();
+      // Try popup first - this happens immediately on user click
+      try {
+        const result = await this.signInWithPopup();
+        return result;
+      } catch (popupError) {
+        console.log('Popup failed, falling back to redirect:', popupError);
+        // Automatically fall back to redirect
         return this.signInWithRedirect();
       }
-      testPopup.close();
-
-      // Use popup method
-      return this.signInWithPopup();
     } catch (error) {
       console.error('Google sign-in failed:', error);
       throw new Error(`Failed to sign in to Google: ${error.message}`);
     }
   }
 
-  private async signInWithPopup(): Promise<boolean> {
+  private signInWithPopup(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
@@ -107,11 +104,23 @@ export class GoogleAuthService {
           },
           error_callback: (error: any) => {
             console.error('Token client popup error:', error);
-            reject(new Error(`Token client error: ${error.message || 'Popup failed'}`));
+            reject(new Error(`Popup authentication failed`));
           }
         });
 
         console.log('Requesting access token with popup...');
+        // Set a timeout to catch popup failures
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Popup timeout - likely blocked'));
+        }, 3000);
+
+        // Clear timeout if callback is called
+        const originalCallback = tokenClient.callback;
+        tokenClient.callback = (response: any) => {
+          clearTimeout(timeoutId);
+          originalCallback(response);
+        };
+
         tokenClient.requestAccessToken({ 
           prompt: 'consent',
           include_granted_scopes: true
@@ -123,7 +132,7 @@ export class GoogleAuthService {
     });
   }
 
-  private async signInWithRedirect(): Promise<boolean> {
+  private signInWithRedirect(): boolean {
     const redirectUri = `${window.location.origin}/dashboard`;
     const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
     
@@ -135,7 +144,7 @@ export class GoogleAuthService {
       `include_granted_scopes=true&` +
       `state=${Date.now()}`;
     
-    console.log('Redirecting to Google OAuth:', authUrl);
+    console.log('Redirecting to Google OAuth (popup fallback):', authUrl);
     window.location.href = authUrl;
     return true;
   }
