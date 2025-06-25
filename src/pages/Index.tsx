@@ -40,12 +40,111 @@ const Index = () => {
     "Refined user experience design",
   ];
 
+  // Floating animation variants
+  const floatingVariants = {
+    animate: {
+      y: [0, -15, 0],
+      transition: {
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
+
+  const extractionVariants = {
+    animate: {
+      opacity: [0.3, 0.8, 0.3],
+      scale: [1, 1.1, 1],
+      transition: {
+        duration: 3,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Subtle pattern overlay */}
       <div className="absolute inset-0 opacity-10" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff6b35' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
+      
+      {/* Floating extraction elements */}
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute top-16 left-8 text-orange-400/40 text-xs font-mono z-5"
+        style={{ animationDelay: '0s' }}
+      >
+        → extracting: candidate_profile.json
+      </motion.div>
+      
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute top-28 right-16 text-orange-400/35 text-xs font-mono z-5"
+        style={{ animationDelay: '2s' }}
+      >
+        → parsing: work_experience.xml
+      </motion.div>
+      
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute top-1/2 left-12 text-orange-400/30 text-xs font-mono z-5"
+        style={{ animationDelay: '1s' }}
+      >
+        → analyzing: technical_skills.csv
+      </motion.div>
+      
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute bottom-32 right-8 text-orange-400/40 text-xs font-mono z-5"
+        style={{ animationDelay: '3s' }}
+      >
+        → processing: education_history.json
+      </motion.div>
+      
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute bottom-16 left-1/4 text-orange-400/35 text-xs font-mono z-5"
+        style={{ animationDelay: '0.5s' }}
+      >
+        → validating: certifications.xml
+      </motion.div>
+
+      {/* Floating geometric elements */}
+      <motion.div
+        variants={extractionVariants}
+        animate="animate"
+        className="absolute top-1/4 left-1/5 w-2 h-2 bg-orange-500/20 rounded-full z-5"
+        style={{ animationDelay: '0s' }}
+      />
+      
+      <motion.div
+        variants={extractionVariants}
+        animate="animate"
+        className="absolute top-1/3 right-1/4 w-1 h-1 bg-orange-400/25 rounded-full z-5"
+        style={{ animationDelay: '1.5s' }}
+      />
+      
+      <motion.div
+        variants={extractionVariants}
+        animate="animate"
+        className="absolute bottom-1/3 left-1/3 w-3 h-3 bg-orange-600/15 rounded-full z-5"
+        style={{ animationDelay: '2.5s' }}
+      />
+      
+      <motion.div
+        variants={extractionVariants}
+        animate="animate"
+        className="absolute top-2/3 right-1/5 w-1.5 h-1.5 bg-orange-500/30 rounded-full z-5"
+        style={{ animationDelay: '1s' }}
+      />
       
       <div className="relative z-10">
         {/* Header */}
