@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle, AlertCircle } from 'lucide-react';
@@ -10,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { CVUpload } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GoogleDocUpload } from './GoogleDocUpload';
 
 interface UploadSectionProps {
   onUploadComplete: (upload: CVUpload) => void;
@@ -28,10 +28,10 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+  const processFiles = async (files: File[]) => {
     if (!user) return;
 
-    const newUploads = acceptedFiles.map(file => ({
+    const newUploads = files.map(file => ({
       file,
       progress: 0,
       status: 'uploading' as const,
@@ -138,6 +138,10 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         });
       }
     }
+  };
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    await processFiles(acceptedFiles);
   }, [user, onUploadComplete, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -155,8 +159,16 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
     setUploadingFiles(prev => prev.filter(f => f.id !== id));
   };
 
+  const handleGoogleUpload = (files: File[]) => {
+    processFiles(files);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Google Import Section */}
+      <GoogleDocUpload onUploadComplete={handleGoogleUpload} />
+
+      {/* Regular Upload Section */}
       <Card className="chrome-glass p-8 rounded-xl">
         <div
           {...getRootProps()}
