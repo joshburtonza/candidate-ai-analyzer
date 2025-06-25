@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,16 +90,12 @@ const Auth = () => {
     "function extractSkills(cv_text) {",
     "  return ai.parse(cv_text);",
     "}",
-    "const skills = parseExperience(resume);",
-    "analyzeEducation(document)",
   ];
 
   const textExtractionElements = [
     "● Python Developer",
     "● Machine Learning Engineer", 
     "● 5+ years experience",
-    "● React.js • Node.js • MongoDB",
-    "● Bachelor's in Computer Science",
   ];
 
   return (
@@ -163,88 +158,6 @@ const Auth = () => {
         </motion.div>
       ))}
 
-      {/* Binary rain effect */}
-      {[...Array(10)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-white/30 font-mono text-lg font-bold"
-          style={{
-            left: `${(i * 10) % 100}%`,
-          }}
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ 
-            y: ["0vh", "110vh"], 
-            opacity: [0, 0.3, 0.2, 0]
-          }}
-          transition={{ 
-            duration: Math.random() * 3 + 4,
-            repeat: Infinity,
-            delay: Math.random() * 4,
-            ease: "linear"
-          }}
-        >
-          {Math.random() > 0.5 ? '1' : '0'}
-        </motion.div>
-      ))}
-
-      {/* Chrome glass processing indicators with orange highlights */}
-      <motion.div
-        className="absolute top-10 right-10 flex items-center space-x-3 text-white/90 border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-5 py-3 rounded-lg"
-        style={{
-          boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-        }}
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ 
-          opacity: [0.3, 0.9, 0.7, 0.9],
-          x: [50, 0, -5, 0],
-          scale: [0.95, 1.02, 1]
-        }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <Code className="w-5 h-5 text-orange-400" />
-        <span className="text-sm font-mono font-semibold">Processing CVs...</span>
-      </motion.div>
-
-      <motion.div
-        className="absolute bottom-10 left-10 flex items-center space-x-3 text-white/90 border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl px-5 py-3 rounded-lg"
-        style={{
-          boxShadow: '0 0 20px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-        }}
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ 
-          opacity: [0.3, 0.9, 0.7, 0.9],
-          y: [50, 0, 5, 0],
-          scale: [0.95, 1.02, 1]
-        }}
-        transition={{ duration: 5, repeat: Infinity, delay: 1.5, ease: "easeInOut" }}
-      >
-        <FileText className="w-5 h-5 text-orange-400" />
-        <span className="text-sm font-mono font-semibold">Extracting Skills...</span>
-      </motion.div>
-
-      {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={`particle-${i}`}
-          className="absolute w-2 h-2 bg-white/20 rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            x: [0, Math.random() * 150 - 75],
-            y: [0, Math.random() * 150 - 75],
-            opacity: [0, 0.2, 0],
-            scale: [0.5, 1.2, 0.5]
-          }}
-          transition={{
-            duration: Math.random() * 5 + 6,
-            repeat: Infinity,
-            delay: Math.random() * 3
-          }}
-        />
-      ))}
-
       <div className="relative z-10 flex justify-center items-center min-h-screen">
         <motion.div 
           className="w-full max-w-md p-6"
@@ -252,89 +165,112 @@ const Auth = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Card className="bg-gray-900/95 backdrop-blur-md border border-gray-600/50 text-white shadow-2xl">
-            <CardHeader className="flex flex-col space-y-1 p-6">
+          <Card className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 text-white shadow-2xl rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
+            <CardHeader className="flex flex-col space-y-1 p-8 pb-6">
               <CardTitle className="text-2xl font-semibold text-center tracking-tight">
-                <div className="flex items-center justify-center gap-2">
-                  <Brain className="w-6 h-6 text-orange-500" />
+                <div className="flex items-center justify-center gap-3">
+                  <Brain className="w-7 h-7 text-orange-500" />
                   <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
                 </div>
               </CardTitle>
-              <CardDescription className="text-gray-400 text-center">
+              <CardDescription className="text-slate-400 text-center text-base">
                 {isLogin ? 'Welcome back!' : 'Join our community.'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <Tabs defaultValue={isLogin ? "login" : "register"} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2 bg-gray-800">
-                  <TabsTrigger value="login" onClick={() => setIsLogin(true)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">Login</TabsTrigger>
-                  <TabsTrigger value="register" onClick={() => setIsLogin(false)} className="text-white data-[state=active]:bg-orange-500 data-[state=active]:text-black">Register</TabsTrigger>
+            <CardContent className="p-8 pt-0">
+              <Tabs defaultValue={isLogin ? "login" : "register"} className="space-y-6">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 backdrop-blur-sm rounded-xl p-1">
+                  <TabsTrigger 
+                    value="login" 
+                    onClick={() => setIsLogin(true)} 
+                    className="text-slate-300 data-[state=active]:bg-orange-500 data-[state=active]:text-black rounded-lg font-medium py-2"
+                  >
+                    Login
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="register" 
+                    onClick={() => setIsLogin(false)} 
+                    className="text-slate-300 data-[state=active]:bg-orange-500 data-[state=active]:text-black rounded-lg font-medium py-2"
+                  >
+                    Register
+                  </TabsTrigger>
                 </TabsList>
-                <TabsContent value="login" className="space-y-4">
+                <TabsContent value="login" className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-300">Email</Label>
+                    <Label htmlFor="email" className="text-slate-300 text-sm font-medium">Email</Label>
                     <Input 
                       id="email" 
                       placeholder="Enter your email" 
                       type="email" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-300">Password</Label>
+                    <Label htmlFor="password" className="text-slate-300 text-sm font-medium">Password</Label>
                     <Input 
                       id="password" 
                       placeholder="Enter your password" 
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
                     />
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <Button className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold" onClick={handleAuth} disabled={loading}>
+                  <Button 
+                    className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl h-12 text-base" 
+                    onClick={handleAuth} 
+                    disabled={loading}
+                  >
                     {loading ? 'Loading...' : 'Sign In'}
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </TabsContent>
-                <TabsContent value="register" className="space-y-4">
+                <TabsContent value="register" className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-gray-300">Full Name</Label>
+                    <Label htmlFor="fullName" className="text-slate-300 text-sm font-medium">Full Name</Label>
                     <Input 
                       id="fullName" 
                       placeholder="Enter your full name" 
                       type="text" 
                       value={fullName} 
                       onChange={(e) => setFullName(e.target.value)}
-                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-300">Email</Label>
+                    <Label htmlFor="email" className="text-slate-300 text-sm font-medium">Email</Label>
                     <Input 
                       id="email" 
                       placeholder="Enter your email" 
                       type="email" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-300">Password</Label>
+                    <Label htmlFor="password" className="text-slate-300 text-sm font-medium">Password</Label>
                     <Input 
                       id="password" 
                       placeholder="Enter your password" 
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-gray-800/80 border-gray-600 text-white placeholder:text-gray-500 focus-visible:ring-orange-500"
+                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
                     />
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <Button className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold" onClick={handleAuth} disabled={loading}>
+                  <Button 
+                    className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl h-12 text-base" 
+                    onClick={handleAuth} 
+                    disabled={loading}
+                  >
                     {loading ? 'Loading...' : 'Sign Up'}
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
