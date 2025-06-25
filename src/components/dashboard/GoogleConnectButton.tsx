@@ -18,8 +18,16 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
 
   const handleGoogleAuth = async () => {
     setIsConnecting(true);
+    
     try {
       console.log('Starting Google authentication...');
+      
+      // Check if popups are blocked
+      const popup = window.open('', '_blank', 'width=1,height=1');
+      if (!popup || popup.closed) {
+        throw new Error('Popup blocked. Please allow popups for this site and try again.');
+      }
+      popup.close();
       
       await googleApi.initialize();
       console.log('Google API initialized, requesting sign in...');
@@ -33,22 +41,30 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
           description: "You can now import documents from Gmail and Google Drive",
         });
         console.log('Successfully connected to Google');
+      } else {
+        throw new Error('Sign in was cancelled or failed');
       }
     } catch (error: any) {
       console.error('Google auth error:', error);
+      
+      // Reset connecting state on error
+      setIsConnected(false);
+      
       toast({
         title: "Connection failed",
-        description: error.message || "Failed to connect to Google services. Please check if popups are blocked.",
+        description: error.message || "Failed to connect to Google services. Please check if popups are blocked and try again.",
         variant: "destructive",
       });
     } finally {
+      // Always reset connecting state
       setIsConnecting(false);
     }
   };
 
   const handleDisconnect = () => {
     setIsConnected(false);
-    // Sign out from Google services
+    setIsConnecting(false);
+    
     try {
       if (window.gapi?.client) {
         window.gapi.client.setToken(null);
@@ -63,7 +79,14 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   };
 
   const handleGmailImport = async () => {
-    if (!isConnected) return;
+    if (!isConnected) {
+      toast({
+        title: "Not connected",
+        description: "Please connect to Google first",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsImporting(prev => ({ ...prev, gmail: true }));
     try {
@@ -99,7 +122,14 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   };
 
   const handleDriveImport = async () => {
-    if (!isConnected) return;
+    if (!isConnected) {
+      toast({
+        title: "Not connected",
+        description: "Please connect to Google first",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsImporting(prev => ({ ...prev, drive: true }));
     try {
@@ -150,11 +180,25 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
           </svg>
           {isConnecting ? 'Connecting...' : 'Connect to Google'}
         </Button>
-        {isConnecting && (
-          <p className="text-xs text-gray-400 text-center">
-            Check for popup windows or allow popups for this site
+        <div className="text-center">
+          <p className="text-xs text-gray-400">
+            {isConnecting ? 'Please wait...' : 'Import CVs from Gmail and Google Drive'}
           </p>
-        )}
+          {isConnecting && (
+            <button 
+              onClick={() => {
+                setIsConnecting(false);
+                toast({
+                  title: "Connection cancelled",
+                  description: "You can try connecting again",
+                });
+              }}
+              className="text-xs text-gray-500 hover:text-gray-300 underline mt-1"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
     );
   }
