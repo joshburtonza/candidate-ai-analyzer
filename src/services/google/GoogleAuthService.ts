@@ -5,6 +5,7 @@ export class GoogleAuthService {
   private clientId: string = '';
   private accessToken: string = '';
   private isInitialized = false;
+  private authInstance: any = null;
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
@@ -27,12 +28,9 @@ export class GoogleAuthService {
       this.clientId = data.clientId;
       console.log('Got Google Client ID successfully');
 
-      // Load Google Identity Services and GAPI
-      console.log('Loading Google APIs...');
-      await Promise.all([
-        GoogleApiLoader.loadGoogleIdentityServices(),
-        GoogleApiLoader.loadGoogleAPIs()
-      ]);
+      // Load Google APIs
+      await GoogleApiLoader.loadGoogleAPIs();
+      await GoogleApiLoader.loadGoogleIdentityServices();
 
       // Initialize GAPI client
       console.log('Initializing GAPI client...');
@@ -65,54 +63,100 @@ export class GoogleAuthService {
 
       console.log('Starting Google sign-in process...');
 
-      return new Promise((resolve, reject) => {
-        try {
-          // Create the token client
-          const tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: this.clientId,
-            scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly',
-            callback: (response: any) => {
-              console.log('OAuth response received:', response);
-              
-              if (response.error) {
-                console.error('OAuth error:', response.error);
-                reject(new Error(`OAuth error: ${response.error}`));
-                return;
-              }
-              
-              if (response.access_token) {
-                this.accessToken = response.access_token;
-                // Set the access token for GAPI client
-                window.gapi.client.setToken({ access_token: response.access_token });
-                console.log('Access token set successfully');
-                resolve(true);
-              } else {
-                console.error('No access token in response:', response);
-                reject(new Error('No access token received from Google'));
-              }
-            },
-            error_callback: (error: any) => {
-              console.error('Token client error:', error);
-              reject(new Error(`Token client error: ${error.message || 'Unknown error'}`));
-            }
-          });
+      // Check if popup will be blocked
+      const testPopup = window.open('', '_blank', 'width=1,height=1');
+      if (!testPopup || testPopup.closed || typeof testPopup.closed === 'undefined') {
+        console.log('Popup blocked, using redirect method');
+        testPopup?.close();
+        return this.signInWithRedirect();
+      }
+      testPopup.close();
 
-          // Request access token with popup
-          console.log('Requesting access token with popup...');
-          tokenClient.requestAccessToken({ 
-            prompt: 'consent',
-            hint: '',
-            hosted_domain: ''
-          });
-        } catch (error) {
-          console.error('Error creating token client:', error);
-          reject(error);
-        }
-      });
+      // Use popup method
+      return this.signInWithPopup();
     } catch (error) {
       console.error('Google sign-in failed:', error);
       throw new Error(`Failed to sign in to Google: ${error.message}`);
     }
+  }
+
+  private async signInWithPopup(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: this.clientId,
+          scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly',
+          callback: (response: any) => {
+            console.log('OAuth popup response received:', response);
+            
+            if (response.error) {
+              console.error('OAuth popup error:', response.error);
+              reject(new Error(`OAuth error: ${response.error}`));
+              return;
+            }
+            
+            if (response.access_token) {
+              this.accessToken = response.access_token;
+              window.gapi.client.setToken({ access_token: response.access_token });
+              console.log('Access token set successfully via popup');
+              resolve(true);
+            } else {
+              console.error('No access token in popup response:', response);
+              reject(new Error('No access token received from Google'));
+            }
+          },
+          error_callback: (error: any) => {
+            console.error('Token client popup error:', error);
+            reject(new Error(`Token client error: ${error.message || 'Popup failed'}`));
+          }
+        });
+
+        console.log('Requesting access token with popup...');
+        tokenClient.requestAccessToken({ 
+          prompt: 'consent',
+          include_granted_scopes: true
+        });
+      } catch (error) {
+        console.error('Error creating token client for popup:', error);
+        reject(error);
+      }
+    });
+  }
+
+  private async signInWithRedirect(): Promise<boolean> {
+    const redirectUri = `${window.location.origin}/dashboard`;
+    const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${this.clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=token&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `include_granted_scopes=true&` +
+      `state=${Date.now()}`;
+    
+    console.log('Redirecting to Google OAuth:', authUrl);
+    window.location.href = authUrl;
+    return true;
+  }
+
+  handleRedirectCallback(): boolean {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      
+      if (accessToken) {
+        this.accessToken = accessToken;
+        window.gapi.client.setToken({ access_token: accessToken });
+        console.log('Access token set successfully via redirect');
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return true;
+      }
+    }
+    return false;
   }
 
   getAccessToken(): string {
