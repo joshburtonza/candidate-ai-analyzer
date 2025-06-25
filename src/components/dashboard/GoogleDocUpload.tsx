@@ -5,14 +5,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, HardDrive, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// TypeScript declarations for Google APIs
-declare global {
-  interface Window {
-    google: any;
-    gapi: any;
-  }
-}
+import { GoogleApiService } from '@/services/GoogleApiService';
 
 interface GoogleDocUploadProps {
   onUploadComplete: (files: File[]) => void;
@@ -21,41 +14,28 @@ interface GoogleDocUploadProps {
 export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [isImporting, setIsImporting] = useState({ gmail: false, drive: false });
   const { toast } = useToast();
+  const googleApi = new GoogleApiService();
 
   const handleGoogleAuth = async () => {
     setIsConnecting(true);
     try {
-      // Initialize Google Auth for document access
-      const response = await new Promise((resolve, reject) => {
-        if (typeof window.google === 'undefined') {
-          // Load Google API if not already loaded
-          const script = document.createElement('script');
-          script.src = 'https://apis.google.com/js/api.js';
-          script.onload = () => {
-            window.gapi.load('auth2', () => {
-              window.gapi.auth2.init({
-                client_id: 'YOUR_GOOGLE_CLIENT_ID', // This would need to be configured
-                scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly'
-              }).then(resolve).catch(reject);
-            });
-          };
-          document.head.appendChild(script);
-        } else {
-          resolve(window.gapi.auth2.getAuthInstance());
-        }
-      });
-
-      setIsConnected(true);
-      toast({
-        title: "Connected to Google",
-        description: "You can now import documents from Gmail and Google Drive",
-      });
+      await googleApi.initialize();
+      const isSignedIn = await googleApi.signIn();
+      
+      if (isSignedIn) {
+        setIsConnected(true);
+        toast({
+          title: "Connected to Google",
+          description: "You can now import documents from Gmail and Google Drive",
+        });
+      }
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
         title: "Connection failed",
-        description: "Failed to connect to Google services",
+        description: error.message || "Failed to connect to Google services",
         variant: "destructive",
       });
     } finally {
@@ -66,51 +46,72 @@ export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
   const handleGmailImport = async () => {
     if (!isConnected) return;
     
+    setIsImporting(prev => ({ ...prev, gmail: true }));
     try {
-      // This would implement Gmail API to fetch attachments
       toast({
-        title: "Gmail import",
+        title: "Gmail import started",
         description: "Searching for CV attachments in your Gmail...",
       });
       
-      // Placeholder for Gmail API integration
-      // In a real implementation, this would:
-      // 1. Search for emails with PDF/DOC attachments
-      // 2. Filter for CV-like attachments
-      // 3. Download and convert to File objects
-      // 4. Call onUploadComplete with the files
+      const files = await googleApi.searchGmailAttachments();
       
+      if (files.length === 0) {
+        toast({
+          title: "No CVs found",
+          description: "No CV attachments found in your Gmail",
+        });
+      } else {
+        onUploadComplete(files);
+        toast({
+          title: "Gmail import successful",
+          description: `Found and imported ${files.length} CV file(s)`,
+        });
+      }
     } catch (error: any) {
+      console.error('Gmail import error:', error);
       toast({
-        title: "Import failed",
-        description: error.message,
+        title: "Gmail import failed",
+        description: error.message || "Failed to import from Gmail",
         variant: "destructive",
       });
+    } finally {
+      setIsImporting(prev => ({ ...prev, gmail: false }));
     }
   };
 
   const handleDriveImport = async () => {
     if (!isConnected) return;
     
+    setIsImporting(prev => ({ ...prev, drive: true }));
     try {
       toast({
-        title: "Google Drive import",
-        description: "Accessing your Google Drive files...",
+        title: "Google Drive picker opened",
+        description: "Select CV files from your Google Drive...",
       });
       
-      // Placeholder for Google Drive API integration
-      // In a real implementation, this would:
-      // 1. Open Drive picker
-      // 2. Allow user to select CV files
-      // 3. Download selected files
-      // 4. Call onUploadComplete with the files
+      const files = await googleApi.openDrivePicker();
       
+      if (files.length === 0) {
+        toast({
+          title: "No files selected",
+          description: "No files were selected from Google Drive",
+        });
+      } else {
+        onUploadComplete(files);
+        toast({
+          title: "Drive import successful",
+          description: `Imported ${files.length} file(s) from Google Drive`,
+        });
+      }
     } catch (error: any) {
+      console.error('Drive import error:', error);
       toast({
-        title: "Import failed",
-        description: error.message,
+        title: "Drive import failed",
+        description: error.message || "Failed to import from Google Drive",
         variant: "destructive",
       });
+    } finally {
+      setIsImporting(prev => ({ ...prev, drive: false }));
     }
   };
 
@@ -150,25 +151,31 @@ export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
           >
             <Button
               onClick={handleGmailImport}
+              disabled={isImporting.gmail}
               variant="outline"
               className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white hover:bg-white/10 font-medium py-6 flex flex-col items-center gap-2"
             >
               <Mail className="w-6 h-6 text-orange-500" />
               <div>
                 <div className="font-semibold">Gmail</div>
-                <div className="text-xs text-gray-400">Import CV attachments</div>
+                <div className="text-xs text-gray-400">
+                  {isImporting.gmail ? 'Searching...' : 'Import CV attachments'}
+                </div>
               </div>
             </Button>
 
             <Button
               onClick={handleDriveImport}
+              disabled={isImporting.drive}
               variant="outline"
               className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white hover:bg-white/10 font-medium py-6 flex flex-col items-center gap-2"
             >
               <HardDrive className="w-6 h-6 text-orange-500" />
               <div>
                 <div className="font-semibold">Google Drive</div>
-                <div className="text-xs text-gray-400">Select CV files</div>
+                <div className="text-xs text-gray-400">
+                  {isImporting.drive ? 'Opening picker...' : 'Select CV files'}
+                </div>
               </div>
             </Button>
           </motion.div>
