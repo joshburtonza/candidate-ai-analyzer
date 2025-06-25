@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, X, CheckCircle, AlertCircle } from 'lucide-react';
@@ -9,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { CVUpload } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleDocUpload } from './GoogleDocUpload';
+import { GoogleConnectButton } from './GoogleConnectButton';
 
 interface UploadSectionProps {
   onUploadComplete: (upload: CVUpload) => void;
@@ -159,17 +160,21 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
     setUploadingFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  const handleGoogleUpload = (files: File[]) => {
+  const handleGoogleImport = (files: File[]) => {
     processFiles(files);
   };
 
   return (
     <div className="space-y-6">
-      {/* Google Import Section */}
-      <GoogleDocUpload onUploadComplete={handleGoogleUpload} />
-
-      {/* Regular Upload Section */}
       <Card className="chrome-glass p-8 rounded-xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-2">Upload CV Files</h3>
+            <p className="text-gray-300">Upload CVs directly or import from Google services</p>
+          </div>
+          <GoogleConnectButton onFilesImported={handleGoogleImport} />
+        </div>
+
         <div
           {...getRootProps()}
           className={`p-12 text-center cursor-pointer transition-all duration-300 rounded-lg border-2 border-dashed ${
@@ -190,12 +195,12 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           
           {isDragActive ? (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Upload CV Files</h3>
-              <p className="text-gray-300">Drag and drop your files here, or click to browse</p>
+              <h3 className="text-xl font-semibold text-white mb-2">Drop files here</h3>
+              <p className="text-gray-300">Release to upload your CV files</p>
             </div>
           ) : (
             <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Upload CV Files</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Drag & Drop Files</h3>
               <p className="text-gray-300 mb-4">
                 Drag and drop your files here, or click to browse
               </p>
