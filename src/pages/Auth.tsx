@@ -87,131 +87,184 @@ const Auth = () => {
   };
 
   const codeSnippets = [
-    "extractSkills(cv_text)",
-    "parseExperience(resume)",
+    "function extractSkills(cv_text) {",
+    "  return ai.parse(cv_text);",
+    "}",
+    "const skills = parseExperience(resume);",
     "analyzeEducation(document)",
-    "matchKeywords(job_desc)",
-    "scoreCandidate(profile)",
-    "validateEmail(contact)",
-    "processDocument(file)",
-    "generateSummary(data)"
+    "if (matchKeywords(job_desc)) {",
+    "  scoreCandidate(profile);",
+    "}",
+    "validateEmail(contact_info)",
+    "processDocument(uploaded_file)",
+    "generateSummary(candidate_data)",
+    "const result = await ai.analyze(cv);",
+    "console.log('Processing complete');",
+    "return candidateScore;"
   ];
 
   const textExtractionElements = [
-    "Python Developer",
-    "Machine Learning",
-    "5+ years experience",
-    "React.js, Node.js",
-    "Bachelor's Degree",
-    "AI Specialist",
-    "Full Stack Engineer",
-    "Data Science"
+    "● Python Developer",
+    "● Machine Learning Engineer",
+    "● 5+ years experience",
+    "● React.js • Node.js • MongoDB",
+    "● Bachelor's in Computer Science",
+    "● AI/ML Specialist",
+    "● Full Stack Developer",
+    "● Data Science • Analytics",
+    "● Senior Software Engineer",
+    "● Cloud Architecture",
+    "● DevOps • CI/CD",
+    "● Team Leadership"
   ];
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <HomeButton />
       
-      {/* Animated code snippets floating in background */}
+      {/* Enhanced floating code snippets */}
       {codeSnippets.map((snippet, i) => (
         <motion.div
           key={i}
-          className="absolute text-green-400/20 font-mono text-sm"
+          className="absolute text-green-400/70 font-mono text-sm border border-green-400/20 bg-black/40 px-2 py-1 rounded backdrop-blur-sm"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 80 + 10}%`,
+            top: `${Math.random() * 80 + 10}%`,
           }}
-          initial={{ opacity: 0, x: -100 }}
+          initial={{ opacity: 0, x: -200, scale: 0.8 }}
           animate={{ 
-            opacity: [0, 0.3, 0],
-            x: ["-100px", "100vw"],
-            y: [0, -50, 0]
+            opacity: [0, 0.8, 0.6, 0],
+            x: ["-200px", "50px", "200px", "400px"],
+            y: [0, -30, 10, -20],
+            scale: [0.8, 1, 0.9, 0.7]
           }}
           transition={{ 
-            duration: Math.random() * 10 + 15,
+            duration: Math.random() * 8 + 12,
             repeat: Infinity,
-            delay: Math.random() * 5
+            delay: Math.random() * 3,
+            ease: "easeInOut"
           }}
         >
           {snippet}
         </motion.div>
       ))}
 
-      {/* Animated text extraction elements */}
+      {/* Enhanced text extraction elements */}
       {textExtractionElements.map((text, i) => (
         <motion.div
           key={i}
-          className="absolute text-blue-400/20 font-semibold text-xs"
+          className="absolute text-blue-400/80 font-semibold text-sm bg-blue-900/20 border border-blue-400/30 px-3 py-1 rounded-lg backdrop-blur-sm"
           style={{
-            right: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            right: `${Math.random() * 80 + 10}%`,
+            top: `${Math.random() * 80 + 10}%`,
           }}
-          initial={{ opacity: 0, scale: 0.5 }}
+          initial={{ opacity: 0, scale: 0.3, rotate: -10 }}
           animate={{ 
-            opacity: [0, 0.4, 0],
-            scale: [0.5, 1, 0.8],
-            rotate: [0, 5, -5, 0]
+            opacity: [0, 0.9, 0.7, 0],
+            scale: [0.3, 1.1, 1, 0.8],
+            rotate: [-10, 5, -5, 10, 0],
+            x: [100, -20, 50, -100]
           }}
           transition={{ 
-            duration: Math.random() * 8 + 12,
+            duration: Math.random() * 10 + 15,
             repeat: Infinity,
-            delay: Math.random() * 3
+            delay: Math.random() * 4,
+            ease: "easeInOut"
           }}
         >
           {text}
         </motion.div>
       ))}
 
-      {/* Animated binary/matrix rain effect */}
-      {[...Array(20)].map((_, i) => (
+      {/* Enhanced binary/matrix rain effect */}
+      {[...Array(30)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute text-green-300/10 font-mono text-xs"
+          className="absolute text-green-300/60 font-mono text-lg font-bold"
           style={{
-            left: `${(i * 5) % 100}%`,
+            left: `${(i * 3.5) % 100}%`,
           }}
-          initial={{ y: -100 }}
-          animate={{ y: "100vh" }}
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ 
+            y: ["0vh", "110vh"], 
+            opacity: [0, 0.8, 0.6, 0]
+          }}
           transition={{ 
-            duration: Math.random() * 3 + 2,
+            duration: Math.random() * 4 + 3,
             repeat: Infinity,
-            delay: Math.random() * 2
+            delay: Math.random() * 3,
+            ease: "linear"
           }}
         >
           {Math.random() > 0.5 ? '1' : '0'}
         </motion.div>
       ))}
 
-      {/* Animated processing indicators */}
+      {/* Enhanced processing indicators */}
       <motion.div
-        className="absolute top-10 right-10 flex items-center space-x-2 text-orange-400/30"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute top-10 right-10 flex items-center space-x-3 text-orange-400/90 bg-orange-900/20 border border-orange-400/40 px-4 py-2 rounded-lg backdrop-blur-sm"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ 
+          opacity: [0.4, 1, 0.7, 1],
+          x: [50, 0, -10, 0],
+          scale: [0.9, 1.05, 1]
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Code className="w-4 h-4" />
-        <span className="text-xs font-mono">Processing...</span>
+        <Code className="w-5 h-5" />
+        <span className="text-sm font-mono font-semibold">Processing CVs...</span>
       </motion.div>
 
       <motion.div
-        className="absolute bottom-10 left-10 flex items-center space-x-2 text-blue-400/30"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+        className="absolute bottom-10 left-10 flex items-center space-x-3 text-blue-400/90 bg-blue-900/20 border border-blue-400/40 px-4 py-2 rounded-lg backdrop-blur-sm"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ 
+          opacity: [0.4, 1, 0.8, 1],
+          y: [50, 0, 10, 0],
+          scale: [0.9, 1.05, 1]
+        }}
+        transition={{ duration: 4, repeat: Infinity, delay: 1, ease: "easeInOut" }}
       >
-        <FileText className="w-4 h-4" />
-        <span className="text-xs font-mono">Extracting data...</span>
+        <FileText className="w-5 h-5" />
+        <span className="text-sm font-mono font-semibold">Extracting Skills...</span>
       </motion.div>
 
       <motion.div
-        className="absolute top-1/2 left-10 flex items-center space-x-2 text-purple-400/30"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+        className="absolute top-1/2 left-10 flex items-center space-x-3 text-purple-400/90 bg-purple-900/20 border border-purple-400/40 px-4 py-2 rounded-lg backdrop-blur-sm"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ 
+          opacity: [0.4, 1, 0.6, 1],
+          scale: [0.8, 1.1, 0.95, 1],
+          rotate: [0, 2, -2, 0]
+        }}
+        transition={{ duration: 3.5, repeat: Infinity, delay: 0.5, ease: "easeInOut" }}
       >
-        <Zap className="w-4 h-4" />
-        <span className="text-xs font-mono">AI Analysis...</span>
+        <Zap className="w-5 h-5" />
+        <span className="text-sm font-mono font-semibold">AI Analysis...</span>
       </motion.div>
+
+      {/* Additional floating elements for more activity */}
+      {[...Array(15)].map((_, i) => (
+        <motion.div
+          key={`particle-${i}`}
+          className="absolute w-2 h-2 bg-orange-400/60 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            x: [0, Math.random() * 200 - 100],
+            y: [0, Math.random() * 200 - 100],
+            opacity: [0, 0.8, 0],
+            scale: [0.5, 1.5, 0.5]
+          }}
+          transition={{
+            duration: Math.random() * 6 + 4,
+            repeat: Infinity,
+            delay: Math.random() * 2
+          }}
+        />
+      ))}
 
       <div className="relative z-10 flex justify-center items-center min-h-screen">
         <motion.div 
@@ -220,7 +273,7 @@ const Auth = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Card className="bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-white shadow-2xl">
+          <Card className="bg-gray-900/95 backdrop-blur-md border border-gray-600/50 text-white shadow-2xl">
             <CardHeader className="flex flex-col space-y-1 p-6">
               <CardTitle className="text-2xl font-semibold text-center tracking-tight">
                 <div className="flex items-center justify-center gap-2">
