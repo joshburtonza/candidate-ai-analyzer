@@ -13,7 +13,9 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   const [isConnected, setIsConnected] = useState(false);
   const [isImporting, setIsImporting] = useState({ gmail: false, drive: false });
   const { toast } = useToast();
-  const googleApi = new GoogleApiService();
+  
+  // Use singleton instance to maintain state
+  const googleApi = GoogleApiService.getInstance();
 
   useEffect(() => {
     // Check for OAuth redirect callback on page load
@@ -27,6 +29,9 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
             title: "Connected to Google",
             description: "You're now signed in with Google. You can import documents from Gmail and Google Drive.",
           });
+        } else {
+          // Check if already authenticated
+          setIsConnected(googleApi.isAuthenticated());
         }
       } catch (error) {
         console.error('Error handling redirect callback:', error);
@@ -106,9 +111,11 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   const handleGmailImport = async () => {
     setIsImporting(prev => ({ ...prev, gmail: true }));
     try {
+      console.log('Gmail import: Starting import process');
+      
       toast({
-        title: "Requesting Gmail access",
-        description: "Please grant permission to access your Gmail in the popup window...",
+        title: "Searching Gmail",
+        description: "Looking for CV attachments in your Gmail...",
       });
       
       const files = await googleApi.searchGmailAttachments();
@@ -140,9 +147,11 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   const handleDriveImport = async () => {
     setIsImporting(prev => ({ ...prev, drive: true }));
     try {
+      console.log('Drive import: Starting import process');
+      
       toast({
-        title: "Requesting Drive access",
-        description: "Please grant permission to access your Google Drive in the popup window...",
+        title: "Opening Google Drive",
+        description: "Select CV files from your Google Drive...",
       });
       
       const files = await googleApi.openDrivePicker();
@@ -222,7 +231,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
         variant="outline"
         className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
       >
-        {isImporting.gmail ? 'Requesting Gmail access...' : 'Import from Gmail'}
+        {isImporting.gmail ? 'Searching Gmail...' : 'Import from Gmail'}
       </Button>
       <Button
         onClick={handleDriveImport}
@@ -230,7 +239,7 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
         variant="outline"
         className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
       >
-        {isImporting.drive ? 'Requesting Drive access...' : 'Import from Drive'}
+        {isImporting.drive ? 'Opening Drive picker...' : 'Import from Drive'}
       </Button>
       <Button
         onClick={handleDisconnect}
