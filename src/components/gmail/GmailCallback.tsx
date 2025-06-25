@@ -34,9 +34,16 @@ export const GmailCallback = () => {
 
       setMessage('Exchanging authorization code...');
 
+      // Use the same redirect URI that was used in the OAuth initiation
+      const redirectUri = `${window.location.origin}/gmail-callback`;
+
       // Call edge function to exchange code for tokens
       const { data, error: exchangeError } = await supabase.functions.invoke('gmail-oauth-callback', {
-        body: { code, state }
+        body: { 
+          code, 
+          state,
+          redirect_uri: redirectUri 
+        }
       });
 
       if (exchangeError) throw exchangeError;

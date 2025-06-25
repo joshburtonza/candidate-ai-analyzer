@@ -35,7 +35,7 @@ serve(async (req) => {
       )
     }
 
-    const { code, state } = await req.json()
+    const { code, state, redirect_uri } = await req.json()
 
     if (!code) {
       throw new Error('No authorization code provided')
@@ -47,8 +47,8 @@ serve(async (req) => {
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
     const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')
     
-    // Use the same redirect URI that was used in the initial request
-    const redirectUri = `${Deno.env.get('SUPABASE_URL')?.replace('/functions/v1', '')}/gmail-callback`
+    // Use the redirect_uri that was passed from the frontend
+    const redirectUri = redirect_uri || `${new URL(req.url).origin}/gmail-callback`
 
     console.log('Using redirect URI for token exchange:', redirectUri)
 
