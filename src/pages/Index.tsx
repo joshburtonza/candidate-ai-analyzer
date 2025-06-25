@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,11 +11,9 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen elegant-gradient relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       <HomeButton />
       
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-violet-900 via-slate-900 to-blue-900 opacity-40 z-0"></div>
-
       <div className="container mx-auto px-6 py-12 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -41,9 +40,12 @@ const Index = () => {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          <Card className="glass-card">
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Upload className="w-5 h-5 text-orange-500" />
                 Batch CV Upload
               </CardTitle>
@@ -52,18 +54,21 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-white/80">
+              <p className="text-white/80 mb-4">
                 Efficiently manage large volumes of applications with our batch processing tool.
               </p>
-              <Button onClick={() => navigate('/auth')} className="mt-4 w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl">
                 Get Started <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Search className="w-5 h-5 text-green-500" />
                 AI-Powered Analysis
               </CardTitle>
@@ -72,18 +77,21 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-white/80">
+              <p className="text-white/80 mb-4">
                 Leverage AI to extract key information and rank candidates based on relevance.
               </p>
-              <Button onClick={() => navigate('/auth')} className="mt-4 w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl">
                 Explore Features <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <BarChart3 className="w-5 h-5 text-blue-500" />
                 Real-time Analytics
               </CardTitle>
@@ -92,18 +100,21 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-white/80">
+              <p className="text-white/80 mb-4">
                 Monitor your CV processing pipeline and make data-driven decisions.
               </p>
-              <Button onClick={() => navigate('/auth')} className="mt-4 w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl">
                 View Dashboard <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Users className="w-5 h-5 text-purple-500" />
                 Candidate Management
               </CardTitle>
@@ -112,18 +123,21 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-white/80">
+              <p className="text-white/80 mb-4">
                 Keep track of candidate profiles, notes, and application history.
               </p>
-              <Button onClick={() => navigate('/auth')} className="mt-4 w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl">
                 Manage Candidates <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Shield className="w-5 h-5 text-yellow-500" />
                 Secure & Private
               </CardTitle>
@@ -132,18 +146,21 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-white/80">
+              <p className="text-white/80 mb-4">
                 We prioritize the privacy and security of your data.
               </p>
-              <Button onClick={() => navigate('/auth')} className="mt-4 w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl">
                 Learn More <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
+                style={{
+                  boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                }}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Zap className="w-5 h-5 text-red-500" />
                 API Integration
               </CardTitle>
@@ -152,10 +169,10 @@ const Index = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-white/80">
+              <p className="text-white/80 mb-4">
                 Automate your CV processing pipeline with our RESTful API.
               </p>
-              <Button onClick={() => navigate('/auth')} className="mt-4 w-full">
+              <Button onClick={() => navigate('/auth')} className="w-full bg-orange-500 text-black hover:bg-orange-600 font-semibold rounded-xl">
                 Explore API <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
@@ -171,7 +188,7 @@ const Index = () => {
           <p className="text-white/90 mb-6">
             Ready to transform your recruitment process?
           </p>
-          <Button onClick={() => navigate('/auth')} className="bg-gradient-to-r from-orange-500 to-yellow-500 text-black font-semibold hover:from-orange-600 hover:to-yellow-600">
+          <Button onClick={() => navigate('/auth')} className="bg-orange-500 text-black font-semibold hover:bg-orange-600 rounded-xl px-8 py-3">
             Sign Up Now <CheckCircle className="w-4 h-4 ml-2" />
           </Button>
         </motion.div>
