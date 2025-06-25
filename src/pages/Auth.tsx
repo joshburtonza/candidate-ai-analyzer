@@ -165,7 +165,7 @@ const Auth = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Card className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 text-white shadow-2xl rounded-2xl"
+          <Card className="border border-orange-400/30 bg-white/5 backdrop-blur-xl shadow-2xl text-white rounded-2xl"
                 style={{
                   boxShadow: '0 0 30px rgba(255, 165, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                 }}>
@@ -182,7 +182,7 @@ const Auth = () => {
             </CardHeader>
             <CardContent className="p-8 pt-0">
               <Tabs defaultValue={isLogin ? "login" : "register"} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 backdrop-blur-sm rounded-xl p-1">
+                <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm rounded-xl p-1">
                   <TabsTrigger 
                     value="login" 
                     onClick={() => setIsLogin(true)} 
@@ -207,7 +207,7 @@ const Auth = () => {
                       type="email" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
                     />
                   </div>
                   <div className="space-y-2">
@@ -218,7 +218,7 @@ const Auth = () => {
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
                     />
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -240,7 +240,7 @@ const Auth = () => {
                       type="text" 
                       value={fullName} 
                       onChange={(e) => setFullName(e.target.value)}
-                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
                     />
                   </div>
                   <div className="space-y-2">
@@ -251,7 +251,7 @@ const Auth = () => {
                       type="email" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
                     />
                   </div>
                   <div className="space-y-2">
@@ -262,7 +262,7 @@ const Auth = () => {
                       type="password" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-slate-700/50 border-slate-600/50 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-orange-500 focus-visible:border-orange-500 rounded-xl h-12 px-4 backdrop-blur-sm"
                     />
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
