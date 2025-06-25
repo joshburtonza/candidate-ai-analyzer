@@ -74,12 +74,12 @@ const Auth = () => {
       {/* Floating extraction elements that move across screen */}
       <motion.div
         animate={{
-          x: [-100, window.innerWidth + 100],
-          y: [0, -20, 0],
+          x: [-50, window.innerWidth * 0.3],
+          y: [0, -10, 0],
         }}
         transition={{
-          x: { duration: 12, repeat: Infinity, ease: "linear" },
-          y: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
+          x: { duration: 20, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
         }}
         className="absolute top-20 text-orange-400/60 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
@@ -88,12 +88,12 @@ const Auth = () => {
       
       <motion.div
         animate={{
-          x: [window.innerWidth + 100, -100],
-          y: [0, -15, 0],
+          x: [window.innerWidth * 0.7, -50],
+          y: [0, -8, 0],
         }}
         transition={{
-          x: { duration: 15, repeat: Infinity, ease: "linear", delay: 2 },
-          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 }
+          x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
+          y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
         }}
         className="absolute top-32 text-orange-400/50 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
@@ -102,12 +102,12 @@ const Auth = () => {
       
       <motion.div
         animate={{
-          x: [-150, window.innerWidth + 150],
-          y: [0, -25, 0],
+          x: [-60, window.innerWidth * 0.4],
+          y: [0, -12, 0],
         }}
         transition={{
-          x: { duration: 18, repeat: Infinity, ease: "linear", delay: 4 },
-          y: { duration: 3.5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
+          x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 6 },
+          y: { duration: 4.5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 }
         }}
         className="absolute bottom-40 text-orange-400/55 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
@@ -116,12 +116,12 @@ const Auth = () => {
       
       <motion.div
         animate={{
-          x: [window.innerWidth + 120, -120],
-          y: [0, -18, 0],
+          x: [window.innerWidth * 0.6, -60],
+          y: [0, -9, 0],
         }}
         transition={{
-          x: { duration: 14, repeat: Infinity, ease: "linear", delay: 6 },
-          y: { duration: 2.8, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.5 }
+          x: { duration: 22, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 9 },
+          y: { duration: 3.8, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.8 }
         }}
         className="absolute bottom-20 text-orange-400/45 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
@@ -130,12 +130,12 @@ const Auth = () => {
 
       <motion.div
         animate={{
-          x: [-80, window.innerWidth + 80],
-          y: [0, -22, 0],
+          x: [-40, window.innerWidth * 0.35],
+          y: [0, -11, 0],
         }}
         transition={{
-          x: { duration: 16, repeat: Infinity, ease: "linear", delay: 8 },
-          y: { duration: 3.2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
+          x: { duration: 28, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 12 },
+          y: { duration: 4.2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
         }}
         className="absolute top-1/2 text-orange-400/40 text-sm font-mono bg-black/40 px-3 py-1 rounded border border-orange-500/30"
       >
@@ -147,12 +147,12 @@ const Auth = () => {
         animate={{
           opacity: [0.4, 1, 0.4],
           scale: [1, 1.05, 1],
-          x: [-50, window.innerWidth + 50],
+          x: [-20, window.innerWidth * 0.25],
         }}
         transition={{
-          opacity: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-          scale: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-          x: { duration: 20, repeat: Infinity, ease: "linear" }
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          x: { duration: 35, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
         }}
         className="absolute top-1/4 w-2 h-2 bg-orange-500/20 rounded-full"
       />
@@ -161,12 +161,12 @@ const Auth = () => {
         animate={{
           opacity: [0.4, 1, 0.4],
           scale: [1, 1.05, 1],
-          x: [window.innerWidth + 30, -30],
+          x: [window.innerWidth * 0.8, -15],
         }}
         transition={{
-          opacity: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
-          scale: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
-          x: { duration: 25, repeat: Infinity, ease: "linear", delay: 3 }
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 },
+          x: { duration: 40, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 5 }
         }}
         className="absolute top-1/3 w-3 h-3 bg-orange-400/15 rounded-full"
       />
@@ -175,12 +175,12 @@ const Auth = () => {
         animate={{
           opacity: [0.4, 1, 0.4],
           scale: [1, 1.05, 1],
-          x: [-40, window.innerWidth + 40],
+          x: [-25, window.innerWidth * 0.3],
         }}
         transition={{
-          opacity: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 },
-          scale: { duration: 2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 },
-          x: { duration: 22, repeat: Infinity, ease: "linear", delay: 6 }
+          opacity: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 4 },
+          scale: { duration: 3, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 4 },
+          x: { duration: 38, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 10 }
         }}
         className="absolute bottom-1/3 w-1 h-1 bg-orange-600/25 rounded-full"
       />
