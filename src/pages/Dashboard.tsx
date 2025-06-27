@@ -26,11 +26,50 @@ const Dashboard = () => {
     if (!authLoading && user) {
       console.log('Dashboard: User authenticated, fetching uploads');
       fetchUploads();
+      setupRealtimeSubscription();
     } else if (!authLoading && !user) {
       console.log('Dashboard: No user found after auth loaded');
       setLoading(false);
     }
   }, [user, authLoading]);
+
+  const setupRealtimeSubscription = () => {
+    console.log('Dashboard: Setting up realtime subscription');
+    
+    const channel = supabase
+      .channel('cv_uploads_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'cv_uploads'
+        },
+        (payload) => {
+          console.log('Dashboard: New upload received via realtime:', payload);
+          
+          const newUpload = payload.new as CVUpload;
+          
+          // Add to uploads list
+          setUploads(prev => [newUpload, ...prev]);
+          
+          // Show toast notification
+          if (newUpload.extracted_json?.candidate_name) {
+            toast({
+              title: "New Candidate Added",
+              description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      console.log('Dashboard: Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  };
 
   const fetchUploads = async () => {
     if (!user) {
