@@ -1,8 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleApiService } from '@/services/GoogleApiService';
+import { MakeIntegration } from '@/services/MakeIntegration';
+import { Settings } from 'lucide-react';
 
 interface GoogleConnectButtonProps {
   onFilesImported: (files: File[]) => void;
@@ -12,12 +14,20 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isImporting, setIsImporting] = useState({ gmail: false, drive: false });
+  const [showMakeConfig, setShowMakeConfig] = useState(false);
+  const [makeWebhookUrl, setMakeWebhookUrl] = useState('');
   const { toast } = useToast();
   
   // Use singleton instance to maintain state
   const googleApi = GoogleApiService.getInstance();
 
   useEffect(() => {
+    // Load saved Make.com webhook URL
+    const savedUrl = localStorage.getItem('make_webhook_url');
+    if (savedUrl) {
+      setMakeWebhookUrl(savedUrl);
+    }
+
     // Check for OAuth redirect callback on page load
     const handleRedirectCallback = async () => {
       try {
@@ -40,6 +50,15 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
 
     handleRedirectCallback();
   }, []);
+
+  const saveMakeWebhook = () => {
+    localStorage.setItem('make_webhook_url', makeWebhookUrl);
+    setShowMakeConfig(false);
+    toast({
+      title: "Make.com webhook saved",
+      description: "Your webhook URL has been saved for future imports",
+    });
+  };
 
   const handleGoogleAuth = async () => {
     setIsConnecting(true);
@@ -126,10 +145,16 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
           description: "No CV attachments found in your Gmail. Try searching for emails with 'CV', 'resume', or 'curriculum' in the subject or content.",
         });
       } else {
+        // Send to Make.com if webhook is configured
+        if (makeWebhookUrl) {
+          const makeIntegration = new MakeIntegration(makeWebhookUrl);
+          await makeIntegration.sendCVData(files, 'gmail');
+        }
+        
         onFilesImported(files);
         toast({
           title: "Gmail import successful",
-          description: `Found and imported ${files.length} CV file(s) from your Gmail`,
+          description: `Found and imported ${files.length} CV file(s) from your Gmail${makeWebhookUrl ? ' and sent to Make.com' : ''}`,
         });
       }
     } catch (error: any) {
@@ -162,10 +187,16 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
           description: "No files were selected from Google Drive",
         });
       } else {
+        // Send to Make.com if webhook is configured
+        if (makeWebhookUrl) {
+          const makeIntegration = new MakeIntegration(makeWebhookUrl);
+          await makeIntegration.sendCVData(files, 'drive');
+        }
+        
         onFilesImported(files);
         toast({
           title: "Drive import successful",
-          description: `Imported ${files.length} file(s) from Google Drive`,
+          description: `Imported ${files.length} file(s) from Google Drive${makeWebhookUrl ? ' and sent to Make.com' : ''}`,
         });
       }
     } catch (error: any) {
@@ -224,31 +255,62 @@ export const GoogleConnectButton = ({ onFilesImported }: GoogleConnectButtonProp
   }
 
   return (
-    <div className="flex gap-2 flex-wrap">
-      <Button
-        onClick={handleGmailImport}
-        disabled={isImporting.gmail}
-        variant="outline"
-        className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
-      >
-        {isImporting.gmail ? 'Searching Gmail...' : 'Import from Gmail'}
-      </Button>
-      <Button
-        onClick={handleDriveImport}
-        disabled={isImporting.drive}
-        variant="outline"
-        className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
-      >
-        {isImporting.drive ? 'Opening Drive picker...' : 'Import from Drive'}
-      </Button>
-      <Button
-        onClick={handleDisconnect}
-        variant="ghost"
-        size="sm"
-        className="text-gray-400 hover:text-white"
-      >
-        Disconnect
-      </Button>
+    <div className="space-y-3">
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          onClick={handleGmailImport}
+          disabled={isImporting.gmail}
+          variant="outline"
+          className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
+        >
+          {isImporting.gmail ? 'Searching Gmail...' : 'Import from Gmail'}
+        </Button>
+        <Button
+          onClick={handleDriveImport}
+          disabled={isImporting.drive}
+          variant="outline"
+          className="bg-white/10 border-orange-500/30 text-white hover:bg-white/20"
+        >
+          {isImporting.drive ? 'Opening Drive picker...' : 'Import from Drive'}
+        </Button>
+        <Button
+          onClick={handleDisconnect}
+          variant="ghost"
+          size="sm"
+          className="text-gray-400 hover:text-white"
+        >
+          Disconnect
+        </Button>
+        <Button
+          onClick={() => setShowMakeConfig(!showMakeConfig)}
+          variant="ghost"
+          size="sm"
+          className="text-gray-400 hover:text-white"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {showMakeConfig && (
+        <div className="bg-white/5 backdrop-blur-xl border border-orange-500/30 rounded-lg p-4 space-y-3">
+          <h4 className="text-white font-medium">Make.com Integration</h4>
+          <p className="text-gray-300 text-sm">Enter your Make.com webhook URL to automatically send imported CV data to your scenario.</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="https://hook.make.com/your-webhook-url"
+              value={makeWebhookUrl}
+              onChange={(e) => setMakeWebhookUrl(e.target.value)}
+              className="bg-white/10 border-gray-600 text-white placeholder-gray-400"
+            />
+            <Button onClick={saveMakeWebhook} size="sm">
+              Save
+            </Button>
+          </div>
+          {makeWebhookUrl && (
+            <p className="text-green-400 text-xs">✓ Webhook configured - data will be sent to Make.com on import</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
