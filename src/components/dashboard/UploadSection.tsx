@@ -42,17 +42,29 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Direct Upload */}
-          <div className="space-y-4">
+        {/* Main Upload Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Direct Upload - Drag and Drop Area */}
+          <div className="lg:col-span-2 space-y-4">
             <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
               <FileText className="w-5 h-5 text-orange-400" />
               DIRECT UPLOAD
             </h3>
-            <GoogleDocUpload onUploadComplete={handleDirectUpload} />
+            
+            {/* Drag and Drop Box */}
+            <div className="border-2 border-dashed border-orange-500/30 rounded-xl p-8 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all duration-300 min-h-[200px] flex flex-col items-center justify-center">
+              <Upload className="w-12 h-12 text-orange-400 mb-4" />
+              <h4 className="text-white font-semibold mb-2">Drop CV files here</h4>
+              <p className="text-gray-300 text-sm text-center mb-4">
+                Drag and drop your CV files or click to browse
+              </p>
+              <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                Browse Files
+              </Button>
+            </div>
           </div>
 
-          {/* Google Integration */}
+          {/* Google Integration - Vertical Stack */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -61,7 +73,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              GOOGLE INTEGRATION
+              GOOGLE
             </h3>
             <GoogleConnectButton onFilesImported={handleFilesImported} />
           </div>
