@@ -287,6 +287,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_upload_by_email: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

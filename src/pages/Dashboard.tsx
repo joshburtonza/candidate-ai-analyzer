@@ -22,11 +22,11 @@ const Dashboard = () => {
   const subscriptionRef = useRef<any>(null);
 
   useEffect(() => {
-    console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null');
+    console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
     
     // Only fetch uploads when we have a user and auth is not loading
     if (!authLoading && user) {
-      console.log('Dashboard: User authenticated, fetching uploads');
+      console.log('Dashboard: User authenticated, fetching uploads with email filtering');
       fetchUploads();
       setupRealtimeSubscription();
     } else if (!authLoading && !user) {
@@ -52,7 +52,7 @@ const Dashboard = () => {
       subscriptionRef.current = null;
     }
 
-    console.log('Dashboard: Setting up new realtime subscription');
+    console.log('Dashboard: Setting up new realtime subscription with email filtering');
     
     const channel = supabase
       .channel('cv_uploads_changes')
@@ -68,14 +68,27 @@ const Dashboard = () => {
           
           const newUpload = payload.new as CVUpload;
           
-          // Add to uploads list
-          setUploads(prev => [newUpload, ...prev]);
+          // Check if this upload should be visible to current user
+          const shouldShow = !newUpload.source_email || 
+                           newUpload.source_email === '' || 
+                           newUpload.source_email === profile?.email ||
+                           profile?.is_admin;
           
-          // Show toast notification
-          if (newUpload.extracted_json?.candidate_name) {
-            toast({
-              title: "New Candidate Added",
-              description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
+          if (shouldShow) {
+            // Add to uploads list
+            setUploads(prev => [newUpload, ...prev]);
+            
+            // Show toast notification
+            if (newUpload.extracted_json?.candidate_name) {
+              toast({
+                title: "New Candidate Added",
+                description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
+              });
+            }
+          } else {
+            console.log('Dashboard: Upload filtered out due to email mismatch', {
+              sourceEmail: newUpload.source_email,
+              userEmail: profile?.email
             });
           }
         }
@@ -93,9 +106,10 @@ const Dashboard = () => {
     }
 
     try {
-      console.log('Dashboard: Fetching uploads for user:', user.id);
+      console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
       setError(null);
       
+      // The RLS policies will handle the email filtering automatically
       const { data, error } = await supabase
         .from('cv_uploads')
         .select('*')
@@ -106,7 +120,7 @@ const Dashboard = () => {
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
       
       // Cast the database response to our CVUpload type
       const typedUploads: CVUpload[] = (data || []).map(upload => ({
@@ -207,7 +221,7 @@ const Dashboard = () => {
     }
   });
 
-  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads');
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email);
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -223,6 +237,22 @@ const Dashboard = () => {
         />
 
         <div className="container mx-auto px-6 py-8 space-y-8">
+          {/* Email Filter Info - Only show for non-admin users */}
+          {profile && !profile.is_admin && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-card p-4 rounded-xl elegant-border"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                <p className="text-white/80 text-sm">
+                  Showing CVs sent to: <span className="text-orange-400 font-medium">{profile.email}</span>
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
