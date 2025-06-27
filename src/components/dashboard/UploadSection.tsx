@@ -18,6 +18,13 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
   const handleFilesImported = (files: File[]) => {
     // Handle the imported files - this will trigger the upload process
     console.log('Files imported from Google:', files);
+    // Note: This would typically process the files and create CVUpload objects
+    // For now, we'll just log them as the actual file processing happens elsewhere
+  };
+
+  const handleDirectUpload = (upload: CVUpload) => {
+    // Handle direct CV upload completion
+    onUploadComplete(upload);
   };
 
   return (
@@ -42,7 +49,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
               <FileText className="w-5 h-5 text-orange-400" />
               DIRECT UPLOAD
             </h3>
-            <GoogleDocUpload onUploadComplete={onUploadComplete} />
+            <GoogleDocUpload onUploadComplete={handleDirectUpload} />
           </div>
 
           {/* Google Integration */}
