@@ -39,77 +39,91 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
       transition={{ duration: 0.2 }}
       className="h-full"
     >
-      <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group flex flex-col min-h-[500px]">
-        <div className="space-y-4 flex-1 flex flex-col">
-          {/* Header */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="p-3 bg-orange-500/20 rounded-lg border border-orange-500/30 flex-shrink-0">
-                <User className="w-5 h-5 text-orange-500" />
+      <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group flex flex-col">
+        <div className="space-y-6 flex-1 flex flex-col">
+          {/* Header with Avatar and Score */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-4 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full w-16 h-16 flex items-center justify-center">
+                <User className="w-8 h-8 gold-accent" />
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-white group-hover:text-orange-400 transition-colors truncate">
+              <div>
+                <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">
                   {data.candidate_name || 'Unknown'}
                 </h3>
-                <p className="text-sm text-gray-400 truncate">{data.email_address}</p>
               </div>
             </div>
             
             {/* Score Circle */}
             <div className="relative flex-shrink-0">
-              <div className={`w-12 h-12 rounded-full ${getScoreColor(score)} flex items-center justify-center`}>
-                <span className="text-white font-bold text-sm">{score}</span>
+              <div className={`w-16 h-16 rounded-full ${getScoreColor(score)} flex items-center justify-center`}>
+                <span className="text-black font-bold text-xl">{score}</span>
+              </div>
+              <div className="text-center mt-2">
+                <span className="text-xs text-white/80 font-medium">ASSESSMENT SCORE</span>
               </div>
             </div>
           </div>
 
           {/* Contact Info */}
-          <div className="space-y-2">
+          <div className="space-y-3">
+            {data.email_address && (
+              <div className="flex items-center gap-3 text-white/90">
+                <Mail className="w-5 h-5 gold-accent flex-shrink-0" />
+                <span className="truncate">{data.email_address}</span>
+              </div>
+            )}
             {data.contact_number && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Phone className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <div className="flex items-center gap-3 text-white/90">
+                <Phone className="w-5 h-5 gold-accent flex-shrink-0" />
                 <span className="truncate">{data.contact_number}</span>
               </div>
             )}
             {data.countries && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <MapPin className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <div className="flex items-center gap-3 text-white/90">
+                <MapPin className="w-5 h-5 gold-accent flex-shrink-0" />
                 <span className="truncate">{data.countries}</span>
               </div>
             )}
           </div>
 
-          {/* Skills */}
+          {/* Expertise Section */}
           {skills.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-white/80">EXPERTISE</p>
-              <div className="flex flex-wrap gap-1">
-                {skills.slice(0, 3).map((skill, index) => (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 bg-gold-accent rounded"></div>
+                <h4 className="text-sm font-bold text-white/90 text-elegant tracking-wider">EXPERTISE</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {skills.slice(0, 6).map((skill, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="bg-gray-700/50 text-white border-orange-500/30 text-xs hover:bg-gray-600/50 transition-colors backdrop-blur-sm"
+                    className="bg-white/10 text-white border-white/20 px-3 py-1 text-xs"
                   >
                     {skill}
                   </Badge>
                 ))}
-                {skills.length > 3 && (
+                {skills.length > 6 && (
                   <Badge
                     variant="secondary"
-                    className="bg-gray-700/50 text-white border-orange-500/30 text-xs backdrop-blur-sm"
+                    className="bg-white/10 text-white border-white/20 px-3 py-1 text-xs"
                   >
-                    +{skills.length - 3}
+                    +{skills.length - 6}
                   </Badge>
                 )}
               </div>
             </div>
           )}
 
-          {/* Justification - Added below expertise */}
-          <div className="space-y-2 flex-1">
-            <p className="text-sm font-medium text-white/80">ASSESSMENT</p>
-            <p className="text-sm text-gray-400 line-clamp-4">
-              {data.justification || 'No assessment available'}
+          {/* Professional Assessment */}
+          <div className="space-y-3 flex-1">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-6 bg-gold-accent rounded"></div>
+              <h4 className="text-sm font-bold text-white/90 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h4>
+            </div>
+            <p className="text-sm text-white/80 line-clamp-4 leading-relaxed">
+              {data.justification || 'Assessment pending analysis'}
             </p>
           </div>
 

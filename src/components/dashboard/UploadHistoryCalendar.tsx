@@ -34,27 +34,35 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     setCurrentWeekStart(addDays(currentWeekStart, 7));
   };
 
+  // Get the month and year for display
+  const currentMonth = format(currentWeekStart, 'MMMM yyyy');
+
   return (
     <Card className="glass-card elegant-border p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white text-elegant tracking-wider">UPLOAD HISTORY</h3>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goToPreviousWeek}
-            className="text-white hover:bg-white/10"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goToNextWeek}
-            className="text-white hover:bg-white/10"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center gap-4">
+          <div className="text-white/80 font-medium text-elegant tracking-wider">
+            {currentMonth.toUpperCase()}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToPreviousWeek}
+              className="text-white hover:bg-white/10"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToNextWeek}
+              className="text-white hover:bg-white/10"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -74,7 +82,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                 variant="ghost"
                 onClick={() => onDateSelect(date)}
                 className={`
-                  h-16 w-full flex flex-col items-center justify-center p-2 rounded-lg border transition-all
+                  h-20 w-full flex flex-col items-center justify-center p-2 rounded-lg border transition-all
                   ${isSelected 
                     ? 'bg-orange-500 text-white border-orange-400' 
                     : uploadCount > 0 
@@ -84,14 +92,16 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                   ${isToday ? 'ring-2 ring-orange-400/50' : ''}
                 `}
               >
-                <div className="text-xs font-medium">
+                <div className="text-xs font-medium mb-1">
                   {format(date, 'EEE').toUpperCase()}
                 </div>
                 <div className="text-lg font-bold">
                   {format(date, 'd')}
                 </div>
                 {uploadCount > 0 && (
-                  <div className="w-2 h-2 bg-orange-400 rounded-full mt-1"></div>
+                  <div className="text-xs font-semibold mt-1 bg-orange-400 text-black px-1.5 py-0.5 rounded-full">
+                    {uploadCount}
+                  </div>
                 )}
               </Button>
             </motion.div>

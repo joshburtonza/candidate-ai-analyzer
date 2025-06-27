@@ -19,9 +19,9 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-orange-400';
-    if (score >= 6) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score >= 8) return 'text-orange-400 bg-orange-500';
+    if (score >= 6) return 'text-yellow-400 bg-yellow-500';
+    return 'text-red-400 bg-red-500';
   };
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
@@ -31,11 +31,11 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3 bg-orange-500/20 rounded-lg border border-orange-500/30">
-            <User className="w-6 h-6 text-orange-500" />
+          <div className="p-3 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full w-14 h-14 flex items-center justify-center">
+            <User className="w-7 h-7 gold-accent" />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-white truncate">
+            <h3 className="text-lg font-bold text-white truncate">
               {data.candidate_name || 'Unknown'}
             </h3>
             <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
@@ -65,7 +65,7 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
             <Badge
               key={index}
               variant="secondary"
-              className="bg-gray-700/50 text-white border-orange-500/30 text-xs hover:bg-gray-600/50 transition-colors backdrop-blur-sm"
+              className="bg-white/10 text-white border-white/20 text-xs hover:bg-white/20 transition-colors backdrop-blur-sm"
             >
               {skill}
             </Badge>
@@ -74,10 +74,10 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
 
         {/* Score */}
         <div className="text-center">
-          <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
-            {score}/10
+          <div className={`w-12 h-12 rounded-full ${getScoreColor(score).split(' ')[1]} flex items-center justify-center`}>
+            <span className="text-black font-bold text-lg">{score}</span>
           </div>
-          <div className="text-xs text-gray-400">FIT SCORE</div>
+          <div className="text-xs text-gray-400 mt-1">ASSESSMENT</div>
         </div>
 
         {/* Action */}
