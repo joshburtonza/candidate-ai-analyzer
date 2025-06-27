@@ -7,6 +7,7 @@ import { GoogleDocUpload } from './GoogleDocUpload';
 import { GoogleConnectButton } from './GoogleConnectButton';
 import { N8nApiInfo } from './N8nApiInfo';
 import { CVUpload } from '@/types/candidate';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UploadSectionProps {
   onUploadComplete: (upload: CVUpload) => void;
@@ -14,6 +15,10 @@ interface UploadSectionProps {
 
 export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
   const [showApiInfo, setShowApiInfo] = useState(false);
+  const { profile } = useAuth();
+
+  // Only show admin sections to Joshua (the only admin)
+  const isJoshuaAdmin = profile?.email === 'joshuaburton096@gmail.com' && profile?.is_admin;
 
   const handleFilesImported = (files: File[]) => {
     // Handle the imported files - this will trigger the upload process
@@ -79,25 +84,30 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           </div>
         </div>
 
-        {/* n8n API Integration */}
-        <div className="border-t border-white/10 pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
-              <Settings className="w-5 h-5 text-orange-400" />
-              N8N WORKFLOW INTEGRATION
-            </h3>
-            <Button
-              onClick={() => setShowApiInfo(!showApiInfo)}
-              variant="outline"
-              size="sm"
-              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
-            >
-              {showApiInfo ? 'Hide' : 'Show'} API Details
-            </Button>
+        {/* n8n API Integration - Only visible to Joshua */}
+        {isJoshuaAdmin && (
+          <div className="border-t border-white/10 pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
+                <Settings className="w-5 h-5 text-orange-400" />
+                N8N WORKFLOW INTEGRATION
+                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30">
+                  ADMIN ONLY
+                </span>
+              </h3>
+              <Button
+                onClick={() => setShowApiInfo(!showApiInfo)}
+                variant="outline"
+                size="sm"
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+              >
+                {showApiInfo ? 'Hide' : 'Show'} API Details
+              </Button>
+            </div>
+            
+            {showApiInfo && <N8nApiInfo />}
           </div>
-          
-          {showApiInfo && <N8nApiInfo />}
-        </div>
+        )}
       </div>
     </Card>
   );

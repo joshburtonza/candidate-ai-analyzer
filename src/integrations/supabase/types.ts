@@ -291,6 +291,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_joshua_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       refresh_gmail_token: {
         Args: {
           integration_id: string

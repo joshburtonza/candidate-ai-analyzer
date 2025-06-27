@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Profile } from '@/types/candidate';
+
 interface DashboardHeaderProps {
   profile: Profile | null;
   searchQuery: string;
@@ -16,6 +17,7 @@ interface DashboardHeaderProps {
   sortBy: 'date' | 'score' | 'name';
   onSortChange: (sort: 'date' | 'score' | 'name') => void;
 }
+
 export const DashboardHeader = ({
   profile,
   searchQuery,
@@ -25,11 +27,14 @@ export const DashboardHeader = ({
   sortBy,
   onSortChange
 }: DashboardHeaderProps) => {
-  const {
-    signOut
-  } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
-  return <header className="bg-white/5 backdrop-blur-xl border-b border-orange-500/30 sticky top-0 z-50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+
+  // Only show admin badge to Joshua
+  const isJoshuaAdmin = profile?.email === 'joshuaburton096@gmail.com' && profile?.is_admin;
+
+  return (
+    <header className="bg-white/5 backdrop-blur-xl border-b border-orange-500/30 sticky top-0 z-50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -39,15 +44,22 @@ export const DashboardHeader = ({
               </div>
               <h1 className="text-xl font-semibold text-white">APPLICHUB</h1>
             </div>
-            {profile?.is_admin && <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs rounded-full font-medium shadow-lg shadow-orange-500/25">
-                ADMIN
-              </span>}
+            {isJoshuaAdmin && (
+              <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full font-medium shadow-lg shadow-red-500/25 border border-red-400/30">
+                JOSHUA ADMIN
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
-              <Input placeholder="Search candidates..." value={searchQuery} onChange={e => onSearchChange(e.target.value)} className="w-64 pl-10 bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-white/60 focus:border-orange-500" />
+              <Input
+                placeholder="Search candidates..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-64 pl-10 bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-white/60 focus:border-orange-500"
+              />
             </div>
 
             <Select value={sortBy} onValueChange={onSortChange}>
@@ -62,10 +74,28 @@ export const DashboardHeader = ({
             </Select>
 
             <div className="flex bg-white/5 backdrop-blur-xl rounded-lg p-1 border border-orange-500/30">
-              <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('grid')} className={`text-white ${viewMode === 'grid' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25' : 'hover:bg-white/10'}`}>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('grid')}
+                className={`text-white ${
+                  viewMode === 'grid'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
+                    : 'hover:bg-white/10'
+                }`}
+              >
                 <Grid3X3 className="w-4 h-4" />
               </Button>
-              <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => onViewModeChange('list')} className={`text-white ${viewMode === 'list' ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25' : 'hover:bg-white/10'}`}>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onViewModeChange('list')}
+                className={`text-white ${
+                  viewMode === 'list'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
+                    : 'hover:bg-white/10'
+                }`}
+              >
                 <List className="w-4 h-4" />
               </Button>
             </div>
@@ -94,5 +124,6 @@ export const DashboardHeader = ({
           </div>
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
