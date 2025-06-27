@@ -21,6 +21,22 @@ interface CandidateData {
   source_email: string; // Now required - the email the CV was sent to
 }
 
+// Test names to filter out
+const TEST_NAMES = [
+  'jane doe',
+  'john doe',
+  'jane smith',
+  'john smith',
+  'test candidate',
+  'sample candidate',
+  'example candidate'
+];
+
+const isTestCandidate = (name: string): boolean => {
+  const normalizedName = name.toLowerCase().trim();
+  return TEST_NAMES.some(testName => normalizedName.includes(testName));
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -66,6 +82,54 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    // Filter out test candidates
+    if (isTestCandidate(candidateData.candidate_name)) {
+      console.log('Rejected test candidate:', candidateData.candidate_name);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Test candidate rejected',
+          message: 'Test candidates like Jane/John Doe are not allowed',
+          candidate_name: candidateData.candidate_name
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Check for existing candidate with same email
+    console.log('Checking for duplicate candidate with email:', candidateData.email_address);
+    const { data: existingCandidate, error: duplicateCheckError } = await supabase
+      .from('cv_uploads')
+      .select('id, extracted_json')
+      .eq('processing_status', 'completed')
+      .not('extracted_json', 'is', null)
+      .maybeSingle();
+
+    if (duplicateCheckError) {
+      console.error('Error checking for duplicates:', duplicateCheckError);
+      // Continue processing - don't fail on duplicate check error
+    } else if (existingCandidate) {
+      // Check if the extracted JSON contains the same email
+      const existingEmail = existingCandidate.extracted_json?.email_address;
+      if (existingEmail === candidateData.email_address) {
+        console.log('Duplicate candidate found:', candidateData.email_address);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Duplicate candidate',
+            message: 'A candidate with this email already exists in the system',
+            email_address: candidateData.email_address,
+            existing_id: existingCandidate.id
+          }),
+          { 
+            status: 409, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
     }
 
     // Find the user that matches the source email
