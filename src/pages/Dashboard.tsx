@@ -18,6 +18,10 @@ const Dashboard = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null
+  });
   const { toast } = useToast();
   const subscriptionRef = useRef<any>(null);
 
@@ -148,6 +152,10 @@ const Dashboard = () => {
     setUploads(prev => [newUpload, ...prev]);
   };
 
+  const handleDateRangeChange = (startDate: Date | null, endDate: Date | null) => {
+    setDateRange({ start: startDate, end: endDate });
+  };
+
   // Show loading only if auth is loading
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
@@ -190,8 +198,25 @@ const Dashboard = () => {
     );
   }
 
+  // Filter uploads by date range
+  const dateFilteredUploads = uploads.filter(upload => {
+    if (!dateRange.start && !dateRange.end) return true;
+    
+    const uploadDate = new Date(upload.uploaded_at);
+    
+    if (dateRange.start && uploadDate < dateRange.start) return false;
+    if (dateRange.end) {
+      // Set end date to end of day for inclusive filtering
+      const endOfDay = new Date(dateRange.end);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (uploadDate > endOfDay) return false;
+    }
+    
+    return true;
+  });
+
   // Filter and sort uploads
-  const filteredUploads = uploads.filter(upload => {
+  const filteredUploads = dateFilteredUploads.filter(upload => {
     if (!searchQuery) return true;
     const data = upload.extracted_json;
     if (!data) return false;
@@ -234,6 +259,7 @@ const Dashboard = () => {
           onViewModeChange={setViewMode}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          onDateRangeChange={handleDateRangeChange}
         />
 
         <div className="container mx-auto px-6 py-8 space-y-8">
@@ -258,7 +284,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <DashboardStats uploads={uploads} />
+            <DashboardStats uploads={sortedUploads} />
           </motion.div>
 
           <motion.div

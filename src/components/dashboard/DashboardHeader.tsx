@@ -1,3 +1,4 @@
+
 import { Search, Grid3X3, List, User, LogOut, Settings, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Profile } from '@/types/candidate';
+import { DateFilter } from './DateFilter';
 
 interface DashboardHeaderProps {
   profile: Profile | null;
@@ -16,6 +18,7 @@ interface DashboardHeaderProps {
   onViewModeChange: (mode: 'grid' | 'list') => void;
   sortBy: 'date' | 'score' | 'name';
   onSortChange: (sort: 'date' | 'score' | 'name') => void;
+  onDateRangeChange: (startDate: Date | null, endDate: Date | null) => void;
 }
 
 export const DashboardHeader = ({
@@ -25,7 +28,8 @@ export const DashboardHeader = ({
   viewMode,
   onViewModeChange,
   sortBy,
-  onSortChange
+  onSortChange,
+  onDateRangeChange
 }: DashboardHeaderProps) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -61,6 +65,8 @@ export const DashboardHeader = ({
                 className="w-64 pl-10 bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-white/60 focus:border-orange-500"
               />
             </div>
+
+            <DateFilter onDateRangeChange={onDateRangeChange} />
 
             <Select value={sortBy} onValueChange={onSortChange}>
               <SelectTrigger className="w-32 bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white">
