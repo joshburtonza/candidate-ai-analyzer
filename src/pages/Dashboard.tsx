@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
   const { toast } = useToast();
+  const subscriptionRef = useRef<any>(null);
 
   useEffect(() => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null');
@@ -31,10 +33,26 @@ const Dashboard = () => {
       console.log('Dashboard: No user found after auth loaded');
       setLoading(false);
     }
+
+    // Cleanup subscription on unmount or when user changes
+    return () => {
+      if (subscriptionRef.current) {
+        console.log('Dashboard: Cleaning up realtime subscription');
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
+    };
   }, [user, authLoading]);
 
   const setupRealtimeSubscription = () => {
-    console.log('Dashboard: Setting up realtime subscription');
+    // Clean up existing subscription first
+    if (subscriptionRef.current) {
+      console.log('Dashboard: Removing existing subscription');
+      supabase.removeChannel(subscriptionRef.current);
+      subscriptionRef.current = null;
+    }
+
+    console.log('Dashboard: Setting up new realtime subscription');
     
     const channel = supabase
       .channel('cv_uploads_changes')
@@ -64,11 +82,7 @@ const Dashboard = () => {
       )
       .subscribe();
 
-    // Cleanup subscription on unmount
-    return () => {
-      console.log('Dashboard: Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
-    };
+    subscriptionRef.current = channel;
   };
 
   const fetchUploads = async () => {
