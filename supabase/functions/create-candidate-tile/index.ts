@@ -18,7 +18,7 @@ interface CandidateData {
   justification: string;
   countries: string;
   original_filename?: string;
-  user_id?: string;
+  source_email: string; // Now required - the email the CV was sent to
 }
 
 serve(async (req) => {
@@ -51,7 +51,7 @@ serve(async (req) => {
     console.log('Received candidate data:', candidateData);
 
     // Validate required fields
-    const requiredFields = ['candidate_name', 'email_address', 'score'];
+    const requiredFields = ['candidate_name', 'email_address', 'score', 'source_email'];
     const missingFields = requiredFields.filter(field => !candidateData[field]);
     
     if (missingFields.length > 0) {
@@ -68,13 +68,48 @@ serve(async (req) => {
       );
     }
 
-    // For now, we'll use a default user_id or the one provided
-    // In production, you might want to authenticate this differently
-    const userId = candidateData.user_id || 'beab296e-3f24-4fac-b004-c17a760ae68d'; // Default admin user
+    // Find the user that matches the source email
+    console.log('Looking for user with email:', candidateData.source_email);
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', candidateData.source_email)
+      .maybeSingle();
 
-    // Create the CV upload record
+    if (profileError) {
+      console.error('Error querying profiles:', profileError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Database error while looking up user', 
+          details: profileError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    if (!profile) {
+      console.error('No user found for email:', candidateData.source_email);
+      return new Response(
+        JSON.stringify({ 
+          error: 'No user found for the provided source email', 
+          source_email: candidateData.source_email,
+          message: 'Make sure a user with this email has signed up to the system'
+        }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log('Found user profile:', profile.id, 'for email:', profile.email);
+
+    // Create the CV upload record with the mapped user ID
     const cvUploadData = {
-      user_id: userId,
+      user_id: profile.id, // Use the actual user ID from profile lookup
       file_url: '', // No actual file for n8n uploads
       original_filename: candidateData.original_filename || `${candidateData.candidate_name}_processed.json`,
       extracted_json: {
@@ -89,7 +124,7 @@ serve(async (req) => {
         countries: candidateData.countries || ''
       },
       processing_status: 'completed',
-      source_email: 'n8n_workflow',
+      source_email: candidateData.source_email, // Use the actual source email from request
       file_size: 0
     };
 
@@ -122,7 +157,9 @@ serve(async (req) => {
         success: true, 
         message: 'Candidate tile created successfully',
         id: data.id,
-        candidate_name: candidateData.candidate_name
+        candidate_name: candidateData.candidate_name,
+        assigned_to_user: profile.email,
+        user_id: profile.id
       }),
       { 
         status: 200, 

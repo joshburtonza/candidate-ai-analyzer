@@ -19,7 +19,8 @@ export const N8nApiInfo = () => {
     score: "85",
     justification: "Strong technical background with relevant experience",
     countries: "USA",
-    original_filename: "john_doe_cv.pdf"
+    original_filename: "john_doe_cv.pdf",
+    source_email: "info@sa-recruitment.com"
   };
 
   const copyToClipboard = (text: string) => {
@@ -90,7 +91,16 @@ export const N8nApiInfo = () => {
               <li>• <code>candidate_name</code> - Name of the candidate</li>
               <li>• <code>email_address</code> - Email address</li>
               <li>• <code>score</code> - Numerical score (0-100)</li>
+              <li>• <code>source_email</code> - Email the CV was sent to (must match a registered user)</li>
             </ul>
+          </div>
+
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+            <h4 className="text-blue-400 font-medium mb-2">Email Mapping:</h4>
+            <p className="text-sm text-gray-300">
+              The <code>source_email</code> field determines which user the CV will be assigned to. 
+              Make sure this email matches a registered user in the system.
+            </p>
           </div>
 
           <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
@@ -100,7 +110,9 @@ export const N8nApiInfo = () => {
   success: true,
   message: "Candidate tile created successfully",
   id: "uuid-here",
-  candidate_name: "John Doe"
+  candidate_name: "John Doe",
+  assigned_to_user: "info@sa-recruitment.com",
+  user_id: "user-uuid-here"
 }, null, 2)}
             </pre>
           </div>
