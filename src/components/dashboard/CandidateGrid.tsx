@@ -10,22 +10,6 @@ interface CandidateGridProps {
   viewMode: 'grid' | 'list';
 }
 
-// Test names to filter out on the client side as backup
-const TEST_NAMES = [
-  'jane doe',
-  'john doe',
-  'jane smith',
-  'john smith',
-  'test candidate',
-  'sample candidate',
-  'example candidate'
-];
-
-const isTestCandidate = (name: string): boolean => {
-  const normalizedName = name.toLowerCase().trim();
-  return TEST_NAMES.some(testName => normalizedName.includes(testName));
-};
-
 const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
@@ -35,14 +19,7 @@ const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
       return false;
     }
 
-    const candidateName = upload.extracted_json.candidate_name;
     const candidateEmail = upload.extracted_json.email_address;
-
-    // Filter out test candidates
-    if (isTestCandidate(candidateName)) {
-      console.log('Filtering out test candidate:', candidateName);
-      return false;
-    }
 
     // Filter out duplicates based on email
     if (candidateEmail && seenEmails.has(candidateEmail.toLowerCase())) {

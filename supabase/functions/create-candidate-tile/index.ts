@@ -21,22 +21,6 @@ interface CandidateData {
   source_email: string; // Now required - the email the CV was sent to
 }
 
-// Test names to filter out
-const TEST_NAMES = [
-  'jane doe',
-  'john doe',
-  'jane smith',
-  'john smith',
-  'test candidate',
-  'sample candidate',
-  'example candidate'
-];
-
-const isTestCandidate = (name: string): boolean => {
-  const normalizedName = name.toLowerCase().trim();
-  return TEST_NAMES.some(testName => normalizedName.includes(testName));
-};
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -76,22 +60,6 @@ serve(async (req) => {
         JSON.stringify({ 
           error: 'Missing required fields', 
           fields: missingFields 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Filter out test candidates
-    if (isTestCandidate(candidateData.candidate_name)) {
-      console.log('Rejected test candidate:', candidateData.candidate_name);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Test candidate rejected',
-          message: 'Test candidates like Jane/John Doe are not allowed',
-          candidate_name: candidateData.candidate_name
         }),
         { 
           status: 400, 
