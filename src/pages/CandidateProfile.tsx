@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,12 +89,15 @@ const CandidateProfile = () => {
   }
 
   const data = upload.extracted_json;
-  const score = parseInt(data.score || '0');
+  
+  // Convert score to be out of 10 instead of 100
+  const rawScore = parseFloat(data.score || '0');
+  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-yellow-400 to-yellow-600';
-    if (score >= 60) return 'from-yellow-500 to-orange-500';
+    if (score >= 8) return 'from-orange-400 to-orange-600';
+    if (score >= 6) return 'from-yellow-500 to-orange-500';
     return 'from-red-500 to-pink-500';
   };
 
@@ -138,7 +140,7 @@ const CandidateProfile = () => {
                       <span className="text-black font-bold text-3xl">{score}</span>
                     </div>
                     <p className="text-white/80 text-elegant tracking-wider">ASSESSMENT SCORE</p>
-                    <Progress value={score} className="mt-4 h-2" />
+                    <Progress value={(score / 10) * 100} className="mt-4 h-2" />
                   </div>
 
                   {/* Contact Info */}

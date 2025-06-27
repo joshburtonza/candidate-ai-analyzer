@@ -39,7 +39,7 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
       transition={{ duration: 0.2 }}
       className="h-full"
     >
-      <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group flex flex-col min-h-[400px]">
+      <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group flex flex-col min-h-[500px]">
         <div className="space-y-4 flex-1 flex flex-col">
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -81,8 +81,8 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
 
           {/* Skills */}
           {skills.length > 0 && (
-            <div className="space-y-2 flex-1">
-              <p className="text-sm font-medium text-white/80">SKILLS</p>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-white/80">EXPERTISE</p>
               <div className="flex flex-wrap gap-1">
                 {skills.slice(0, 3).map((skill, index) => (
                   <Badge
@@ -105,10 +105,10 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
             </div>
           )}
 
-          {/* Assessment */}
+          {/* Justification - Added below expertise */}
           <div className="space-y-2 flex-1">
             <p className="text-sm font-medium text-white/80">ASSESSMENT</p>
-            <p className="text-sm text-gray-400 line-clamp-3">
+            <p className="text-sm text-gray-400 line-clamp-4">
               {data.justification || 'No assessment available'}
             </p>
           </div>

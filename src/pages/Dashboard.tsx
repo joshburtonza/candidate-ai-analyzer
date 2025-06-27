@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,8 +6,10 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
+import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { isSameDay } from 'date-fns';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -22,6 +23,7 @@ const Dashboard = () => {
     start: null,
     end: null
   });
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const { toast } = useToast();
   const subscriptionRef = useRef<any>(null);
 
@@ -154,6 +156,14 @@ const Dashboard = () => {
 
   const handleDateRangeChange = (startDate: Date | null, endDate: Date | null) => {
     setDateRange({ start: startDate, end: endDate });
+    // Clear calendar date selection when using date range
+    setSelectedCalendarDate(null);
+  };
+
+  const handleCalendarDateSelect = (date: Date) => {
+    setSelectedCalendarDate(date);
+    // Clear date range when using calendar selection
+    setDateRange({ start: null, end: null });
   };
 
   // Show loading only if auth is loading
@@ -198,8 +208,14 @@ const Dashboard = () => {
     );
   }
 
-  // Filter uploads by date range
+  // Filter uploads by date range or calendar selection
   const dateFilteredUploads = uploads.filter(upload => {
+    // Calendar date selection takes priority
+    if (selectedCalendarDate) {
+      return isSameDay(new Date(upload.uploaded_at), selectedCalendarDate);
+    }
+    
+    // Otherwise use date range
     if (!dateRange.start && !dateRange.end) return true;
     
     const uploadDate = new Date(upload.uploaded_at);
@@ -273,7 +289,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 <p className="text-white/80 text-sm">
-                  Showing CVs sent to: <span className="text-orange-400 font-medium">{profile.email}</span>
+                  Showing complete profiles with scores ≥ 5/10 sent to: <span className="text-orange-400 font-medium">{profile.email}</span>
                 </p>
               </div>
             </motion.div>
@@ -284,7 +300,11 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <DashboardStats uploads={sortedUploads} />
+            <UploadHistoryCalendar 
+              uploads={uploads} 
+              onDateSelect={handleCalendarDateSelect}
+              selectedDate={selectedCalendarDate}
+            />
           </motion.div>
 
           <motion.div
@@ -292,13 +312,21 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <UploadSection onUploadComplete={handleUploadComplete} />
+            <DashboardStats uploads={sortedUploads} />
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <UploadSection onUploadComplete={handleUploadComplete} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
             <CandidateGrid uploads={sortedUploads} viewMode={viewMode} />
           </motion.div>

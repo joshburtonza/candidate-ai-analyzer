@@ -10,12 +10,44 @@ interface CandidateGridProps {
   viewMode: 'grid' | 'list';
 }
 
+const isCompleteProfile = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json) return false;
+  
+  const data = upload.extracted_json;
+  
+  // Check all required fields for a complete profile
+  return !!(
+    data.candidate_name &&
+    data.contact_number &&
+    data.email_address &&
+    data.countries &&
+    data.skill_set &&
+    data.educational_qualifications &&
+    data.job_history &&
+    data.justification
+  );
+};
+
 const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
     // Filter out incomplete uploads
     if (upload.processing_status !== 'completed' || !upload.extracted_json) {
+      return false;
+    }
+
+    // Filter out incomplete profiles
+    if (!isCompleteProfile(upload)) {
+      console.log('Filtering out incomplete profile:', upload.extracted_json?.candidate_name);
+      return false;
+    }
+
+    // Filter out low scores (below 5/10)
+    const rawScore = parseFloat(upload.extracted_json.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    if (score < 5) {
+      console.log('Filtering out low score candidate:', upload.extracted_json?.candidate_name, 'Score:', score);
       return false;
     }
 
@@ -48,8 +80,8 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
         <div className="inline-flex items-center justify-center w-20 h-20 glass-card rounded-2xl mb-6 elegant-border">
           <FileText className="w-10 h-10 gold-accent" />
         </div>
-        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">NO CANDIDATES YET</h3>
-        <p className="text-white/70 text-lg">Upload some CV files to begin elite AI analysis</p>
+        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">NO QUALIFIED CANDIDATES</h3>
+        <p className="text-white/70 text-lg">Upload CVs with complete profiles and scores ≥ 5/10 to see candidates</p>
       </motion.div>
     );
   }
