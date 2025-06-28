@@ -12,13 +12,65 @@ interface UploadHistoryCalendarProps {
   selectedDate: Date | null;
 }
 
+// Filter function to match the same logic used in CandidateGrid
+const isQualifiedCandidate = (upload: CVUpload): boolean => {
+  // Filter out incomplete uploads
+  if (upload.processing_status !== 'completed' || !upload.extracted_json) {
+    return false;
+  }
+
+  const data = upload.extracted_json;
+  
+  // Check all required fields for a complete profile
+  const hasRequiredFields = !!(
+    data.candidate_name &&
+    data.contact_number &&
+    data.email_address &&
+    data.countries &&
+    data.skill_set &&
+    data.educational_qualifications &&
+    data.job_history &&
+    data.justification
+  );
+
+  if (!hasRequiredFields) {
+    return false;
+  }
+
+  // Filter out low scores (below 5/10)
+  const rawScore = parseFloat(data.score || '0');
+  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+  if (score < 5) {
+    return false;
+  }
+
+  return true;
+};
+
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
 
-  const getUploadCountForDate = (date: Date) => {
+  const getQualifiedCountForDate = (date: Date) => {
+    const seenEmails = new Set<string>();
+    
     return uploads.filter(upload => {
       const uploadDate = new Date(upload.uploaded_at);
-      return isSameDay(uploadDate, date);
+      if (!isSameDay(uploadDate, date)) return false;
+
+      // Apply the same qualification filter as CandidateGrid
+      if (!isQualifiedCandidate(upload)) return false;
+
+      // Filter out duplicates based on email (case-insensitive)
+      const candidateEmail = upload.extracted_json?.email_address;
+      if (candidateEmail) {
+        const normalizedEmail = candidateEmail.toLowerCase().trim();
+        if (seenEmails.has(normalizedEmail)) {
+          return false;
+        }
+        seenEmails.add(normalizedEmail);
+      }
+
+      return true;
     }).length;
   };
 
@@ -28,17 +80,17 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     
     return eachDayOfInterval({ start: weekStart, end: weekEnd }).map(date => ({
       date,
-      count: getUploadCountForDate(date)
+      count: getQualifiedCountForDate(date)
     }));
   };
 
-  const getTotalUploadsThisWeek = () => {
+  const getTotalQualifiedThisWeek = () => {
     const weekDays = getWeekDays();
     return weekDays.reduce((sum, day) => sum + day.count, 0);
   };
 
   const weekDays = getWeekDays();
-  const totalUploadsThisWeek = getTotalUploadsThisWeek();
+  const totalQualifiedThisWeek = getTotalQualifiedThisWeek();
 
   const handleDateSelect = (date: Date) => {
     onDateSelect(date);
@@ -81,7 +133,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         <div className="flex items-center gap-6">
           <div className="text-right">
             <div className="text-3xl font-bold text-brand-gradient">
-              {totalUploadsThisWeek}
+              {totalQualifiedThisWeek}
             </div>
             <div className="text-xs text-white/60 font-medium tracking-wider">
               THIS WEEK
@@ -162,7 +214,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                 {dayNumber}
               </div>
               
-              {/* Upload count badge */}
+              {/* Qualified candidate count badge */}
               {count > 0 && (
                 <div className="absolute -top-2 -right-2">
                   <Badge 
