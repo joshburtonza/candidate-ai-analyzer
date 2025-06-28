@@ -34,14 +34,23 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
       }, 0) / validCandidates.length
     : 0;
 
-  // Get unique countries
+  // Get unique countries with proper type checking
   const uniqueCountries = new Set();
   validCandidates.forEach(upload => {
     const countries = upload.extracted_json?.countries;
     if (countries) {
-      countries.split(',').forEach(country => {
-        uniqueCountries.add(country.trim());
-      });
+      // Handle different data types for countries
+      if (typeof countries === 'string') {
+        countries.split(',').forEach(country => {
+          uniqueCountries.add(country.trim());
+        });
+      } else if (Array.isArray(countries)) {
+        countries.forEach(country => {
+          if (typeof country === 'string') {
+            uniqueCountries.add(country.trim());
+          }
+        });
+      }
     }
   });
 
