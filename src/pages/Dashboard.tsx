@@ -260,9 +260,9 @@ const Dashboard = () => {
               className="glass-card p-4 rounded-xl elegant-border"
             >
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-brand-gradient rounded-full"></div>
                 <p className="text-white/80 text-sm">
-                  Showing complete profiles with scores ≥ 5/10 sent to: <span className="text-orange-400 font-medium">{profile.email}</span>
+                  Showing complete profiles with scores ≥ 5/10 sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
                 </p>
               </div>
             </motion.div>
@@ -270,17 +270,17 @@ const Dashboard = () => {
 
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/5 backdrop-blur-xl border border-orange-500/30">
+            <TabsList className="grid w-full grid-cols-2 bg-white/5 backdrop-blur-xl border border-slate-500/30">
               <TabsTrigger 
                 value="candidates" 
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-white/70"
+                className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
               >
                 <Users className="w-4 h-4 mr-2" />
                 Candidates
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-white/70"
+                className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
               >
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
