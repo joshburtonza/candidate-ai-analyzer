@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
