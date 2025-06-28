@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { CVUpload } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
@@ -49,11 +50,63 @@ const isQualifiedCandidate = (upload: CVUpload): boolean => {
 
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
+  const [realtimeUploads, setRealtimeUploads] = useState<CVUpload[]>(uploads);
+
+  // Update local uploads when prop changes
+  useEffect(() => {
+    setRealtimeUploads(uploads);
+  }, [uploads]);
+
+  // Set up real-time subscription for new uploads
+  useEffect(() => {
+    console.log('UploadHistoryCalendar: Setting up realtime subscription');
+    
+    const channel = supabase
+      .channel('calendar_cv_uploads_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'cv_uploads'
+        },
+        (payload) => {
+          console.log('UploadHistoryCalendar: New upload received via realtime:', payload);
+          const newUpload = payload.new as CVUpload;
+          
+          setRealtimeUploads(prev => [newUpload, ...prev]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'cv_uploads'
+        },
+        (payload) => {
+          console.log('UploadHistoryCalendar: Upload updated via realtime:', payload);
+          const updatedUpload = payload.new as CVUpload;
+          
+          setRealtimeUploads(prev => 
+            prev.map(upload => 
+              upload.id === updatedUpload.id ? updatedUpload : upload
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('UploadHistoryCalendar: Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const getQualifiedCountForDate = (date: Date) => {
     const seenEmails = new Set<string>();
     
-    return uploads.filter(upload => {
+    return realtimeUploads.filter(upload => {
       const uploadDate = new Date(upload.uploaded_at);
       if (!isSameDay(uploadDate, date)) return false;
 
