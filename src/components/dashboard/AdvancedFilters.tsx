@@ -1,357 +1,304 @@
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
-import { Check, ChevronsUpDown, X, Filter, RotateCcw } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Filter, X, MapPin, Award, Briefcase } from 'lucide-react';
 import { CVUpload } from '@/types/candidate';
-import { cn } from '@/lib/utils';
-
-interface FilterState {
-  countries: string[];
-  skills: string[];
-  scoreRange: [number, number];
-  searchQuery: string;
-}
 
 interface AdvancedFiltersProps {
   uploads: CVUpload[];
-  onFilterChange: (filteredUploads: CVUpload[]) => void;
+  onFilterChange: (filtered: CVUpload[]) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
-export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearchChange }: AdvancedFiltersProps) => {
-  const [filters, setFilters] = useState<FilterState>({
-    countries: [],
-    skills: [],
-    scoreRange: [5, 10],
-    searchQuery: searchQuery
+const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  return uploads.filter(upload => {
+    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
+    
+    const data = upload.extracted_json;
+    if (!(data.candidate_name && data.contact_number && data.email_address && 
+          data.countries && data.skill_set && data.educational_qualifications && 
+          data.job_history && data.justification)) return false;
+    
+    const rawScore = parseFloat(data.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    if (score < 5) return false;
+    
+    const candidateEmail = data.email_address;
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) return false;
+      seenEmails.add(normalizedEmail);
+    }
+    
+    return true;
   });
+};
 
+export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearchChange }: AdvancedFiltersProps) => {
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [scoreRange, setScoreRange] = useState<[number, number]>([5, 10]);
   const [showFilters, setShowFilters] = useState(false);
-  const [countryOpen, setCountryOpen] = useState(false);
-  const [skillOpen, setSkillOpen] = useState(false);
 
-  // Extract unique countries and skills from all uploads
-  const availableCountries = Array.from(new Set(
-    uploads
-      .filter(u => u.extracted_json?.countries)
-      .flatMap(u => u.extracted_json!.countries.split(',').map(c => c.trim()))
-      .filter(Boolean)
-  )).sort();
+  const validUploads = filterValidCandidates(uploads);
 
-  const availableSkills = Array.from(new Set(
-    uploads
-      .filter(u => u.extracted_json?.skill_set)
-      .flatMap(u => u.extracted_json!.skill_set.split(',').map(s => s.trim().toLowerCase()))
-      .filter(Boolean)
-  )).sort();
+  // Extract unique countries with proper type checking
+  const availableCountries = useMemo(() => {
+    const countrySet = new Set<string>();
+    validUploads.forEach(upload => {
+      const countries = upload.extracted_json?.countries;
+      // Type guard to ensure countries is a string before calling split
+      if (typeof countries === 'string' && countries) {
+        countries.split(',').forEach(country => {
+          const trimmed = country.trim();
+          if (trimmed) countrySet.add(trimmed);
+        });
+      }
+    });
+    return Array.from(countrySet).sort();
+  }, [validUploads]);
+
+  // Extract unique skills with proper type checking
+  const availableSkills = useMemo(() => {
+    const skillSet = new Set<string>();
+    validUploads.forEach(upload => {
+      const skills = upload.extracted_json?.skill_set;
+      // Type guard to ensure skills is a string before calling split
+      if (typeof skills === 'string' && skills) {
+        skills.split(',').forEach(skill => {
+          const trimmed = skill.trim();
+          if (trimmed) skillSet.add(trimmed);
+        });
+      }
+    });
+    return Array.from(skillSet).sort();
+  }, [validUploads]);
 
   // Apply filters
   useEffect(() => {
-    let filtered = uploads.filter(upload => {
-      if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
-      
-      const data = upload.extracted_json;
-      
-      // Complete profile check
-      if (!(data.candidate_name && data.contact_number && data.email_address && 
-            data.countries && data.skill_set && data.educational_qualifications && 
-            data.job_history && data.justification)) return false;
-      
-      // Score filter
-      const rawScore = parseFloat(data.score || '0');
-      const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-      if (score < filters.scoreRange[0] || score > filters.scoreRange[1]) return false;
-      
-      // Country filter
-      if (filters.countries.length > 0) {
-        const candidateCountries = data.countries.split(',').map(c => c.trim());
-        const hasMatchingCountry = filters.countries.some(filterCountry => 
-          candidateCountries.some(country => country.toLowerCase().includes(filterCountry.toLowerCase()))
-        );
-        if (!hasMatchingCountry) return false;
-      }
-      
-      // Skills filter
-      if (filters.skills.length > 0) {
-        const candidateSkills = data.skill_set.split(',').map(s => s.trim().toLowerCase());
-        const hasMatchingSkill = filters.skills.some(filterSkill => 
-          candidateSkills.some(skill => skill.includes(filterSkill.toLowerCase()))
-        );
-        if (!hasMatchingSkill) return false;
-      }
-      
-      // Search query
-      if (filters.searchQuery) {
-        const searchFields = [
-          data.candidate_name,
-          data.email_address,
-          data.skill_set,
-          data.countries
-        ].join(' ').toLowerCase();
-        
-        if (!searchFields.includes(filters.searchQuery.toLowerCase())) return false;
-      }
-      
-      return true;
-    });
+    let filtered = validUploads;
 
-    // Remove duplicates by email
-    const seenEmails = new Set<string>();
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(upload => {
+        const data = upload.extracted_json!;
+        return (
+          data.candidate_name?.toLowerCase().includes(query) ||
+          data.email_address?.toLowerCase().includes(query) ||
+          data.skill_set?.toLowerCase().includes(query) ||
+          data.countries?.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    // Country filter
+    if (selectedCountries.length > 0) {
+      filtered = filtered.filter(upload => {
+        const countries = upload.extracted_json?.countries;
+        if (typeof countries === 'string') {
+          return selectedCountries.some(selectedCountry =>
+            countries.toLowerCase().includes(selectedCountry.toLowerCase())
+          );
+        }
+        return false;
+      });
+    }
+
+    // Skills filter
+    if (selectedSkills.length > 0) {
+      filtered = filtered.filter(upload => {
+        const skills = upload.extracted_json?.skill_set;
+        if (typeof skills === 'string') {
+          return selectedSkills.some(selectedSkill =>
+            skills.toLowerCase().includes(selectedSkill.toLowerCase())
+          );
+        }
+        return false;
+      });
+    }
+
+    // Score filter
     filtered = filtered.filter(upload => {
-      const email = upload.extracted_json?.email_address;
-      if (email) {
-        const normalizedEmail = email.toLowerCase().trim();
-        if (seenEmails.has(normalizedEmail)) return false;
-        seenEmails.add(normalizedEmail);
-      }
-      return true;
+      const rawScore = parseFloat(upload.extracted_json?.score || '0');
+      const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+      return score >= scoreRange[0] && score <= scoreRange[1];
     });
 
     onFilterChange(filtered);
-  }, [filters, uploads, onFilterChange]);
-
-  // Sync search query
-  useEffect(() => {
-    setFilters(prev => ({ ...prev, searchQuery }));
-  }, [searchQuery]);
-
-  const handleSearchChange = (value: string) => {
-    onSearchChange(value);
-    setFilters(prev => ({ ...prev, searchQuery: value }));
-  };
+  }, [validUploads, searchQuery, selectedCountries, selectedSkills, scoreRange, onFilterChange]);
 
   const clearFilters = () => {
-    setFilters({
-      countries: [],
-      skills: [],
-      scoreRange: [5, 10],
-      searchQuery: ''
-    });
+    setSelectedCountries([]);
+    setSelectedSkills([]);
+    setScoreRange([5, 10]);
     onSearchChange('');
   };
 
-  const hasActiveFilters = filters.countries.length > 0 || 
-                          filters.skills.length > 0 || 
-                          filters.scoreRange[0] > 5 || 
-                          filters.scoreRange[1] < 10 ||
-                          filters.searchQuery.length > 0;
-
   const removeCountry = (country: string) => {
-    setFilters(prev => ({
-      ...prev,
-      countries: prev.countries.filter(c => c !== country)
-    }));
+    setSelectedCountries(prev => prev.filter(c => c !== country));
   };
 
   const removeSkill = (skill: string) => {
-    setFilters(prev => ({
-      ...prev,
-      skills: prev.skills.filter(s => s !== skill)
-    }));
+    setSelectedSkills(prev => prev.filter(s => s !== skill));
   };
 
-  return (
-    <div className="space-y-4">
-      {/* Search and Filter Toggle */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Search candidates..."
-            value={filters.searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-white/60 focus:border-orange-500"
-          />
-        </div>
-        
-        <Button
-          onClick={() => setShowFilters(!showFilters)}
-          variant="outline"
-          className={cn(
-            "border-orange-500/30 text-orange-400 hover:bg-orange-500/10",
-            hasActiveFilters && "bg-orange-500/20 border-orange-500"
-          )}
-        >
-          <Filter className="w-4 h-4 mr-2" />
-          Filters {hasActiveFilters && `(${[filters.countries.length, filters.skills.length].filter(x => x > 0).length + (filters.scoreRange[0] > 5 || filters.scoreRange[1] < 10 ? 1 : 0)})`}
-        </Button>
+  const activeFiltersCount = selectedCountries.length + selectedSkills.length + (scoreRange[0] > 5 || scoreRange[1] < 10 ? 1 : 0);
 
-        {hasActiveFilters && (
+  return (
+    <div className="glass-card elegant-border p-6 rounded-xl space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search candidates..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10 bg-white/5 backdrop-blur-xl border-orange-500/30 text-white placeholder:text-white/50"
+            />
+          </div>
+          
+          <Button
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+          </Button>
+        </div>
+
+        {activeFiltersCount > 0 && (
           <Button
             onClick={clearFilters}
             variant="ghost"
             size="sm"
-            className="text-white/60 hover:text-white hover:bg-white/10"
+            className="text-red-400 hover:bg-red-500/10"
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Clear
+            Clear All
           </Button>
         )}
       </div>
 
-      {/* Active Filters Display */}
-      {(filters.countries.length > 0 || filters.skills.length > 0) && (
-        <div className="flex flex-wrap gap-2">
-          {filters.countries.map(country => (
-            <Badge
-              key={country}
-              variant="secondary"
-              className="bg-orange-500/20 text-orange-300 border-orange-500/30 pr-1"
-            >
-              {country}
-              <button
-                onClick={() => removeCountry(country)}
-                className="ml-2 hover:bg-orange-500/30 rounded-full p-0.5"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-          {filters.skills.map(skill => (
-            <Badge
-              key={skill}
-              variant="secondary"
-              className="bg-blue-500/20 text-blue-300 border-blue-500/30 pr-1"
-            >
-              {skill}
-              <button
-                onClick={() => removeSkill(skill)}
-                className="ml-2 hover:bg-blue-500/30 rounded-full p-0.5"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      {/* Advanced Filters Panel */}
       {showFilters && (
-        <Card className="glass-card elegant-border p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Country Filter */}
-            <div className="space-y-2">
-              <Label className="text-white font-medium">Countries</Label>
-              <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={countryOpen}
-                    className="w-full justify-between bg-white/5 border-orange-500/30 text-white"
-                  >
-                    {filters.countries.length > 0
-                      ? `${filters.countries.length} selected`
-                      : "Select countries..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-gray-800 border-orange-500/30">
-                  <Command className="bg-gray-800">
-                    <CommandInput placeholder="Search countries..." className="text-white" />
-                    <CommandEmpty className="text-white/60">No countries found.</CommandEmpty>
-                    <CommandGroup className="max-h-48 overflow-auto">
-                      {availableCountries.map((country) => (
-                        <CommandItem
-                          key={country}
-                          onSelect={() => {
-                            setFilters(prev => ({
-                              ...prev,
-                              countries: prev.countries.includes(country)
-                                ? prev.countries.filter(c => c !== country)
-                                : [...prev.countries, country]
-                            }));
-                          }}
-                          className="text-white hover:bg-white/10"
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              filters.countries.includes(country) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {country}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+        <div className="space-y-6 border-t border-white/10 pt-4">
+          {/* Country Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-orange-400" />
+              <label className="text-sm font-medium text-white">Countries</label>
             </div>
-
-            {/* Skills Filter */}
-            <div className="space-y-2">
-              <Label className="text-white font-medium">Skills</Label>
-              <Popover open={skillOpen} onOpenChange={setSkillOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={skillOpen}
-                    className="w-full justify-between bg-white/5 border-orange-500/30 text-white"
+            <Select
+              onValueChange={(value) => {
+                if (!selectedCountries.includes(value)) {
+                  setSelectedCountries([...selectedCountries, value]);
+                }
+              }}
+            >
+              <SelectTrigger className="bg-white/5 border-orange-500/30 text-white">
+                <SelectValue placeholder="Select countries..." />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-orange-500/30 text-white">
+                {availableCountries.map(country => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedCountries.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedCountries.map(country => (
+                  <Badge
+                    key={country}
+                    variant="secondary"
+                    className="bg-orange-500/20 text-orange-300 border-orange-500/30"
                   >
-                    {filters.skills.length > 0
-                      ? `${filters.skills.length} selected`
-                      : "Select skills..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-gray-800 border-orange-500/30">
-                  <Command className="bg-gray-800">
-                    <CommandInput placeholder="Search skills..." className="text-white" />
-                    <CommandEmpty className="text-white/60">No skills found.</CommandEmpty>
-                    <CommandGroup className="max-h-48 overflow-auto">
-                      {availableSkills.map((skill) => (
-                        <CommandItem
-                          key={skill}
-                          onSelect={() => {
-                            setFilters(prev => ({
-                              ...prev,
-                              skills: prev.skills.includes(skill)
-                                ? prev.skills.filter(s => s !== skill)
-                                : [...prev.skills, skill]
-                            }));
-                          }}
-                          className="text-white hover:bg-white/10"
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              filters.skills.includes(skill) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {skill}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+                    {country}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => removeCountry(country)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
 
-            {/* Score Range Filter */}
-            <div className="space-y-4">
-              <Label className="text-white font-medium">
-                Score Range: {filters.scoreRange[0]} - {filters.scoreRange[1]}/10
-              </Label>
+          {/* Skills Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-orange-400" />
+              <label className="text-sm font-medium text-white">Skills</label>
+            </div>
+            <Select
+              onValueChange={(value) => {
+                if (!selectedSkills.includes(value)) {
+                  setSelectedSkills([...selectedSkills, value]);
+                }
+              }}
+            >
+              <SelectTrigger className="bg-white/5 border-orange-500/30 text-white">
+                <SelectValue placeholder="Select skills..." />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-orange-500/30 text-white max-h-48 overflow-auto">
+                {availableSkills.map(skill => (
+                  <SelectItem key={skill} value={skill}>
+                    {skill}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedSkills.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedSkills.map(skill => (
+                  <Badge
+                    key={skill}
+                    variant="secondary"
+                    className="bg-blue-500/20 text-blue-300 border-blue-500/30"
+                  >
+                    {skill}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => removeSkill(skill)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Score Range Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Award className="w-4 h-4 text-orange-400" />
+              <label className="text-sm font-medium text-white">Score Range</label>
+            </div>
+            <div className="space-y-2">
               <Slider
-                value={filters.scoreRange}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, scoreRange: value as [number, number] }))}
+                value={scoreRange}
+                onValueChange={(value) => setScoreRange(value as [number, number])}
                 min={5}
                 max={10}
                 step={1}
                 className="w-full"
               />
+              <div className="flex justify-between text-sm text-white/70">
+                <span>{scoreRange[0]}/10</span>
+                <span>{scoreRange[1]}/10</span>
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );
