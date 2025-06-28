@@ -1,9 +1,8 @@
 
-import { Users, FileText, TrendingUp, MapPin, Calendar } from 'lucide-react';
+import { Users, FileText, TrendingUp, MapPin } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { CVUpload } from '@/types/candidate';
 import { motion } from 'framer-motion';
-import { isSameDay } from 'date-fns';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
@@ -68,13 +67,6 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   
   const stats = {
     totalCandidates: qualifiedCandidates.length,
-    todayUploads: uploads.filter(u => {
-      const today = new Date();
-      return isSameDay(new Date(u.uploaded_at), today);
-    }).filter(u => {
-      // Apply same filtering to today's uploads
-      return filterValidCandidates([u]).length > 0;
-    }).length,
     averageScore: qualifiedCandidates.length > 0 
       ? Math.round(qualifiedCandidates.reduce((sum, upload) => {
           const rawScore = parseFloat(upload.extracted_json?.score || '0');
@@ -101,12 +93,6 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
       color: 'bg-blue-600',
     },
     {
-      title: "TODAY'S QUALIFIED",
-      value: stats.todayUploads,
-      icon: Calendar,
-      color: 'bg-green-600',
-    },
-    {
       title: 'AVERAGE FIT SCORE',
       value: `${stats.averageScore}/10`,
       icon: TrendingUp,
@@ -121,7 +107,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {statCards.map((stat, index) => (
         <motion.div
           key={stat.title}
