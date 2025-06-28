@@ -1,4 +1,3 @@
-
 import { CVUpload } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
@@ -36,20 +35,77 @@ const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   });
 };
 
+const normalizeCountryName = (country: string): string => {
+  const normalized = country.toLowerCase().trim();
+  
+  // Country name mappings
+  const countryMappings: Record<string, string> = {
+    'usa': 'United States',
+    'united states': 'United States',
+    'united states of america': 'United States',
+    'us': 'United States',
+    'america': 'United States',
+    'uae': 'United Arab Emirates',
+    'united arab emirates': 'United Arab Emirates',
+    'emirates': 'United Arab Emirates',
+    'uk': 'United Kingdom',
+    'united kingdom': 'United Kingdom',
+    'britain': 'United Kingdom',
+    'great britain': 'United Kingdom',
+    'south africa': 'South Africa',
+    'rsa': 'South Africa'
+  };
+  
+  return countryMappings[normalized] || country.trim();
+};
+
+const normalizeSkillName = (skill: string): string => {
+  const normalized = skill.toLowerCase().trim();
+  
+  // Skill name mappings for common variations
+  const skillMappings: Record<string, string> = {
+    'javascript': 'JavaScript',
+    'js': 'JavaScript',
+    'typescript': 'TypeScript',
+    'ts': 'TypeScript',
+    'react': 'React',
+    'reactjs': 'React',
+    'react.js': 'React',
+    'nodejs': 'Node.js',
+    'node': 'Node.js',
+    'node.js': 'Node.js',
+    'python': 'Python',
+    'java': 'Java',
+    'c#': 'C#',
+    'csharp': 'C#',
+    'c++': 'C++',
+    'cpp': 'C++',
+    'html': 'HTML',
+    'css': 'CSS',
+    'sql': 'SQL',
+    'mysql': 'MySQL',
+    'postgresql': 'PostgreSQL',
+    'postgres': 'PostgreSQL'
+  };
+  
+  return skillMappings[normalized] || skill.trim();
+};
+
 const extractCountries = (countriesData: any): string[] => {
   console.log('Countries data:', countriesData, 'Type:', typeof countriesData);
   
   if (!countriesData) return [];
   
+  let countries: string[] = [];
+  
   if (typeof countriesData === 'string') {
-    return countriesData.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    countries = countriesData.split(/[,;|]/).map(c => c.trim()).filter(c => c.length > 0);
+  } else if (Array.isArray(countriesData)) {
+    countries = countriesData.map(c => String(c).trim()).filter(c => c.length > 0);
   }
   
-  if (Array.isArray(countriesData)) {
-    return countriesData.map(c => String(c).trim()).filter(c => c.length > 0);
-  }
-  
-  return [];
+  // Normalize country names
+  return countries.map(normalizeCountryName);
 };
 
 const extractSkills = (skillsData: any): string[] => {
@@ -57,15 +113,16 @@ const extractSkills = (skillsData: any): string[] => {
   
   if (!skillsData) return [];
   
+  let skills: string[] = [];
+  
   if (typeof skillsData === 'string') {
-    return skillsData.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+    skills = skillsData.split(/[,;|]/).map(s => s.trim()).filter(s => s.length > 0);
+  } else if (Array.isArray(skillsData)) {
+    skills = skillsData.map(s => String(s).trim()).filter(s => s.length > 0);
   }
   
-  if (Array.isArray(skillsData)) {
-    return skillsData.map(s => String(s).trim().toLowerCase()).filter(s => s.length > 0);
-  }
-  
-  return [];
+  // Normalize skill names
+  return skills.map(normalizeSkillName);
 };
 
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
@@ -85,7 +142,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([score, count]) => ({ score, count }))
     .sort((a, b) => parseInt(a.score) - parseInt(b.score));
 
-  // Country distribution data with improved extraction
+  // Country distribution data with improved extraction and normalization
   const countryDistribution = validUploads.reduce((acc, upload) => {
     const countries = extractCountries(upload.extracted_json?.countries);
     countries.forEach(country => {
@@ -122,7 +179,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     };
   });
 
-  // Top skills with improved extraction
+  // Top skills with improved extraction and normalization
   const skillsDistribution = validUploads.reduce((acc, upload) => {
     const skills = extractSkills(upload.extracted_json?.skill_set);
     skills.forEach(skill => {
