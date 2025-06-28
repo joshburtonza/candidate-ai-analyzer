@@ -3,32 +3,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark theme utilities */
+.dark-card {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 41, 59, 0.9) 50%, 
+    rgba(15, 23, 42, 0.95) 100%);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.dark-card-hover {
+  transition: all 0.3s ease;
+}
+
+.dark-card-hover:hover {
+  transform: scale(1.02);
+  border-color: rgba(251, 146, 60, 0.3);
+}
+
 /* Glass-morphism utility classes */
 .glass {
-  @apply bg-glass border border-border rounded-lgx shadow-glass
-         backdrop-blur-xl backdrop-saturate-150;
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 41, 59, 0.9) 50%, 
+    rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(24px);
+  backdrop-saturate: 150%;
 }
 
 .hover-lift {
-  @apply transition-transform duration-150 ease-swift will-change-transform;
+  transition: transform 0.3s cubic-bezier(0.25,0.8,0.25,1);
 }
 
 .hover-lift:hover { 
-  transform: scale(1.025); 
+  transform: scale(1.02); 
 }
 
 .hover-lift:active { 
   transform: scale(0.99); 
-  box-shadow: 0 2px 16px rgba(0,0,0,0.35); 
 }
 
 /* Brand gradient utilities */
 .bg-brand-gradient {
-  background: linear-gradient(135deg, #FFA62E 0%, #EA4D2C 100%);
+  background: linear-gradient(135deg, #FB923C 0%, #EA580C 100%);
 }
 
 .text-brand-gradient {
-  background: linear-gradient(135deg, #FFA62E 0%, #EA4D2C 100%);
+  background: linear-gradient(135deg, #FB923C 0%, #EA580C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -38,12 +63,46 @@
 body {
   background-color: #000;
   background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0);
-  background-size: 10px 10px;
+  background-size: 20px 20px;
   color: rgba(255,255,255,0.9);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
   font-weight: 600;
+  color: white;
+}
+
+.dot-grid-bg {
+  background-color: #000;
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+.elegant-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+
+.elegant-border {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 41, 59, 0.9) 50%, 
+    rgba(15, 23, 42, 0.95) 100%);
+  backdrop-filter: blur(24px);
+  backdrop-saturate: 150%;
+}
+
+.text-elegant {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.gold-accent {
+  color: #FB923C;
 }

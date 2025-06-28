@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -176,104 +177,117 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
   };
 
   return (
-    <div className="glass p-8 rounded-lgx">
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center mb-4">
-          <div className="p-3 bg-brand-gradient/20 rounded-lgx">
-            <Upload className="w-8 h-8 text-brand" />
-          </div>
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">UPLOAD CV FILES</h2>
-        <p className="text-white/70">Add candidate CVs for elite AI analysis and scoring</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Direct Upload */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-brand-gradient/20 rounded-lg">
-              <FileText className="w-5 h-5 text-brand" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">DIRECT UPLOAD</h3>
-          </div>
-
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lgx p-8 text-center cursor-pointer transition-all hover-lift ${
-              isDragActive
-                ? 'border-brand bg-brand/10'
-                : 'border-white/20 hover:border-brand/50 hover:bg-brand/5'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <div className="flex flex-col items-center gap-4">
-              <div className="p-4 bg-brand-gradient/20 rounded-lgx">
-                <Upload className="w-8 h-8 text-brand" />
-              </div>
-              <div>
-                <p className="text-lg font-medium text-white mb-2">
-                  {isDragActive ? 'Drop CV files here' : 'Drop CV files here'}
-                </p>
-                <p className="text-sm text-white/70 mb-4">
-                  Drag and drop your CV files or click to browse
-                </p>
-                <Button 
-                  className="bg-brand-gradient hover:opacity-90 text-white font-semibold"
-                  type="button"
-                >
-                  Browse Files
-                </Button>
+    <div className="relative overflow-hidden">
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 rounded-2xl"></div>
+      
+      {/* Content */}
+      <div className="relative z-10 p-8 border border-white/10 rounded-2xl">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl blur-lg opacity-50"></div>
+              <div className="relative p-3 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl">
+                <Upload className="w-8 h-8 text-white" />
               </div>
             </div>
           </div>
+          <h2 className="text-2xl font-bold text-white mb-2 tracking-wider">UPLOAD CV FILES</h2>
+          <p className="text-gray-400">Add candidate CVs for elite AI analysis and scoring</p>
         </div>
 
-        {/* Google Integration */}
-        <div className="space-y-4">
-          <GoogleDocUpload onUploadComplete={onUploadComplete} />
-        </div>
-      </div>
-
-      {/* Upload Progress */}
-      {uploadFiles.length > 0 && (
-        <div className="mt-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-brand-gradient/20 rounded-lg">
-              <Users className="w-5 h-5 text-brand" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Direct Upload */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/20">
+                <FileText className="w-5 h-5 text-orange-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white tracking-wider">DIRECT UPLOAD</h3>
             </div>
-            <h3 className="text-lg font-semibold text-white">PROCESSING FILES</h3>
-          </div>
-          
-          <div className="space-y-3">
-            {uploadFiles.map((uploadFile, index) => (
-              <div key={index} className="glass p-4 rounded-lgx">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(uploadFile.status)}
-                    <span className="text-white font-medium truncate">
-                      {uploadFile.file.name}
-                    </span>
+
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
+                isDragActive
+                  ? 'border-orange-400 bg-orange-500/10'
+                  : 'border-white/20 hover:border-orange-400/50 hover:bg-orange-500/5'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl blur-lg opacity-30"></div>
+                  <div className="relative p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
+                    <Upload className="w-8 h-8 text-orange-400" />
                   </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={`${getStatusColor(uploadFile.status)} border-current/30`}
-                  >
-                    {uploadFile.status.toUpperCase()}
-                  </Badge>
                 </div>
-                
-                {uploadFile.status !== 'error' && (
-                  <Progress value={uploadFile.progress} className="h-2" />
-                )}
-                
-                {uploadFile.error && (
-                  <p className="text-red-400 text-sm mt-2">{uploadFile.error}</p>
-                )}
+                <div>
+                  <p className="text-lg font-medium text-white mb-2">
+                    {isDragActive ? 'Drop CV files here' : 'Drop CV files here'}
+                  </p>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Drag and drop your CV files or click to browse
+                  </p>
+                  <Button 
+                    className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25"
+                    type="button"
+                  >
+                    Browse Files
+                  </Button>
+                </div>
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* Google Integration */}
+          <div className="space-y-4">
+            <GoogleDocUpload onUploadComplete={onUploadComplete} />
           </div>
         </div>
-      )}
+
+        {/* Upload Progress */}
+        {uploadFiles.length > 0 && (
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/20">
+                <Users className="w-5 h-5 text-orange-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white tracking-wider">PROCESSING FILES</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {uploadFiles.map((uploadFile, index) => (
+                <div key={index} className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(uploadFile.status)}
+                      <span className="text-white font-medium truncate">
+                        {uploadFile.file.name}
+                      </span>
+                    </div>
+                    <Badge 
+                      variant="secondary" 
+                      className={`${getStatusColor(uploadFile.status)} border-current/30 rounded-xl`}
+                    >
+                      {uploadFile.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                  
+                  {uploadFile.status !== 'error' && (
+                    <Progress value={uploadFile.progress} className="h-2" />
+                  )}
+                  
+                  {uploadFile.error && (
+                    <p className="text-red-400 text-sm mt-2">{uploadFile.error}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

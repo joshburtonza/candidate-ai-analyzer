@@ -79,28 +79,35 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
 
   const getIconColor = (color: string) => {
     switch (color) {
-      case 'blue': return 'text-blue-400 bg-blue-500/20';
-      case 'orange': return 'text-brand bg-brand-gradient/20';
-      case 'red': return 'text-red-400 bg-red-500/20';
-      default: return 'text-brand bg-brand-gradient/20';
+      case 'blue': return 'text-blue-400 bg-blue-500/10';
+      case 'orange': return 'text-orange-400 bg-orange-500/10';
+      case 'red': return 'text-red-400 bg-red-500/10';
+      default: return 'text-orange-400 bg-orange-500/10';
     }
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat, index) => (
-        <div key={index} className="glass p-6 rounded-lgx hover-lift">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-white/70 tracking-wider">
-                {stat.title}
-              </p>
-              <p className="text-3xl font-bold text-white mt-2">
-                {stat.value}
-              </p>
-            </div>
-            <div className={`p-3 rounded-lgx ${getIconColor(stat.color)}`}>
-              <stat.icon className="w-6 h-6" />
+        <div key={index} className="relative overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 rounded-2xl"></div>
+          
+          {/* Content */}
+          <div className="relative z-10 p-8 border border-white/10 rounded-2xl transition-all duration-300 hover:scale-105 hover:border-orange-500/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-400 tracking-wider mb-2">
+                  {stat.title}
+                </p>
+                <p className="text-4xl font-bold text-white">
+                  {stat.value}
+                </p>
+              </div>
+              <div className={`p-4 rounded-xl ${getIconColor(stat.color)}`}>
+                <stat.icon className="w-8 h-8" />
+              </div>
             </div>
           </div>
         </div>
