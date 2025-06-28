@@ -38,35 +38,35 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
   const currentMonth = format(currentWeekStart, 'MMMM yyyy');
 
   return (
-    <Card className="glass-card elegant-border p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white text-elegant tracking-wider">UPLOAD HISTORY</h3>
-        <div className="flex items-center gap-4">
-          <div className="text-white/80 font-medium text-elegant tracking-wider">
+    <Card className="glass-card elegant-border p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-xl font-bold text-white tracking-wide">UPLOAD HISTORY</h3>
+        <div className="flex items-center gap-6">
+          <div className="text-white/90 font-semibold text-lg tracking-wide">
             {currentMonth.toUpperCase()}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={goToPreviousWeek}
-              className="text-white hover:bg-white/10"
+              className="text-white/70 hover:text-white hover:bg-white/10 w-10 h-10 p-0"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={goToNextWeek}
-              className="text-white hover:bg-white/10"
+              className="text-white/70 hover:text-white hover:bg-white/10 w-10 h-10 p-0"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-3 mb-6">
         {weekDays.map((date, index) => {
           const uploadCount = getUploadCountForDate(date);
           const isSelected = selectedDate && isSameDay(date, selectedDate);
@@ -75,31 +75,38 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           return (
             <motion.div
               key={index}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="relative"
             >
               <Button
                 variant="ghost"
                 onClick={() => onDateSelect(date)}
                 className={`
-                  h-20 w-full flex flex-col items-center justify-center p-2 rounded-lg border transition-all
+                  h-24 w-full flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200
                   ${isSelected 
-                    ? 'bg-orange-500 text-white border-orange-400' 
+                    ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white border-orange-400 shadow-lg shadow-orange-500/25' 
                     : uploadCount > 0 
-                      ? 'bg-orange-500/20 text-orange-400 border-orange-500/30 hover:bg-orange-500/30' 
-                      : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'
+                      ? 'bg-orange-500/10 text-orange-300 border-orange-500/30 hover:bg-orange-500/20 hover:border-orange-500/50' 
+                      : 'bg-white/3 text-white/50 border-white/10 hover:bg-white/8 hover:border-white/20'
                   }
-                  ${isToday ? 'ring-2 ring-orange-400/50' : ''}
+                  ${isToday ? 'ring-2 ring-orange-400/40' : ''}
                 `}
               >
-                <div className="text-xs font-medium mb-1">
+                <div className="text-xs font-medium mb-1 opacity-80">
                   {format(date, 'EEE').toUpperCase()}
                 </div>
-                <div className="text-lg font-bold">
+                <div className="text-xl font-bold">
                   {format(date, 'd')}
                 </div>
                 {uploadCount > 0 && (
-                  <div className="text-xs font-semibold mt-1 bg-orange-400 text-black px-1.5 py-0.5 rounded-full">
+                  <div className={`
+                    text-xs font-bold mt-2 px-2 py-1 rounded-full min-w-[24px] h-6 flex items-center justify-center
+                    ${isSelected 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-orange-500 text-white'
+                    }
+                  `}>
                     {uploadCount}
                   </div>
                 )}
@@ -109,9 +116,11 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         })}
       </div>
 
-      <p className="text-center text-white/60 text-sm mt-4">
-        Click on a day to filter candidates by upload date
-      </p>
+      <div className="text-center">
+        <p className="text-white/60 text-sm font-medium">
+          Click on a day to filter candidates by upload date
+        </p>
+      </div>
     </Card>
   );
 };
