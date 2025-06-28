@@ -61,7 +61,9 @@ const Auth = () => {
 
   const handleGoogleAuth = async () => {
     setGoogleLoading(true);
+    
     try {
+      console.log('Starting Google OAuth...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -69,11 +71,18 @@ const Auth = () => {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Google OAuth error:', error);
+        throw error;
+      }
+      
+      // Note: The user will be redirected to Google, so we don't set loading to false here
+      console.log('Google OAuth initiated successfully');
     } catch (error: any) {
+      console.error('Google auth failed:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Google Sign-In Failed",
+        description: error.message || "Unable to sign in with Google. Please try again.",
         variant: "destructive",
       });
       setGoogleLoading(false);
