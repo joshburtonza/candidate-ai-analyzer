@@ -1,4 +1,5 @@
 
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Brain, Upload, BarChart3, Users, ArrowRight, CheckCircle, Sparkles, Quote } from "lucide-react";
@@ -42,7 +43,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{
-      background: 'hsla(213, 77%, 14%, 1)',
       background: 'linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
       backgroundAttachment: 'fixed'
     }}>
@@ -353,3 +353,4 @@ const Index = () => {
 };
 
 export default Index;
+
