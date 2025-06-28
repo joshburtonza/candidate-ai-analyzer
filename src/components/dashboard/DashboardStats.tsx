@@ -45,7 +45,8 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
           uniqueCountries.add(country.trim());
         });
       } else if (Array.isArray(countries)) {
-        countries.forEach((country: any) => {
+        // Explicitly type the country parameter and check it's a string
+        countries.forEach((country: unknown) => {
           if (typeof country === 'string') {
             uniqueCountries.add(country.trim());
           }
