@@ -165,60 +165,60 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'text-green-400';
+        return 'text-green-400 border-green-500/30 bg-green-500/20';
       case 'error':
-        return 'text-red-400';
+        return 'text-red-400 border-red-500/30 bg-red-500/20';
       case 'processing':
-        return 'text-yellow-400';
+        return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/20';
       default:
-        return 'text-blue-400';
+        return 'text-blue-400 border-blue-500/30 bg-blue-500/20';
     }
   };
 
   return (
-    <div className="glass p-8 rounded-lgx">
+    <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 backdrop-blur-sm">
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-4">
-          <div className="p-3 bg-brand-gradient/20 rounded-lgx">
-            <Upload className="w-8 h-8 text-brand" />
+          <div className="p-4 bg-orange-500/20 rounded-2xl border border-orange-500/30">
+            <Upload className="w-8 h-8 text-orange-400" />
           </div>
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">UPLOAD CV FILES</h2>
-        <p className="text-white/70">Add candidate CVs for elite AI analysis and scoring</p>
+        <p className="text-gray-400">Add candidate CVs for elite AI analysis and scoring</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Direct Upload */}
         <div className="space-y-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-brand-gradient/20 rounded-lg">
-              <FileText className="w-5 h-5 text-brand" />
+            <div className="p-2 bg-orange-500/20 rounded-xl border border-orange-500/30">
+              <FileText className="w-5 h-5 text-orange-400" />
             </div>
             <h3 className="text-lg font-semibold text-white">DIRECT UPLOAD</h3>
           </div>
 
           <div
             {...getRootProps()}
-            className={`border-2 border-dashed rounded-lgx p-8 text-center cursor-pointer transition-all hover-lift ${
+            className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
               isDragActive
-                ? 'border-brand bg-brand/10'
-                : 'border-white/20 hover:border-brand/50 hover:bg-brand/5'
+                ? 'border-orange-500 bg-orange-500/10'
+                : 'border-slate-600/50 hover:border-orange-500/50 hover:bg-orange-500/5'
             }`}
           >
             <input {...getInputProps()} />
             <div className="flex flex-col items-center gap-4">
-              <div className="p-4 bg-brand-gradient/20 rounded-lgx">
-                <Upload className="w-8 h-8 text-brand" />
+              <div className="p-4 bg-orange-500/20 rounded-2xl border border-orange-500/30">
+                <Upload className="w-8 h-8 text-orange-400" />
               </div>
               <div>
                 <p className="text-lg font-medium text-white mb-2">
                   {isDragActive ? 'Drop CV files here' : 'Drop CV files here'}
                 </p>
-                <p className="text-sm text-white/70 mb-4">
+                <p className="text-sm text-gray-400 mb-4">
                   Drag and drop your CV files or click to browse
                 </p>
                 <Button 
-                  className="bg-brand-gradient hover:opacity-90 text-white font-semibold"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl border border-orange-400/50"
                   type="button"
                 >
                   Browse Files
@@ -238,15 +238,15 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       {uploadFiles.length > 0 && (
         <div className="mt-8 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-brand-gradient/20 rounded-lg">
-              <Users className="w-5 h-5 text-brand" />
+            <div className="p-2 bg-orange-500/20 rounded-xl border border-orange-500/30">
+              <Users className="w-5 h-5 text-orange-400" />
             </div>
             <h3 className="text-lg font-semibold text-white">PROCESSING FILES</h3>
           </div>
           
           <div className="space-y-3">
             {uploadFiles.map((uploadFile, index) => (
-              <div key={index} className="glass p-4 rounded-lgx">
+              <div key={index} className="bg-slate-700/50 border border-slate-600/50 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     {getStatusIcon(uploadFile.status)}
@@ -255,8 +255,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                     </span>
                   </div>
                   <Badge 
-                    variant="secondary" 
-                    className={`${getStatusColor(uploadFile.status)} border-current/30`}
+                    className={`${getStatusColor(uploadFile.status)} border rounded-xl px-3 py-1`}
                   >
                     {uploadFile.status.toUpperCase()}
                   </Badge>

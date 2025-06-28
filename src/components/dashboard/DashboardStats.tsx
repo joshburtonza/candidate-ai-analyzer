@@ -1,6 +1,5 @@
-
 import { CVUpload } from '@/types/candidate';
-import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
+import { Users, TrendingUp, MapPin } from 'lucide-react';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
@@ -79,27 +78,27 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
 
   const getIconColor = (color: string) => {
     switch (color) {
-      case 'blue': return 'text-blue-400 bg-blue-500/20';
-      case 'orange': return 'text-brand bg-brand-gradient/20';
-      case 'red': return 'text-red-400 bg-red-500/20';
-      default: return 'text-brand bg-brand-gradient/20';
+      case 'blue': return 'text-blue-400 bg-blue-500/20 border-blue-500/30';
+      case 'orange': return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
+      case 'red': return 'text-red-400 bg-red-500/20 border-red-500/30';
+      default: return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
     }
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat, index) => (
-        <div key={index} className="glass p-6 rounded-lgx hover-lift">
+        <div key={index} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 hover:border-orange-500/30 transition-all duration-300 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-white/70 tracking-wider">
+              <p className="text-sm font-medium text-gray-400 tracking-wider mb-3">
                 {stat.title}
               </p>
-              <p className="text-3xl font-bold text-white mt-2">
+              <p className="text-3xl font-bold text-white">
                 {stat.value}
               </p>
             </div>
-            <div className={`p-3 rounded-lgx ${getIconColor(stat.color)}`}>
+            <div className={`p-4 rounded-2xl border ${getIconColor(stat.color)}`}>
               <stat.icon className="w-6 h-6" />
             </div>
           </div>
