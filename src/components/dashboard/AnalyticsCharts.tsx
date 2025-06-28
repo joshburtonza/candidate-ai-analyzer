@@ -36,8 +36,41 @@ const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   });
 };
 
+const extractCountries = (countriesData: any): string[] => {
+  console.log('Countries data:', countriesData, 'Type:', typeof countriesData);
+  
+  if (!countriesData) return [];
+  
+  if (typeof countriesData === 'string') {
+    return countriesData.split(',').map(c => c.trim()).filter(c => c.length > 0);
+  }
+  
+  if (Array.isArray(countriesData)) {
+    return countriesData.map(c => String(c).trim()).filter(c => c.length > 0);
+  }
+  
+  return [];
+};
+
+const extractSkills = (skillsData: any): string[] => {
+  console.log('Skills data:', skillsData, 'Type:', typeof skillsData);
+  
+  if (!skillsData) return [];
+  
+  if (typeof skillsData === 'string') {
+    return skillsData.split(',').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+  }
+  
+  if (Array.isArray(skillsData)) {
+    return skillsData.map(s => String(s).trim().toLowerCase()).filter(s => s.length > 0);
+  }
+  
+  return [];
+};
+
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   const validUploads = filterValidCandidates(uploads);
+  console.log('Valid uploads for analytics:', validUploads.length);
 
   // Score distribution data
   const scoreDistribution = validUploads.reduce((acc, upload) => {
@@ -52,18 +85,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([score, count]) => ({ score, count }))
     .sort((a, b) => parseInt(a.score) - parseInt(b.score));
 
-  // Country distribution data with proper type checking
+  // Country distribution data with improved extraction
   const countryDistribution = validUploads.reduce((acc, upload) => {
-    const countries = upload.extracted_json?.countries;
-    // Only process if countries is a string
-    if (typeof countries === 'string' && countries) {
-      countries.split(',').forEach(country => {
-        const trimmed = country.trim();
-        if (trimmed) {
-          acc[trimmed] = (acc[trimmed] || 0) + 1;
-        }
-      });
-    }
+    const countries = extractCountries(upload.extracted_json?.countries);
+    countries.forEach(country => {
+      if (country) {
+        acc[country] = (acc[country] || 0) + 1;
+      }
+    });
     return acc;
   }, {} as Record<string, number>);
 
@@ -71,6 +100,8 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([country, count]) => ({ country, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8); // Top 8 countries
+
+  console.log('Country data:', countryData);
 
   // Upload trends (last 7 days)
   const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -91,18 +122,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     };
   });
 
-  // Top skills with proper type checking
+  // Top skills with improved extraction
   const skillsDistribution = validUploads.reduce((acc, upload) => {
-    const skills = upload.extracted_json?.skill_set;
-    // Only process if skills is a string
-    if (typeof skills === 'string' && skills) {
-      skills.split(',').forEach(skill => {
-        const trimmed = skill.trim().toLowerCase();
-        if (trimmed) {
-          acc[trimmed] = (acc[trimmed] || 0) + 1;
-        }
-      });
-    }
+    const skills = extractSkills(upload.extracted_json?.skill_set);
+    skills.forEach(skill => {
+      if (skill) {
+        acc[skill] = (acc[skill] || 0) + 1;
+      }
+    });
     return acc;
   }, {} as Record<string, number>);
 
@@ -110,6 +137,8 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([skill, count]) => ({ skill, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
+
+  console.log('Top skills:', topSkills);
 
   return (
     <div className="space-y-8">
@@ -149,31 +178,37 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
         >
           <Card className="glass-card elegant-border p-6">
             <h3 className="text-lg font-bold text-white mb-6 tracking-wide">TOP COUNTRIES</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={countryData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="count"
-                  label={({ country, count }) => `${country}: ${count}`}
-                >
-                  {countryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
-                  }} 
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {countryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={countryData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="count"
+                    label={({ country, count }) => `${country}: ${count}`}
+                  >
+                    {countryData.map((entry, index) => (
+                      <Cell key={`country-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }} 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <p className="text-gray-400">No country data available</p>
+              </div>
+            )}
           </Card>
         </motion.div>
       </div>
@@ -220,22 +255,28 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
         >
           <Card className="glass-card elegant-border p-6">
             <h3 className="text-lg font-bold text-white mb-6 tracking-wide">TOP SKILLS</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topSkills} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis type="number" stroke="#9CA3AF" />
-                <YAxis dataKey="skill" type="category" stroke="#9CA3AF" width={100} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
-                  }} 
-                />
-                <Bar dataKey="count" fill="#eab308" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {topSkills.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topSkills} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" stroke="#9CA3AF" />
+                  <YAxis dataKey="skill" type="category" stroke="#9CA3AF" width={100} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }} 
+                  />
+                  <Bar dataKey="count" fill="#eab308" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center">
+                <p className="text-gray-400">No skills data available</p>
+              </div>
+            )}
           </Card>
         </motion.div>
       </div>
