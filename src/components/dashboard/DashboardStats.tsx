@@ -1,28 +1,15 @@
 
 import { CVUpload } from '@/types/candidate';
 import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
 }
 
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
-  // Filter for valid candidates with complete data and score >= 5
-  const validCandidates = uploads.filter(upload => {
-    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
-    
-    const data = upload.extracted_json;
-    const hasRequiredFields = data.candidate_name && data.contact_number && 
-                             data.email_address && data.countries && data.skill_set && 
-                             data.educational_qualifications && data.job_history && data.justification;
-    
-    if (!hasRequiredFields) return false;
-    
-    const rawScore = parseFloat(data.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-    return score >= 5;
-  });
-
+  // Use the centralized filtering logic
+  const validCandidates = filterValidCandidates(uploads);
   const totalCandidates = validCandidates.length;
   
   // Calculate average score

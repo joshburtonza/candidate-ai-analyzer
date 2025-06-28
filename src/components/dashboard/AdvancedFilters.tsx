@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, X, MapPin, Award, Briefcase } from 'lucide-react';
 import { CVUpload } from '@/types/candidate';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface AdvancedFiltersProps {
   uploads: CVUpload[];
@@ -15,38 +16,13 @@ interface AdvancedFiltersProps {
   onSearchChange: (query: string) => void;
 }
 
-const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
-  
-  return uploads.filter(upload => {
-    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
-    
-    const data = upload.extracted_json;
-    if (!(data.candidate_name && data.contact_number && data.email_address && 
-          data.countries && data.skill_set && data.educational_qualifications && 
-          data.job_history && data.justification)) return false;
-    
-    const rawScore = parseFloat(data.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-    if (score < 5) return false;
-    
-    const candidateEmail = data.email_address;
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) return false;
-      seenEmails.add(normalizedEmail);
-    }
-    
-    return true;
-  });
-};
-
 export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearchChange }: AdvancedFiltersProps) => {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [scoreRange, setScoreRange] = useState<[number, number]>([5, 10]);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Use the centralized filtering logic
   const validUploads = filterValidCandidates(uploads);
 
   // Extract unique countries with proper type checking

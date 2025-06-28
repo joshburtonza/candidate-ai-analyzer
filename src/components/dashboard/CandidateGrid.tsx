@@ -5,68 +5,12 @@ import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
 import { FileText } from 'lucide-react';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
 }
-
-const isCompleteProfile = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json) return false;
-  
-  const data = upload.extracted_json;
-  
-  // Check all required fields for a complete profile
-  return !!(
-    data.candidate_name &&
-    data.contact_number &&
-    data.email_address &&
-    data.countries &&
-    data.skill_set &&
-    data.educational_qualifications &&
-    data.job_history &&
-    data.justification
-  );
-};
-
-const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
-  
-  return uploads.filter(upload => {
-    // Filter out incomplete uploads
-    if (upload.processing_status !== 'completed' || !upload.extracted_json) {
-      return false;
-    }
-
-    // Filter out incomplete profiles
-    if (!isCompleteProfile(upload)) {
-      console.log('Filtering out incomplete profile:', upload.extracted_json?.candidate_name);
-      return false;
-    }
-
-    // Filter out low scores (below 5/10)
-    const rawScore = parseFloat(upload.extracted_json.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-    if (score < 5) {
-      console.log('Filtering out low score candidate:', upload.extracted_json?.candidate_name, 'Score:', score);
-      return false;
-    }
-
-    const candidateEmail = upload.extracted_json.email_address;
-
-    // STRENGTHENED: Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
-        console.log('Frontend: Filtering out duplicate candidate with email:', candidateEmail);
-        return false;
-      }
-      seenEmails.add(normalizedEmail);
-    }
-
-    return true;
-  });
-};
 
 export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
@@ -80,6 +24,7 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
     setLocalUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
+  // Use the centralized filtering logic
   const validUploads = filterValidCandidates(localUploads);
 
   if (validUploads.length === 0) {

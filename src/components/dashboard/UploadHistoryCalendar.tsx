@@ -6,47 +6,13 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { CVUpload } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
   onDateSelect: (date: Date) => void;
   selectedDate: Date | null;
 }
-
-// Filter function to match the same logic used in CandidateGrid
-const isQualifiedCandidate = (upload: CVUpload): boolean => {
-  // Filter out incomplete uploads
-  if (upload.processing_status !== 'completed' || !upload.extracted_json) {
-    return false;
-  }
-
-  const data = upload.extracted_json;
-  
-  // Check all required fields for a complete profile
-  const hasRequiredFields = !!(
-    data.candidate_name &&
-    data.contact_number &&
-    data.email_address &&
-    data.countries &&
-    data.skill_set &&
-    data.educational_qualifications &&
-    data.job_history &&
-    data.justification
-  );
-
-  if (!hasRequiredFields) {
-    return false;
-  }
-
-  // Filter out low scores (below 5/10)
-  const rawScore = parseFloat(data.score || '0');
-  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-  if (score < 5) {
-    return false;
-  }
-
-  return true;
-};
 
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
@@ -104,27 +70,14 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
   }, []);
 
   const getQualifiedCountForDate = (date: Date) => {
-    const seenEmails = new Set<string>();
-    
-    return realtimeUploads.filter(upload => {
+    const uploadsForDate = realtimeUploads.filter(upload => {
       const uploadDate = new Date(upload.uploaded_at);
-      if (!isSameDay(uploadDate, date)) return false;
+      return isSameDay(uploadDate, date);
+    });
 
-      // Apply the same qualification filter as CandidateGrid
-      if (!isQualifiedCandidate(upload)) return false;
-
-      // Filter out duplicates based on email (case-insensitive)
-      const candidateEmail = upload.extracted_json?.email_address;
-      if (candidateEmail) {
-        const normalizedEmail = candidateEmail.toLowerCase().trim();
-        if (seenEmails.has(normalizedEmail)) {
-          return false;
-        }
-        seenEmails.add(normalizedEmail);
-      }
-
-      return true;
-    }).length;
+    // Use the same filtering logic as the rest of the app
+    const validCandidates = filterValidCandidates(uploadsForDate);
+    return validCandidates.length;
   };
 
   const getWeekDays = () => {
