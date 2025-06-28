@@ -3,27 +3,87 @@ import { Users, FileText, TrendingUp, MapPin, Calendar } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { CVUpload } from '@/types/candidate';
 import { motion } from 'framer-motion';
+import { isSameDay } from 'date-fns';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
 }
 
+const isCompleteProfile = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json) return false;
+  
+  const data = upload.extracted_json;
+  
+  // Check all required fields for a complete profile
+  return !!(
+    data.candidate_name &&
+    data.contact_number &&
+    data.email_address &&
+    data.countries &&
+    data.skill_set &&
+    data.educational_qualifications &&
+    data.job_history &&
+    data.justification
+  );
+};
+
+const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  return uploads.filter(upload => {
+    // Filter out incomplete uploads
+    if (upload.processing_status !== 'completed' || !upload.extracted_json) {
+      return false;
+    }
+
+    // Filter out incomplete profiles
+    if (!isCompleteProfile(upload)) {
+      return false;
+    }
+
+    // Filter out low scores (below 5/10)
+    const rawScore = parseFloat(upload.extracted_json.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    if (score < 5) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+};
+
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
-  const completedUploads = uploads.filter(u => u.processing_status === 'completed' && u.extracted_json);
+  const qualifiedCandidates = filterValidCandidates(uploads);
   
   const stats = {
-    totalCandidates: completedUploads.length,
+    totalCandidates: qualifiedCandidates.length,
     todayUploads: uploads.filter(u => {
-      const today = new Date().toDateString();
-      return new Date(u.uploaded_at).toDateString() === today;
+      const today = new Date();
+      return isSameDay(new Date(u.uploaded_at), today);
+    }).filter(u => {
+      // Apply same filtering to today's uploads
+      return filterValidCandidates([u]).length > 0;
     }).length,
-    averageScore: completedUploads.length > 0 
-      ? Math.round(completedUploads.reduce((sum, upload) => {
-          return sum + parseInt(upload.extracted_json?.score || '0');
-        }, 0) / completedUploads.length)
+    averageScore: qualifiedCandidates.length > 0 
+      ? Math.round(qualifiedCandidates.reduce((sum, upload) => {
+          const rawScore = parseFloat(upload.extracted_json?.score || '0');
+          const normalizedScore = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+          return sum + normalizedScore;
+        }, 0) / qualifiedCandidates.length)
       : 0,
     uniqueCountries: new Set(
-      completedUploads
+      qualifiedCandidates
         .map(u => u.extracted_json?.countries)
         .filter(Boolean)
         .join(',')
@@ -35,20 +95,20 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
 
   const statCards = [
     {
-      title: 'TOTAL CANDIDATES',
+      title: 'QUALIFIED CANDIDATES',
       value: stats.totalCandidates,
       icon: Users,
       color: 'bg-blue-600',
     },
     {
-      title: "TODAY'S UPLOADS",
+      title: "TODAY'S QUALIFIED",
       value: stats.todayUploads,
       icon: Calendar,
       color: 'bg-green-600',
     },
     {
       title: 'AVERAGE FIT SCORE',
-      value: `${stats.averageScore}%`,
+      value: `${stats.averageScore}/10`,
       icon: TrendingUp,
       color: 'bg-yellow-600',
     },
