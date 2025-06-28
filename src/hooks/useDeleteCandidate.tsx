@@ -18,8 +18,8 @@ export const useDeleteCandidate = () => {
       if (error) throw error;
 
       toast({
-        title: "Candidate Removed",
-        description: `${candidateName} has been removed from your candidates`,
+        title: "Candidate Deleted",
+        description: `${candidateName} has been permanently removed from the database`,
       });
 
       return true;
@@ -27,7 +27,7 @@ export const useDeleteCandidate = () => {
       console.error('Error deleting candidate:', error);
       toast({
         title: "Error",
-        description: "Failed to remove candidate",
+        description: "Failed to delete candidate from database",
         variant: "destructive",
       });
       return false;

@@ -83,7 +83,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                 variant="ghost"
                 onClick={() => onDateSelect(date)}
                 className={`
-                  h-24 w-full flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200
+                  h-28 w-full flex flex-col items-center justify-between p-3 rounded-xl border-2 transition-all duration-200
                   ${isSelected 
                     ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white border-orange-400 shadow-lg shadow-orange-500/25' 
                     : uploadCount > 0 
@@ -93,15 +93,18 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                   ${isToday ? 'ring-2 ring-orange-400/40' : ''}
                 `}
               >
-                <div className="text-xs font-medium mb-1 opacity-80">
-                  {format(date, 'EEE').toUpperCase()}
+                <div className="flex flex-col items-center justify-center flex-1">
+                  <div className="text-xs font-medium mb-1 opacity-80">
+                    {format(date, 'EEE').toUpperCase()}
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {format(date, 'd')}
+                  </div>
                 </div>
-                <div className="text-xl font-bold">
-                  {format(date, 'd')}
-                </div>
+                
                 {uploadCount > 0 && (
                   <div className={`
-                    text-xs font-bold mt-2 px-2 py-1 rounded-full min-w-[24px] h-6 flex items-center justify-center
+                    text-xs font-bold px-2 py-1 rounded-full min-w-[28px] h-6 flex items-center justify-center mt-1
                     ${isSelected 
                       ? 'bg-white/20 text-white' 
                       : 'bg-orange-500 text-white'
