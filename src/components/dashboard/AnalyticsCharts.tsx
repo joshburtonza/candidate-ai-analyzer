@@ -1,4 +1,3 @@
-
 import { CVUpload } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
@@ -8,7 +7,7 @@ interface AnalyticsChartsProps {
   uploads: CVUpload[];
 }
 
-const COLORS = ['#f97316', '#eab308', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+const COLORS = ['#8399A2', '#A8B5BA', '#BCC7CB', '#D1DADC', '#E6ECED', '#3b82f6', '#8b5cf6', '#ec4899'];
 
 const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
@@ -260,8 +259,8 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                 <Bar dataKey="count" fill="url(#brandGradient)" radius={[8, 8, 0, 0]} />
                 <defs>
                   <linearGradient id="brandGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FFA62E" />
-                    <stop offset="100%" stopColor="#EA4D2C" />
+                    <stop offset="0%" stopColor="#8399A2" />
+                    <stop offset="100%" stopColor="#EEF2F3" />
                   </linearGradient>
                 </defs>
               </BarChart>
@@ -285,12 +284,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
+                    innerRadius={0}
+                    paddingAngle={5}
                     fill="#8884d8"
                     dataKey="count"
                     label={({ country, count }) => `${country}: ${count}`}
                   >
                     {countryData.map((entry, index) => (
-                      <Cell key={`country-cell-${index}`} fill={index === 0 ? '#FFA62E' : COLORS[index % COLORS.length]} />
+                      <Cell key={`country-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip 
@@ -339,9 +340,9 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                 <Line 
                   type="monotone" 
                   dataKey="candidates" 
-                  stroke="#FFA62E" 
+                  stroke="#8399A2" 
                   strokeWidth={3}
-                  dot={{ fill: '#FFA62E', strokeWidth: 2, r: 6 }}
+                  dot={{ fill: '#8399A2', strokeWidth: 2, r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -361,7 +362,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                 <BarChart data={topSkills} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis type="number" stroke="rgba(255,255,255,0.7)" />
-                  <YAxis dataKey="skill" type="category" stroke="rgba(255,255,255,0.7)" width={100} />
+                  <YAxis 
+                    dataKey="skill" 
+                    type="category" 
+                    stroke="rgba(255,255,255,0.7)" 
+                    width={120}
+                    tick={{ fontSize: 12 }}
+                    interval={0}
+                  />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'rgba(0,0,0,0.8)', 
@@ -374,8 +382,8 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                   <Bar dataKey="count" fill="url(#skillsGradient)" radius={[0, 8, 8, 0]} />
                   <defs>
                     <linearGradient id="skillsGradient" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#FFA62E" />
-                      <stop offset="100%" stopColor="#EA4D2C" />
+                      <stop offset="0%" stopColor="#8399A2" />
+                      <stop offset="100%" stopColor="#EEF2F3" />
                     </linearGradient>
                   </defs>
                 </BarChart>
