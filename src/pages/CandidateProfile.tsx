@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload, CandidateData } from '@/types/candidate';
@@ -79,7 +80,7 @@ const CandidateProfile = () => {
           <Button 
             onClick={() => navigate('/dashboard')} 
             variant="outline"
-            className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
+            className="border-brand/30 text-brand hover:bg-brand/10 elegant-border text-elegant tracking-wider"
           >
             RETURN TO DASHBOARD
           </Button>
@@ -117,7 +118,7 @@ const CandidateProfile = () => {
             <Button
               onClick={() => navigate('/dashboard')}
               variant="outline"
-              className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
+              className="border-brand/30 text-brand hover:bg-brand/10 elegant-border text-elegant tracking-wider"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               RETURN TO DASHBOARD
@@ -140,8 +141,8 @@ const CandidateProfile = () => {
             <div className="space-y-6">
               <Card className="glass-card elegant-border p-8">
                 <div className="text-center">
-                  <div className="p-6 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                    <User className="w-12 h-12 gold-accent" />
+                  <div className="p-6 bg-gradient-to-br from-brand/20 to-brand/30 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <User className="w-12 h-12 text-brand" />
                   </div>
                   <h1 className="text-3xl font-bold text-white mb-4 text-elegant tracking-wider">
                     {data.candidate_name || 'UNKNOWN CANDIDATE'}
@@ -160,19 +161,19 @@ const CandidateProfile = () => {
                   <div className="space-y-4 text-left">
                     {data.email_address && (
                       <div className="flex items-center gap-4 text-white/90">
-                        <Mail className="w-5 h-5 gold-accent" />
-                        <span>{data.email_address}</span>
+                        <Mail className="w-5 h-5 text-brand" />
+                        <span className="break-all">{data.email_address}</span>
                       </div>
                     )}
                     {data.contact_number && (
                       <div className="flex items-center gap-4 text-white/90">
-                        <Phone className="w-5 h-5 gold-accent" />
+                        <Phone className="w-5 h-5 text-brand" />
                         <span>{data.contact_number}</span>
                       </div>
                     )}
                     {data.countries && (
                       <div className="flex items-center gap-4 text-white/90">
-                        <MapPin className="w-5 h-5 gold-accent" />
+                        <MapPin className="w-5 h-5 text-brand" />
                         <span>{data.countries}</span>
                       </div>
                     )}
@@ -184,7 +185,7 @@ const CandidateProfile = () => {
               {skills.length > 0 && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <Star className="w-6 h-6 gold-accent" />
+                    <Star className="w-6 h-6 text-brand" />
                     <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">EXPERTISE</h3>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -192,7 +193,7 @@ const CandidateProfile = () => {
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="bg-white/10 text-white border-white/20 px-3 py-1"
+                        className="bg-white/10 text-white border-white/20 px-3 py-1 hover:bg-white/20 transition-colors"
                       >
                         {skill}
                       </Badge>
@@ -205,46 +206,52 @@ const CandidateProfile = () => {
             {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Assessment */}
-              <Card className="glass-card elegant-border p-8">
+              <Card className="glass-card elegant-border p-8 hover:border-brand/30 transition-colors">
                 <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
-                <p className="text-white/90 leading-relaxed text-lg">
-                  {data.justification || 'Assessment pending analysis'}
-                </p>
+                <div className="text-white/90 leading-relaxed text-lg overflow-hidden">
+                  <p className="whitespace-pre-wrap break-words">
+                    {data.justification || 'Assessment pending analysis'}
+                  </p>
+                </div>
               </Card>
 
               {/* Education */}
               {data.educational_qualifications && (
-                <Card className="glass-card elegant-border p-8">
+                <Card className="glass-card elegant-border p-8 hover:border-brand/30 transition-colors">
                   <div className="flex items-center gap-3 mb-6">
-                    <GraduationCap className="w-6 h-6 gold-accent" />
+                    <GraduationCap className="w-6 h-6 text-brand" />
                     <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
                   </div>
-                  <div className="text-white/90 whitespace-pre-line leading-relaxed">
-                    {data.educational_qualifications}
+                  <div className="text-white/90 leading-relaxed overflow-hidden">
+                    <p className="whitespace-pre-wrap break-words">
+                      {data.educational_qualifications}
+                    </p>
                   </div>
                 </Card>
               )}
 
               {/* Work Experience */}
               {data.job_history && (
-                <Card className="glass-card elegant-border p-8">
+                <Card className="glass-card elegant-border p-8 hover:border-brand/30 transition-colors">
                   <div className="flex items-center gap-3 mb-6">
-                    <Briefcase className="w-6 h-6 gold-accent" />
+                    <Briefcase className="w-6 h-6 text-brand" />
                     <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
                   </div>
-                  <div className="text-white/90 whitespace-pre-line leading-relaxed">
-                    {data.job_history}
+                  <div className="text-white/90 leading-relaxed overflow-hidden">
+                    <p className="whitespace-pre-wrap break-words">
+                      {data.job_history}
+                    </p>
                   </div>
                 </Card>
               )}
 
               {/* File Info */}
-              <Card className="glass-card elegant-border p-8">
+              <Card className="glass-card elegant-border p-8 hover:border-brand/30 transition-colors">
                 <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                  <div className="overflow-hidden">
                     <span className="text-white/60 text-sm tracking-wider">ORIGINAL FILENAME:</span>
-                    <p className="text-white font-medium">{upload.original_filename}</p>
+                    <p className="text-white font-medium break-all">{upload.original_filename}</p>
                   </div>
                   <div>
                     <span className="text-white/60 text-sm tracking-wider">UPLOAD DATE:</span>
