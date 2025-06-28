@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
@@ -36,11 +35,9 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   };
 
   return (
-    <motion.div
+    <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.2 }}
       className="h-full relative"
     >
       <div className="relative overflow-hidden h-full cursor-pointer group">
@@ -49,7 +46,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
         
         {/* Content */}
-        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col transition-all duration-300 hover:scale-[1.01] hover:border-slate-400/30">
+        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col">
           {/* Clear Button */}
           <Button
             onClick={handleDelete}
@@ -175,6 +172,6 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
