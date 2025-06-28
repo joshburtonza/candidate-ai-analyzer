@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Brain, Upload, BarChart3, Users, ArrowRight, CheckCircle, Sparkles, Quote } from "lucide-react";
@@ -40,7 +41,11 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{
+      background: 'hsla(213, 77%, 14%, 1)',
+      background: 'linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
+      backgroundAttachment: 'fixed'
+    }}>
       {/* Subtle pattern overlay */}
       <div className="absolute inset-0 opacity-10" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23475569' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -208,7 +213,17 @@ const Index = () => {
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight">
               BORN TO BE
               <br />
-              <span className="bg-brand-gradient bg-clip-text text-transparent">CURIOUS</span>
+              <span 
+                className="inline-block"
+                style={{
+                  background: 'linear-gradient(90deg, hsla(197, 14%, 57%, 1) 0%, hsla(192, 17%, 94%, 1) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}
+              >
+                CURIOUS
+              </span>
             </h1>
             
             <p className="text-xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
