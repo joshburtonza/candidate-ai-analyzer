@@ -1,132 +1,98 @@
 
-import { Users, FileText, TrendingUp, MapPin } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { CVUpload } from '@/types/candidate';
-import { motion } from 'framer-motion';
+import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
 }
 
-const isCompleteProfile = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json) return false;
-  
-  const data = upload.extracted_json;
-  
-  // Check all required fields for a complete profile
-  return !!(
-    data.candidate_name &&
-    data.contact_number &&
-    data.email_address &&
-    data.countries &&
-    data.skill_set &&
-    data.educational_qualifications &&
-    data.job_history &&
-    data.justification
-  );
-};
-
-const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
-  
-  return uploads.filter(upload => {
-    // Filter out incomplete uploads
-    if (upload.processing_status !== 'completed' || !upload.extracted_json) {
-      return false;
-    }
-
-    // Filter out incomplete profiles
-    if (!isCompleteProfile(upload)) {
-      return false;
-    }
-
-    // Filter out low scores (below 5/10)
-    const rawScore = parseFloat(upload.extracted_json.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-    if (score < 5) {
-      return false;
-    }
-
-    const candidateEmail = upload.extracted_json.email_address;
-
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
-        return false;
-      }
-      seenEmails.add(normalizedEmail);
-    }
-
-    return true;
-  });
-};
-
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
-  const qualifiedCandidates = filterValidCandidates(uploads);
-  
-  const stats = {
-    totalCandidates: qualifiedCandidates.length,
-    averageScore: qualifiedCandidates.length > 0 
-      ? Math.round(qualifiedCandidates.reduce((sum, upload) => {
-          const rawScore = parseFloat(upload.extracted_json?.score || '0');
-          const normalizedScore = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-          return sum + normalizedScore;
-        }, 0) / qualifiedCandidates.length)
-      : 0,
-    uniqueCountries: new Set(
-      qualifiedCandidates
-        .map(u => u.extracted_json?.countries)
-        .filter(Boolean)
-        .join(',')
-        .split(',')
-        .map(c => c.trim())
-        .filter(Boolean)
-    ).size,
-  };
+  // Filter for valid candidates with complete data and score >= 5
+  const validCandidates = uploads.filter(upload => {
+    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
+    
+    const data = upload.extracted_json;
+    const hasRequiredFields = data.candidate_name && data.contact_number && 
+                             data.email_address && data.countries && data.skill_set && 
+                             data.educational_qualifications && data.job_history && data.justification;
+    
+    if (!hasRequiredFields) return false;
+    
+    const rawScore = parseFloat(data.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    return score >= 5;
+  });
 
-  const statCards = [
+  const totalCandidates = validCandidates.length;
+  
+  // Calculate average score
+  const averageScore = validCandidates.length > 0 
+    ? validCandidates.reduce((sum, upload) => {
+        const rawScore = parseFloat(upload.extracted_json?.score || '0');
+        const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+        return sum + score;
+      }, 0) / validCandidates.length
+    : 0;
+
+  // Get unique countries
+  const uniqueCountries = new Set();
+  validCandidates.forEach(upload => {
+    const countries = upload.extracted_json?.countries;
+    if (countries) {
+      countries.split(',').forEach(country => {
+        uniqueCountries.add(country.trim());
+      });
+    }
+  });
+
+  const stats = [
     {
       title: 'QUALIFIED CANDIDATES',
-      value: stats.totalCandidates,
+      value: totalCandidates,
       icon: Users,
-      color: 'bg-blue-600',
+      color: 'blue'
     },
     {
       title: 'AVERAGE FIT SCORE',
-      value: `${stats.averageScore}/10`,
+      value: `${Math.round(averageScore)}/10`,
       icon: TrendingUp,
-      color: 'bg-yellow-600',
+      color: 'orange'
     },
     {
       title: 'UNIQUE COUNTRIES',
-      value: stats.uniqueCountries,
+      value: uniqueCountries.size,
       icon: MapPin,
-      color: 'bg-red-600',
-    },
+      color: 'red'
+    }
   ];
 
+  const getIconColor = (color: string) => {
+    switch (color) {
+      case 'blue': return 'text-blue-400 bg-blue-500/20';
+      case 'orange': return 'text-brand bg-brand-gradient/20';
+      case 'red': return 'text-red-400 bg-red-500/20';
+      default: return 'text-brand bg-brand-gradient/20';
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {statCards.map((stat, index) => (
-        <motion.div
-          key={stat.title}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-        >
-          <Card className="chrome-glass chrome-glass-hover p-6 rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/70 text-sm font-medium">{stat.title}</p>
-                <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
-              </div>
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {stats.map((stat, index) => (
+        <div key={index} className="glass p-6 rounded-lgx hover-lift">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-white/70 tracking-wider">
+                {stat.title}
+              </p>
+              <p className="text-3xl font-bold text-white mt-2">
+                {stat.value}
+              </p>
             </div>
-          </Card>
-        </motion.div>
+            <div className={`p-3 rounded-lgx ${getIconColor(stat.color)}`}>
+              <stat.icon className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   );

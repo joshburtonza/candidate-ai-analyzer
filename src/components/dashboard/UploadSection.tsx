@@ -1,114 +1,273 @@
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText, Settings } from 'lucide-react';
-import { GoogleDocUpload } from './GoogleDocUpload';
-import { GoogleConnectButton } from './GoogleConnectButton';
-import { N8nApiInfo } from './N8nApiInfo';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
-import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { GoogleDocUpload } from './GoogleDocUpload';
 
 interface UploadSectionProps {
   onUploadComplete: (upload: CVUpload) => void;
 }
 
+interface UploadFile {
+  file: File;
+  progress: number;
+  status: 'uploading' | 'processing' | 'completed' | 'error';
+  uploadId?: string;
+  error?: string;
+}
+
 export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
-  const [showApiInfo, setShowApiInfo] = useState(false);
-  const { profile } = useAuth();
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
+  const { toast } = useToast();
 
-  // Only show admin sections to Joshua (the only admin)
-  const isJoshuaAdmin = profile?.email === 'joshuaburton096@gmail.com' && profile?.is_admin;
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const newFiles = acceptedFiles.map(file => ({
+      file,
+      progress: 0,
+      status: 'uploading' as const
+    }));
 
-  const handleFilesImported = (files: File[]) => {
-    // Handle the imported files - this will trigger the upload process
-    console.log('Files imported from Google:', files);
-    // Note: This would typically process the files and create CVUpload objects
-    // For now, we'll just log them as the actual file processing happens elsewhere
+    setUploadFiles(prev => [...prev, ...newFiles]);
+
+    for (let i = 0; i < newFiles.length; i++) {
+      const uploadFile = newFiles[i];
+      await processFile(uploadFile, i);
+    }
+  }, []);
+
+  const processFile = async (uploadFile: UploadFile, index: number) => {
+    try {
+      const fileExt = uploadFile.file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `cv-uploads/${fileName}`;
+
+      // Update progress for upload
+      setUploadFiles(prev => prev.map((f, i) => 
+        f.file === uploadFile.file ? { ...f, progress: 25 } : f
+      ));
+
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('cv-uploads')
+        .upload(filePath, uploadFile.file);
+
+      if (uploadError) throw uploadError;
+
+      // Update progress
+      setUploadFiles(prev => prev.map((f, i) => 
+        f.file === uploadFile.file ? { ...f, progress: 50 } : f
+      ));
+
+      // Create database record
+      const { data: cvUpload, error: dbError } = await supabase
+        .from('cv_uploads')
+        .insert({
+          file_name: uploadFile.file.name,
+          file_path: filePath,
+          file_size: uploadFile.file.size,
+          processing_status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      // Update with upload ID and processing status
+      setUploadFiles(prev => prev.map((f, i) => 
+        f.file === uploadFile.file ? { 
+          ...f, 
+          uploadId: cvUpload.id, 
+          progress: 75, 
+          status: 'processing' 
+        } : f
+      ));
+
+      // Call processing function
+      const { error: processError } = await supabase.functions.invoke('process-cv', {
+        body: { uploadId: cvUpload.id }
+      });
+
+      if (processError) throw processError;
+
+      // Complete
+      setUploadFiles(prev => prev.map((f, i) => 
+        f.file === uploadFile.file ? { 
+          ...f, 
+          progress: 100, 
+          status: 'completed' 
+        } : f
+      ));
+
+      // Remove completed file after delay
+      setTimeout(() => {
+        setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
+      }, 3000);
+
+      toast({
+        title: "Upload Successful",
+        description: `${uploadFile.file.name} has been processed successfully`,
+      });
+
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      
+      setUploadFiles(prev => prev.map((f, i) => 
+        f.file === uploadFile.file ? { 
+          ...f, 
+          status: 'error', 
+          error: error.message 
+        } : f
+      ));
+
+      toast({
+        title: "Upload Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDirectUpload = (upload: CVUpload) => {
-    // Handle direct CV upload completion
-    onUploadComplete(upload);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+    },
+    multiple: true
+  });
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
+      case 'error':
+        return <XCircle className="w-4 h-4 text-red-400" />;
+      case 'processing':
+        return <AlertCircle className="w-4 h-4 text-yellow-400" />;
+      default:
+        return <FileText className="w-4 h-4 text-blue-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'text-green-400';
+      case 'error':
+        return 'text-red-400';
+      case 'processing':
+        return 'text-yellow-400';
+      default:
+        return 'text-blue-400';
+    }
   };
 
   return (
-    <Card className="chrome-glass p-8 rounded-xl">
-      <div className="space-y-6">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 glass-card rounded-2xl mb-4 elegant-border">
-            <Upload className="w-8 h-8 gold-accent" />
-          </div>
-          <h2 className="text-2xl font-semibold text-white mb-2 text-elegant tracking-wider">
-            UPLOAD CV FILES
-          </h2>
-          <p className="text-white/70 text-lg">
-            Add candidate CVs for elite AI analysis and scoring
-          </p>
-        </div>
-
-        {/* Main Upload Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Direct Upload - Drag and Drop Area */}
-          <div className="lg:col-span-2 space-y-4">
-            <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
-              <FileText className="w-5 h-5 text-orange-400" />
-              DIRECT UPLOAD
-            </h3>
-            
-            {/* Drag and Drop Box */}
-            <div className="border-2 border-dashed border-orange-500/30 rounded-xl p-8 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all duration-300 min-h-[200px] flex flex-col items-center justify-center">
-              <Upload className="w-12 h-12 text-orange-400 mb-4" />
-              <h4 className="text-white font-semibold mb-2">Drop CV files here</h4>
-              <p className="text-gray-300 text-sm text-center mb-4">
-                Drag and drop your CV files or click to browse
-              </p>
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-                Browse Files
-              </Button>
-            </div>
-          </div>
-
-          {/* Google Integration - Vertical Stack */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              GOOGLE
-            </h3>
-            <GoogleConnectButton onFilesImported={handleFilesImported} />
+    <div className="glass p-8 rounded-lgx">
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center mb-4">
+          <div className="p-3 bg-brand-gradient/20 rounded-lgx">
+            <Upload className="w-8 h-8 text-brand" />
           </div>
         </div>
-
-        {/* n8n API Integration - Only visible to Joshua */}
-        {isJoshuaAdmin && (
-          <div className="border-t border-white/10 pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white text-elegant tracking-wider flex items-center gap-2">
-                <Settings className="w-5 h-5 text-orange-400" />
-                N8N WORKFLOW INTEGRATION
-                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full border border-red-500/30">
-                  ADMIN ONLY
-                </span>
-              </h3>
-              <Button
-                onClick={() => setShowApiInfo(!showApiInfo)}
-                variant="outline"
-                size="sm"
-                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
-              >
-                {showApiInfo ? 'Hide' : 'Show'} API Details
-              </Button>
-            </div>
-            
-            {showApiInfo && <N8nApiInfo />}
-          </div>
-        )}
+        <h2 className="text-2xl font-bold text-white mb-2">UPLOAD CV FILES</h2>
+        <p className="text-white/70">Add candidate CVs for elite AI analysis and scoring</p>
       </div>
-    </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Direct Upload */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-brand-gradient/20 rounded-lg">
+              <FileText className="w-5 h-5 text-brand" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">DIRECT UPLOAD</h3>
+          </div>
+
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lgx p-8 text-center cursor-pointer transition-all hover-lift ${
+              isDragActive
+                ? 'border-brand bg-brand/10'
+                : 'border-white/20 hover:border-brand/50 hover:bg-brand/5'
+            }`}
+          >
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-brand-gradient/20 rounded-lgx">
+                <Upload className="w-8 h-8 text-brand" />
+              </div>
+              <div>
+                <p className="text-lg font-medium text-white mb-2">
+                  {isDragActive ? 'Drop CV files here' : 'Drop CV files here'}
+                </p>
+                <p className="text-sm text-white/70 mb-4">
+                  Drag and drop your CV files or click to browse
+                </p>
+                <Button 
+                  className="bg-brand-gradient hover:opacity-90 text-white font-semibold"
+                  type="button"
+                >
+                  Browse Files
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Integration */}
+        <div className="space-y-4">
+          <GoogleDocUpload onUploadComplete={onUploadComplete} />
+        </div>
+      </div>
+
+      {/* Upload Progress */}
+      {uploadFiles.length > 0 && (
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-brand-gradient/20 rounded-lg">
+              <Users className="w-5 h-5 text-brand" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">PROCESSING FILES</h3>
+          </div>
+          
+          <div className="space-y-3">
+            {uploadFiles.map((uploadFile, index) => (
+              <div key={index} className="glass p-4 rounded-lgx">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(uploadFile.status)}
+                    <span className="text-white font-medium truncate">
+                      {uploadFile.file.name}
+                    </span>
+                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className={`${getStatusColor(uploadFile.status)} border-current/30`}
+                  >
+                    {uploadFile.status.toUpperCase()}
+                  </Badge>
+                </div>
+                
+                {uploadFile.status !== 'error' && (
+                  <Progress value={uploadFile.progress} className="h-2" />
+                )}
+                
+                {uploadFile.error && (
+                  <p className="text-red-400 text-sm mt-2">{uploadFile.error}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
