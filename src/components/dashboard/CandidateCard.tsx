@@ -39,7 +39,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
     <motion.div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ y: -5 }}
+      whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
       className="h-full relative"
     >
@@ -49,7 +49,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
         
         {/* Content */}
-        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col transition-all duration-300 hover:scale-105 hover:border-slate-400/30">
+        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col transition-all duration-300 hover:scale-[1.01] hover:border-slate-400/30">
           {/* Clear Button */}
           <Button
             onClick={handleDelete}
