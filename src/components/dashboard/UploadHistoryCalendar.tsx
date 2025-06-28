@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { CVUpload } from '@/types/candidate';
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachWeekOfInterval, startOfMonth, endOfMonth } from 'date-fns';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
@@ -13,29 +13,54 @@ interface UploadHistoryCalendarProps {
 }
 
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 })); // 0 = Sunday
 
-  // Get upload counts for each day of the current month
-  const getUploadCountForDate = (date: Date) => {
-    return uploads.filter(upload => 
-      isSameDay(new Date(upload.uploaded_at), date)
-    ).length;
+  // Get upload counts for a specific week
+  const getUploadCountForWeek = (weekStart: Date) => {
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
+    return uploads.filter(upload => {
+      const uploadDate = new Date(upload.uploaded_at);
+      return uploadDate >= weekStart && uploadDate <= weekEnd;
+    }).length;
   };
 
-  // Get days with uploads for the current month
-  const getDaysWithUploads = () => {
-    const start = startOfMonth(currentDate);
-    const end = endOfMonth(currentDate);
-    const days = eachDayOfInterval({ start, end });
+  // Get weeks with uploads for the current month
+  const getWeeksWithUploads = () => {
+    const monthStart = startOfMonth(currentWeek);
+    const monthEnd = endOfMonth(currentWeek);
+    const weeks = eachWeekOfInterval(
+      { start: monthStart, end: monthEnd },
+      { weekStartsOn: 0 }
+    );
     
-    return days.map(day => ({
-      date: day,
-      count: getUploadCountForDate(day)
-    })).filter(day => day.count > 0);
+    return weeks.map(week => ({
+      weekStart: week,
+      weekEnd: endOfWeek(week, { weekStartsOn: 0 }),
+      count: getUploadCountForWeek(week)
+    })).filter(week => week.count > 0);
   };
 
-  const daysWithUploads = getDaysWithUploads();
-  const totalUploadsThisMonth = daysWithUploads.reduce((sum, day) => sum + day.count, 0);
+  const weeksWithUploads = getWeeksWithUploads();
+  const totalUploadsThisMonth = weeksWithUploads.reduce((sum, week) => sum + week.count, 0);
+
+  const handleWeekSelect = (weekStart: Date) => {
+    // Select the first day of the week when clicking on a week block
+    onDateSelect(weekStart);
+  };
+
+  const navigateToNextWeek = () => {
+    setCurrentWeek(addWeeks(currentWeek, 1));
+  };
+
+  const navigateToPrevWeek = () => {
+    setCurrentWeek(subWeeks(currentWeek, 1));
+  };
+
+  const isWeekSelected = (weekStart: Date) => {
+    if (!selectedDate) return false;
+    const selectedWeekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
+    return isSameDay(weekStart, selectedWeekStart);
+  };
 
   return (
     <div className="glass p-6 rounded-lgx">
@@ -46,7 +71,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">QUALIFIED CANDIDATES</h2>
-            <p className="text-sm text-white/70">Click on a day to filter candidates by upload date • Shows qualified candidates only</p>
+            <p className="text-sm text-white/70">Click on a week to filter candidates by upload date • Shows qualified candidates only</p>
           </div>
         </div>
         
@@ -60,20 +85,20 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+              onClick={navigateToPrevWeek}
               className="text-white hover:bg-white/10"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
             
             <span className="text-white font-medium px-4">
-              {format(currentDate, 'MMMM yyyy').toUpperCase()}
+              {format(currentWeek, 'MMMM yyyy').toUpperCase()}
             </span>
             
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+              onClick={navigateToNextWeek}
               className="text-white hover:bg-white/10"
             >
               <ChevronRight className="w-4 h-4" />
@@ -82,28 +107,28 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         </div>
       </div>
 
-      {/* Single row of days with uploads */}
+      {/* Single row of weeks with uploads */}
       <div className="flex flex-wrap gap-3">
-        {daysWithUploads.length > 0 ? (
-          daysWithUploads.map(({ date, count }) => {
-            const isSelected = selectedDate && isSameDay(date, selectedDate);
+        {weeksWithUploads.length > 0 ? (
+          weeksWithUploads.map(({ weekStart, weekEnd, count }) => {
+            const isSelected = isWeekSelected(weekStart);
             
             return (
               <Button
-                key={date.toISOString()}
+                key={weekStart.toISOString()}
                 variant="ghost"
-                onClick={() => onDateSelect(date)}
-                className={`flex flex-col items-center gap-2 p-4 rounded-lgx border transition-all min-w-[80px] ${
+                onClick={() => handleWeekSelect(weekStart)}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lgx border transition-all min-w-[120px] ${
                   isSelected 
                     ? 'bg-brand-gradient text-white border-brand shadow-lg' 
                     : 'glass border-brand/30 text-white hover:bg-brand/20'
                 }`}
               >
-                <div className="text-lg font-bold">
-                  {format(date, 'd')}
+                <div className="text-sm font-medium text-center">
+                  {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
                 </div>
                 <div className="text-xs text-white/70">
-                  {format(date, 'MMM')}
+                  Week of {format(weekStart, 'MMM d')}
                 </div>
                 <Badge 
                   variant="secondary" 

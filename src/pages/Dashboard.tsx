@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
-import { isSameDay } from 'date-fns';
+import { isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { BarChart3, Download, Users } from 'lucide-react';
 
 const Dashboard = () => {
@@ -170,9 +170,14 @@ const Dashboard = () => {
     exportToCSV(filteredUploads, 'all_candidates');
   };
 
-  // Apply calendar date filter to filtered uploads
+  // Apply calendar date filter to filtered uploads - now handles week ranges
   const displayUploads = selectedCalendarDate 
-    ? filteredUploads.filter(upload => isSameDay(new Date(upload.uploaded_at), selectedCalendarDate))
+    ? filteredUploads.filter(upload => {
+        const uploadDate = new Date(upload.uploaded_at);
+        const selectedWeekStart = startOfWeek(selectedCalendarDate, { weekStartsOn: 0 });
+        const selectedWeekEnd = endOfWeek(selectedCalendarDate, { weekStartsOn: 0 });
+        return uploadDate >= selectedWeekStart && uploadDate <= selectedWeekEnd;
+      })
     : filteredUploads;
 
   // Sort uploads
