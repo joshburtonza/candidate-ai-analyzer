@@ -90,7 +90,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden">
+    <div 
+      className="min-h-screen text-white flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        background: 'hsla(213, 77%, 14%, 1)',
+        background: 'linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
+        background: '-moz-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
+        background: '-webkit-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
+        filter: 'progid: DXImageTransform.Microsoft.gradient( startColorstr="#08203E", endColorstr="#557C93", GradientType=1 )'
+      }}
+    >
       {/* Dotted grid background */}
       <div 
         className="absolute inset-0 opacity-20"
