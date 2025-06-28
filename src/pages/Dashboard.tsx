@@ -170,13 +170,11 @@ const Dashboard = () => {
     exportToCSV(filteredUploads, 'all_candidates');
   };
 
-  // Apply calendar date filter to filtered uploads - now handles week ranges
+  // Apply calendar date filter to filtered uploads - now handles single day selection
   const displayUploads = selectedCalendarDate 
     ? filteredUploads.filter(upload => {
         const uploadDate = new Date(upload.uploaded_at);
-        const selectedWeekStart = startOfWeek(selectedCalendarDate, { weekStartsOn: 0 });
-        const selectedWeekEnd = endOfWeek(selectedCalendarDate, { weekStartsOn: 0 });
-        return uploadDate >= selectedWeekStart && uploadDate <= selectedWeekEnd;
+        return isSameDay(uploadDate, selectedCalendarDate);
       })
     : filteredUploads;
 
