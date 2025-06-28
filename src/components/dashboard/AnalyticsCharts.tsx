@@ -52,15 +52,18 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([score, count]) => ({ score, count }))
     .sort((a, b) => parseInt(a.score) - parseInt(b.score));
 
-  // Country distribution data
+  // Country distribution data with proper type checking
   const countryDistribution = validUploads.reduce((acc, upload) => {
-    const countries = upload.extracted_json?.countries || '';
-    countries.split(',').forEach(country => {
-      const trimmed = country.trim();
-      if (trimmed) {
-        acc[trimmed] = (acc[trimmed] || 0) + 1;
-      }
-    });
+    const countries = upload.extracted_json?.countries;
+    // Only process if countries is a string
+    if (typeof countries === 'string' && countries) {
+      countries.split(',').forEach(country => {
+        const trimmed = country.trim();
+        if (trimmed) {
+          acc[trimmed] = (acc[trimmed] || 0) + 1;
+        }
+      });
+    }
     return acc;
   }, {} as Record<string, number>);
 
@@ -88,15 +91,18 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     };
   });
 
-  // Top skills
+  // Top skills with proper type checking
   const skillsDistribution = validUploads.reduce((acc, upload) => {
-    const skills = upload.extracted_json?.skill_set || '';
-    skills.split(',').forEach(skill => {
-      const trimmed = skill.trim().toLowerCase();
-      if (trimmed) {
-        acc[trimmed] = (acc[trimmed] || 0) + 1;
-      }
-    });
+    const skills = upload.extracted_json?.skill_set;
+    // Only process if skills is a string
+    if (typeof skills === 'string' && skills) {
+      skills.split(',').forEach(skill => {
+        const trimmed = skill.trim().toLowerCase();
+        if (trimmed) {
+          acc[trimmed] = (acc[trimmed] || 0) + 1;
+        }
+      });
+    }
     return acc;
   }, {} as Record<string, number>);
 
