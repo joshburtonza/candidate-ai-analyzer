@@ -68,7 +68,18 @@ const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 };
 
 export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
-  const validUploads = filterValidCandidates(uploads);
+  const [localUploads, setLocalUploads] = useState(uploads);
+  
+  // Update local uploads when prop changes
+  useEffect(() => {
+    setLocalUploads(uploads);
+  }, [uploads]);
+
+  const handleCandidateDelete = (deletedId: string) => {
+    setLocalUploads(prev => prev.filter(upload => upload.id !== deletedId));
+  };
+
+  const validUploads = filterValidCandidates(localUploads);
 
   if (validUploads.length === 0) {
     return (
@@ -96,7 +107,7 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
           >
-            <CandidateListItem upload={upload} />
+            <CandidateListItem upload={upload} onDelete={handleCandidateDelete} />
           </motion.div>
         ))}
       </div>
@@ -112,7 +123,7 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: index * 0.05 }}
         >
-          <CandidateCard upload={upload} />
+          <CandidateCard upload={upload} onDelete={handleCandidateDelete} />
         </motion.div>
       ))}
     </div>

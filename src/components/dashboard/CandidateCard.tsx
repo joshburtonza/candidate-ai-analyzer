@@ -5,17 +5,20 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, MapPin, Eye } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 
 interface CandidateCardProps {
   upload: CVUpload;
+  onDelete?: (id: string) => void;
 }
 
-export const CandidateCard = ({ upload }: CandidateCardProps) => {
+export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+  const { deleteCandidate, isDeleting } = useDeleteCandidate();
   const data = upload.extracted_json!;
   
   // Convert score to be out of 10 instead of 100
@@ -31,15 +34,34 @@ export const CandidateCard = ({ upload }: CandidateCardProps) => {
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
+    if (success && onDelete) {
+      onDelete(upload.id);
+    }
+  };
+
   return (
     <motion.div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       whileHover={{ y: -5 }}
       transition={{ duration: 0.2 }}
-      className="h-full"
+      className="h-full relative"
     >
       <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group flex flex-col">
+        {/* Clear Button */}
+        <Button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 z-10 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300"
+        >
+          <X className="w-4 h-4" />
+        </Button>
+
         <div className="space-y-6 flex-1 flex flex-col">
           {/* Header with Avatar and Score */}
           <div className="flex items-center justify-between">

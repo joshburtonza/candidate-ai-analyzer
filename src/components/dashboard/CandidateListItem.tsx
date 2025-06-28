@@ -3,15 +3,18 @@ import { CVUpload } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Phone, MapPin, Eye } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 
 interface CandidateListItemProps {
   upload: CVUpload;
+  onDelete?: (id: string) => void;
 }
 
-export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
+export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) => {
   const navigate = useNavigate();
+  const { deleteCandidate, isDeleting } = useDeleteCandidate();
   const data = upload.extracted_json!;
   
   // Convert score to be out of 10 instead of 100
@@ -26,8 +29,27 @@ export const CandidateListItem = ({ upload }: CandidateListItemProps) => {
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
+    if (success && onDelete) {
+      onDelete(upload.id);
+    }
+  };
+
   return (
-    <Card className="chrome-glass chrome-glass-hover p-6 rounded-xl">
+    <Card className="chrome-glass chrome-glass-hover p-6 rounded-xl relative">
+      {/* Clear Button */}
+      <Button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        variant="ghost"
+        size="sm"
+        className="absolute top-2 right-2 z-10 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300"
+      >
+        <X className="w-4 h-4" />
+      </Button>
+
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">

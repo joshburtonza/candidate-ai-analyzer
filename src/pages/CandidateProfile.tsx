@@ -113,14 +113,27 @@ const CandidateProfile = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Button
-            onClick={() => navigate('/dashboard')}
-            variant="outline"
-            className="mb-8 border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            RETURN TO DASHBOARD
-          </Button>
+          <div className="flex items-center justify-between mb-8">
+            <Button
+              onClick={() => navigate('/dashboard')}
+              variant="outline"
+              className="border-yellow-400/30 text-yellow-400 hover:bg-yellow-400/10 elegant-border text-elegant tracking-wider"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              RETURN TO DASHBOARD
+            </Button>
+
+            {/* Email Button */}
+            {data.email_address && (
+              <Button
+                onClick={() => window.open(`mailto:${data.email_address}`, '_blank')}
+                className="bg-orange-500 hover:bg-orange-600 text-black font-semibold text-elegant tracking-wider"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                EMAIL CANDIDATE
+              </Button>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Basic Info & Score */}
