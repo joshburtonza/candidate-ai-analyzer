@@ -64,7 +64,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     <div className="relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-orange-500/10 rounded-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 via-transparent to-slate-500/10 rounded-2xl"></div>
       
       {/* Content */}
       <div className="relative z-10 p-8">
@@ -72,9 +72,9 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl blur-lg opacity-50"></div>
-              <div className="relative p-3 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl">
-                <CalendarIcon className="w-6 h-6 text-white" />
+              <div className="absolute inset-0 bg-brand-gradient rounded-xl blur-lg opacity-50"></div>
+              <div className="relative p-3 bg-brand-gradient rounded-xl">
+                <CalendarIcon className="w-6 h-6 text-slate-800" />
               </div>
             </div>
             <div>
@@ -89,7 +89,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-3xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+              <div className="text-3xl font-bold text-brand-gradient">
                 {totalUploadsThisWeek}
               </div>
               <div className="text-xs text-gray-400 font-medium tracking-wider">
@@ -128,7 +128,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         {/* Week range */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-            <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
             <span className="text-white font-medium">
               {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
             </span>
@@ -151,22 +151,22 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                 className={`
                   relative flex flex-col items-center gap-3 p-6 rounded-2xl border transition-all duration-300 min-h-[120px] group
                   ${isSelected 
-                    ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white border-orange-400 shadow-lg shadow-orange-500/25 scale-105' 
+                    ? 'bg-brand-gradient text-slate-800 border-slate-400 shadow-lg shadow-slate-400/25 scale-105' 
                     : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:scale-105'
                   }
-                  ${isToday && !isSelected ? 'ring-2 ring-orange-400/50' : ''}
+                  ${isToday && !isSelected ? 'ring-2 ring-slate-400/50' : ''}
                 `}
               >
                 {/* Day name */}
                 <div className={`text-xs font-semibold tracking-wider uppercase ${
-                  isSelected ? 'text-white/90' : 'text-gray-400 group-hover:text-gray-300'
+                  isSelected ? 'text-slate-700' : 'text-gray-400 group-hover:text-gray-300'
                 }`}>
                   {dayName}
                 </div>
                 
                 {/* Day number */}
                 <div className={`text-2xl font-bold ${
-                  isSelected ? 'text-white' : 'text-white group-hover:text-white'
+                  isSelected ? 'text-slate-800' : 'text-white group-hover:text-white'
                 }`}>
                   {dayNumber}
                 </div>
@@ -177,8 +177,8 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                     <Badge 
                       className={`text-xs px-2 py-1 font-semibold border-0 ${
                         isSelected 
-                          ? 'bg-white text-orange-600' 
-                          : 'bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-lg'
+                          ? 'bg-white text-slate-800' 
+                          : 'bg-brand-gradient text-slate-800 shadow-lg'
                       }`}
                     >
                       {count}
@@ -188,7 +188,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                 
                 {/* Today indicator */}
                 {isToday && (
-                  <div className="absolute bottom-2 w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <div className="absolute bottom-2 w-2 h-2 bg-slate-400 rounded-full"></div>
                 )}
               </Button>
             );

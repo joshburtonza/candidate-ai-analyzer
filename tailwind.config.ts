@@ -8,9 +8,9 @@ export default {
     extend: {
       colors: {
         brand: { 
-          DEFAULT: '#FFA62E', 
-          light: '#FFA62E',
-          dark: '#EA4D2C'
+          DEFAULT: '#8399A2', 
+          light: '#EEF2F3',
+          dark: '#8399A2'
         },
         glass: 'rgba(255,255,255,0.08)',
         border: 'rgba(255,255,255,0.2)'
@@ -20,7 +20,7 @@ export default {
       backdropBlur: { xl: '24px' },
       transitionTimingFunction: { swift: 'cubic-bezier(0.25,0.8,0.25,1)' },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #FFA62E 0%, #EA4D2C 100%)',
+        'brand-gradient': 'linear-gradient(90deg, hsla(197, 14%, 57%, 1) 0%, hsla(192, 17%, 94%, 1) 100%)',
       }
     }
   },

@@ -26,7 +26,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const scorePercentage = (score / 10) * 100; // For progress bar
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'from-orange-400 to-orange-600';
+    if (score >= 8) return 'bg-brand-gradient';
     if (score >= 6) return 'from-yellow-400 to-yellow-600';
     return 'from-red-400 to-red-600';
   };
@@ -52,10 +52,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
       <div className="relative overflow-hidden h-full cursor-pointer group">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 rounded-2xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
         
         {/* Content */}
-        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col transition-all duration-300 hover:scale-105 hover:border-orange-500/30">
+        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col transition-all duration-300 hover:scale-105 hover:border-slate-400/30">
           {/* Clear Button */}
           <Button
             onClick={handleDelete}
@@ -71,11 +71,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             {/* Header with Avatar and Score */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-4 bg-orange-500/10 rounded-xl w-16 h-16 flex items-center justify-center border border-orange-500/20">
-                  <User className="w-8 h-8 text-orange-400" />
+                <div className="p-4 bg-slate-500/10 rounded-xl w-16 h-16 flex items-center justify-center border border-slate-500/20">
+                  <User className="w-8 h-8 text-slate-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">
+                  <h3 className="text-xl font-bold text-white group-hover:text-slate-400 transition-colors">
                     {data.candidate_name || 'Unknown'}
                   </h3>
                 </div>
@@ -83,8 +83,8 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               
               {/* Score Circle */}
               <div className="relative flex-shrink-0">
-                <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center shadow-lg`}>
-                  <span className="text-white font-bold text-xl">{score}</span>
+                <div className={`w-16 h-16 rounded-full ${score >= 8 ? 'bg-brand-gradient' : `bg-gradient-to-r ${getScoreColor(score)}`} flex items-center justify-center shadow-lg`}>
+                  <span className={`font-bold text-xl ${score >= 8 ? 'text-slate-800' : 'text-white'}`}>{score}</span>
                 </div>
                 <div className="text-center mt-2">
                   <span className="text-xs text-gray-400 font-medium tracking-wider">SCORE</span>
@@ -96,19 +96,19 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             <div className="space-y-3">
               {data.email_address && (
                 <div className="flex items-center gap-3 text-gray-300">
-                  <Mail className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                  <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
                   <span className="truncate">{data.email_address}</span>
                 </div>
               )}
               {data.contact_number && (
                 <div className="flex items-center gap-3 text-gray-300">
-                  <Phone className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                  <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
                   <span className="truncate">{data.contact_number}</span>
                 </div>
               )}
               {data.countries && (
                 <div className="flex items-center gap-3 text-gray-300">
-                  <MapPin className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                  <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
                   <span className="truncate">{data.countries}</span>
                 </div>
               )}
@@ -118,7 +118,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             {skills.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1 h-6 bg-orange-400 rounded"></div>
+                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
                   <h4 className="text-sm font-bold text-gray-300 tracking-wider">EXPERTISE</h4>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -146,7 +146,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             {/* Professional Assessment */}
             <div className="space-y-3 flex-1">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-orange-400 rounded"></div>
+                <div className="w-1 h-6 bg-slate-400 rounded"></div>
                 <h4 className="text-sm font-bold text-gray-300 tracking-wider">ASSESSMENT</h4>
               </div>
               <p className="text-sm text-gray-400 line-clamp-4 leading-relaxed">
@@ -172,7 +172,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             >
               <Button
                 onClick={() => navigate(`/candidate/${upload.id}`)}
-                className="w-full bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold shadow-lg shadow-orange-500/25 rounded-xl"
+                className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold shadow-lg shadow-slate-400/25 rounded-xl"
               >
                 <Eye className="w-4 h-4 mr-2" />
                 VIEW PROFILE

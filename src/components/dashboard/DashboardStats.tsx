@@ -67,7 +67,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
       title: 'AVERAGE FIT SCORE',
       value: `${Math.round(averageScore)}/10`,
       icon: TrendingUp,
-      color: 'orange'
+      color: 'brand'
     },
     {
       title: 'UNIQUE COUNTRIES',
@@ -80,9 +80,9 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   const getIconColor = (color: string) => {
     switch (color) {
       case 'blue': return 'text-blue-400 bg-blue-500/10';
-      case 'orange': return 'text-orange-400 bg-orange-500/10';
+      case 'brand': return 'text-slate-400 bg-slate-500/10';
       case 'red': return 'text-red-400 bg-red-500/10';
-      default: return 'text-orange-400 bg-orange-500/10';
+      default: return 'text-slate-400 bg-slate-500/10';
     }
   };
 
@@ -92,10 +92,10 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
         <div key={index} className="relative overflow-hidden">
           {/* Background gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 rounded-2xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
           
           {/* Content */}
-          <div className="relative z-10 p-8 border border-white/10 rounded-2xl transition-all duration-300 hover:scale-105 hover:border-orange-500/30">
+          <div className="relative z-10 p-8 border border-white/10 rounded-2xl transition-all duration-300 hover:scale-105 hover:border-slate-400/30">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-400 tracking-wider mb-2">

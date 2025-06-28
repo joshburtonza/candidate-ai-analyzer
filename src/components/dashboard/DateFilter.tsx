@@ -44,13 +44,13 @@ export const DateFilter = ({ onDateRangeChange }: DateFilterProps) => {
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white hover:bg-white/10 text-sm"
+            className="bg-white/5 backdrop-blur-xl border border-slate-500/30 text-white hover:bg-white/10 text-sm"
           >
             <CalendarIcon className="w-4 h-4 mr-2" />
             {startDate ? format(startDate, 'MMM dd, yyyy') : 'Start Date'}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-gray-800 border-orange-500/30">
+        <PopoverContent className="w-auto p-0 bg-gray-800 border-slate-500/30">
           <Calendar
             mode="single"
             selected={startDate || undefined}
@@ -67,13 +67,13 @@ export const DateFilter = ({ onDateRangeChange }: DateFilterProps) => {
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className="bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white hover:bg-white/10 text-sm"
+            className="bg-white/5 backdrop-blur-xl border border-slate-500/30 text-white hover:bg-white/10 text-sm"
           >
             <CalendarIcon className="w-4 h-4 mr-2" />
             {endDate ? format(endDate, 'MMM dd, yyyy') : 'End Date'}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-gray-800 border-orange-500/30">
+        <PopoverContent className="w-auto p-0 bg-gray-800 border-slate-500/30">
           <Calendar
             mode="single"
             selected={endDate || undefined}

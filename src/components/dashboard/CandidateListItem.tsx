@@ -21,7 +21,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-white bg-brand-gradient';
+    if (score >= 8) return 'text-slate-800 bg-brand-gradient';
     if (score >= 6) return 'text-white bg-gradient-to-br from-yellow-400 to-yellow-600';
     return 'text-white bg-gradient-to-br from-red-400 to-red-600';
   };
@@ -52,8 +52,8 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3 bg-brand-gradient/20 rounded-lgx w-14 h-14 flex items-center justify-center border border-brand/30">
-            <User className="w-7 h-7 text-brand" />
+          <div className="p-3 bg-slate-500/20 rounded-lgx w-14 h-14 flex items-center justify-center border border-slate-400/30">
+            <User className="w-7 h-7 text-slate-400" />
           </div>
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-white truncate">
@@ -61,18 +61,18 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
             </h3>
             <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
               <div className="flex items-center gap-1">
-                <Mail className="w-3 h-3 text-brand" />
+                <Mail className="w-3 h-3 text-slate-400" />
                 <span className="truncate">{data.email_address}</span>
               </div>
               {data.contact_number && (
                 <div className="flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-brand" />
+                  <Phone className="w-3 h-3 text-slate-400" />
                   <span>{data.contact_number}</span>
                 </div>
               )}
               {data.countries && (
                 <div className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-brand" />
+                  <MapPin className="w-3 h-3 text-slate-400" />
                   <span>{data.countries}</span>
                 </div>
               )}
@@ -106,7 +106,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
           onClick={() => navigate(`/candidate/${upload.id}`)}
           variant="outline"
           size="sm"
-          className="border-brand/30 text-brand hover:bg-brand/10 backdrop-blur-sm hover-lift"
+          className="border-slate-400/30 text-slate-400 hover:bg-slate-400/10 backdrop-blur-sm hover-lift"
         >
           <Eye className="w-4 h-4 mr-2" />
           VIEW

@@ -47,7 +47,7 @@ export const N8nApiInfo = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => copyToClipboard(apiEndpoint)}
-                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                className="border-slate-500/30 text-slate-400 hover:bg-slate-500/10"
               >
                 <Copy className="w-4 h-4" />
               </Button>
@@ -78,15 +78,15 @@ export const N8nApiInfo = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => copyToClipboard(JSON.stringify(sampleData, null, 2))}
-                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 mt-1"
+                className="border-slate-500/30 text-slate-400 hover:bg-slate-500/10 mt-1"
               >
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
-          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
-            <h4 className="text-orange-400 font-medium mb-2">Required Fields:</h4>
+          <div className="bg-slate-500/10 border border-slate-500/30 rounded-lg p-4">
+            <h4 className="text-slate-400 font-medium mb-2">Required Fields:</h4>
             <ul className="text-sm text-gray-300 space-y-1">
               <li>• <code>candidate_name</code> - Name of the candidate</li>
               <li>• <code>email_address</code> - Email address</li>

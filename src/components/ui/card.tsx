@@ -10,13 +10,13 @@ const Card = React.forwardRef<
   <div className="relative overflow-hidden">
     {/* Background gradient */}
     <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-    <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 rounded-2xl"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
     
     {/* Content */}
     <div
       ref={ref}
       className={cn(
-        "relative z-10 border border-white/10 rounded-2xl bg-transparent text-white shadow-sm transition-all duration-300 hover:scale-105 hover:border-orange-500/30",
+        "relative z-10 border border-white/10 rounded-2xl bg-transparent text-white shadow-sm transition-all duration-300 hover:scale-105 hover:border-slate-400/30",
         className
       )}
       {...props}

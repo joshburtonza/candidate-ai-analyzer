@@ -35,13 +35,13 @@ export const DashboardHeader = ({
   const isJoshuaAdmin = profile?.email === 'joshuaburton096@gmail.com' && profile?.is_admin;
 
   return (
-    <header className="bg-white/5 backdrop-blur-xl border-b border-brand/30 sticky top-0 z-50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+    <header className="bg-white/5 backdrop-blur-xl border-b border-slate-400/30 sticky top-0 z-50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-brand-gradient rounded-lg shadow-lg shadow-brand/25">
-                <Brain className="w-6 h-6 text-white" />
+              <div className="p-2 bg-brand-gradient rounded-lg shadow-lg shadow-slate-400/25">
+                <Brain className="w-6 h-6 text-slate-800" />
               </div>
               <h1 className="text-xl font-semibold text-white">APPLICHUB</h1>
             </div>
@@ -54,24 +54,24 @@ export const DashboardHeader = ({
 
           <div className="flex items-center gap-4">
             <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger className="w-32 bg-white/5 backdrop-blur-xl border border-brand/30 text-white">
+              <SelectTrigger className="w-32 bg-white/5 backdrop-blur-xl border border-slate-400/30 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-brand/30 text-white">
+              <SelectContent className="bg-gray-800 border-slate-400/30 text-white">
                 <SelectItem value="date">Date</SelectItem>
                 <SelectItem value="score">Score</SelectItem>
                 <SelectItem value="name">Name</SelectItem>
               </SelectContent>
             </Select>
 
-            <div className="flex bg-white/5 backdrop-blur-xl rounded-lg p-1 border border-brand/30">
+            <div className="flex bg-white/5 backdrop-blur-xl rounded-lg p-1 border border-slate-400/30">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => onViewModeChange('grid')}
                 className={`text-white ${
                   viewMode === 'grid'
-                    ? 'bg-brand-gradient text-white shadow-lg shadow-brand/25'
+                    ? 'bg-brand-gradient text-slate-800 shadow-lg shadow-slate-400/25'
                     : 'hover:bg-white/10'
                 }`}
               >
@@ -83,7 +83,7 @@ export const DashboardHeader = ({
                 onClick={() => onViewModeChange('list')}
                 className={`text-white ${
                   viewMode === 'list'
-                    ? 'bg-brand-gradient text-white shadow-lg shadow-brand/25'
+                    ? 'bg-brand-gradient text-slate-800 shadow-lg shadow-slate-400/25'
                     : 'hover:bg-white/10'
                 }`}
               >
@@ -95,13 +95,13 @@ export const DashboardHeader = ({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="p-0 hover:bg-white/10">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="bg-brand-gradient text-white font-semibold">
+                    <AvatarFallback className="bg-brand-gradient text-slate-800 font-semibold">
                       {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-800 border-brand/30 text-white">
+              <DropdownMenuContent align="end" className="bg-gray-800 border-slate-400/30 text-white">
                 <DropdownMenuItem onClick={() => navigate('/account')} className="hover:bg-white/10">
                   <User className="w-4 h-4 mr-2" />
                   Account Settings

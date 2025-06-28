@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -180,16 +179,16 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
     <div className="relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5 rounded-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
       
       {/* Content */}
       <div className="relative z-10 p-8 border border-white/10 rounded-2xl">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl blur-lg opacity-50"></div>
-              <div className="relative p-3 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl">
-                <Upload className="w-8 h-8 text-white" />
+              <div className="absolute inset-0 bg-brand-gradient rounded-xl blur-lg opacity-50"></div>
+              <div className="relative p-3 bg-brand-gradient rounded-xl">
+                <Upload className="w-8 h-8 text-slate-800" />
               </div>
             </div>
           </div>
@@ -201,8 +200,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           {/* Direct Upload */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/20">
-                <FileText className="w-5 h-5 text-orange-400" />
+              <div className="p-2 bg-slate-500/10 rounded-xl border border-slate-500/20">
+                <FileText className="w-5 h-5 text-slate-400" />
               </div>
               <h3 className="text-lg font-semibold text-white tracking-wider">DIRECT UPLOAD</h3>
             </div>
@@ -211,16 +210,16 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
               {...getRootProps()}
               className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 hover:scale-105 ${
                 isDragActive
-                  ? 'border-orange-400 bg-orange-500/10'
-                  : 'border-white/20 hover:border-orange-400/50 hover:bg-orange-500/5'
+                  ? 'border-slate-400 bg-slate-500/10'
+                  : 'border-white/20 hover:border-slate-400/50 hover:bg-slate-500/5'
               }`}
             >
               <input {...getInputProps()} />
               <div className="flex flex-col items-center gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl blur-lg opacity-30"></div>
-                  <div className="relative p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
-                    <Upload className="w-8 h-8 text-orange-400" />
+                  <div className="absolute inset-0 bg-brand-gradient rounded-xl blur-lg opacity-30"></div>
+                  <div className="relative p-4 bg-slate-500/10 rounded-xl border border-slate-500/20">
+                    <Upload className="w-8 h-8 text-slate-400" />
                   </div>
                 </div>
                 <div>
@@ -231,7 +230,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
                     Drag and drop your CV files or click to browse
                   </p>
                   <Button 
-                    className="bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25"
+                    className="bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold rounded-xl shadow-lg shadow-slate-400/25"
                     type="button"
                   >
                     Browse Files
@@ -251,8 +250,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         {uploadFiles.length > 0 && (
           <div className="mt-8 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/20">
-                <Users className="w-5 h-5 text-orange-400" />
+              <div className="p-2 bg-slate-500/10 rounded-xl border border-slate-500/20">
+                <Users className="w-5 h-5 text-slate-400" />
               </div>
               <h3 className="text-lg font-semibold text-white tracking-wider">PROCESSING FILES</h3>
             </div>
