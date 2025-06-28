@@ -68,8 +68,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       const { data: cvUpload, error: dbError } = await supabase
         .from('cv_uploads')
         .insert({
-          file_name: uploadFile.file.name,
-          file_path: filePath,
+          original_filename: uploadFile.file.name,
+          file_url: filePath,
           file_size: uploadFile.file.size,
           processing_status: 'pending'
         })
