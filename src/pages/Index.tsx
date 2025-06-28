@@ -1,5 +1,3 @@
-
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Brain, Upload, BarChart3, Users, ArrowRight, CheckCircle, Sparkles, Quote } from "lucide-react";
@@ -191,7 +189,7 @@ const Index = () => {
             </div>
             <Button
               onClick={() => navigate('/auth')}
-              className="bg-white/5 backdrop-blur-xl border border-slate-500/30 text-slate-400 hover:bg-slate-500/10 hover:border-slate-500/50 px-6 py-2 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
+              className="bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold px-8 py-3 text-base tracking-wider shadow-xl shadow-slate-500/25 border-0"
             >
               ENTER
             </Button>
@@ -353,4 +351,3 @@ const Index = () => {
 };
 
 export default Index;
-
