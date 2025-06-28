@@ -1,7 +1,5 @@
 
 import { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
@@ -84,53 +82,46 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
-        {/* Day headers */}
-        {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-          <div key={day} className="text-center p-2">
-            <div className="text-xs font-medium text-white/60">{day}</div>
-          </div>
-        ))}
-        
-        {/* Calendar days */}
-        {eachDayOfInterval({ 
-          start: startOfMonth(currentDate), 
-          end: endOfMonth(currentDate) 
-        }).map(day => {
-          const uploadCount = getUploadCountForDate(day);
-          const isSelected = selectedDate && isSameDay(day, selectedDate);
-          const hasUploads = uploadCount > 0;
-          
-          return (
-            <div key={day.toISOString()} className="aspect-square">
+      {/* Single row of days with uploads */}
+      <div className="flex flex-wrap gap-3">
+        {daysWithUploads.length > 0 ? (
+          daysWithUploads.map(({ date, count }) => {
+            const isSelected = selectedDate && isSameDay(date, selectedDate);
+            
+            return (
               <Button
+                key={date.toISOString()}
                 variant="ghost"
-                onClick={() => onDateSelect(day)}
-                className={`w-full h-full p-1 rounded-lgx border transition-all ${
+                onClick={() => onDateSelect(date)}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lgx border transition-all min-w-[80px] ${
                   isSelected 
                     ? 'bg-brand-gradient text-white border-brand shadow-lg' 
-                    : hasUploads
-                    ? 'glass border-brand/30 text-white hover:bg-brand/20'
-                    : 'border-white/10 text-white/40 hover:bg-white/5'
+                    : 'glass border-brand/30 text-white hover:bg-brand/20'
                 }`}
               >
-                <div className="flex flex-col items-center justify-center gap-1">
-                  <span className="text-lg font-medium">
-                    {format(day, 'd')}
-                  </span>
-                  {hasUploads && (
-                    <Badge 
-                      variant="secondary" 
-                      className="text-xs px-1 py-0 bg-brand-gradient text-white border-0"
-                    >
-                      {uploadCount}
-                    </Badge>
-                  )}
+                <div className="text-lg font-bold">
+                  {format(date, 'd')}
                 </div>
+                <div className="text-xs text-white/70">
+                  {format(date, 'MMM')}
+                </div>
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs px-2 py-1 bg-brand-gradient text-white border-0"
+                >
+                  {count}
+                </Badge>
               </Button>
+            );
+          })
+        ) : (
+          <div className="flex items-center justify-center w-full py-8">
+            <div className="text-center">
+              <div className="text-white/50 text-lg mb-2">No uploads this month</div>
+              <div className="text-white/30 text-sm">Upload some CVs to see them here</div>
             </div>
-          );
-        })}
+          </div>
+        )}
       </div>
     </div>
   );
