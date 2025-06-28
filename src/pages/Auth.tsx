@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,16 +89,7 @@ const Auth = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen text-white flex items-center justify-center p-4 relative overflow-hidden"
-      style={{
-        background: 'hsla(213, 77%, 14%, 1)',
-        background: 'linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
-        background: '-moz-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
-        background: '-webkit-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)',
-        filter: 'progid: DXImageTransform.Microsoft.gradient( startColorstr="#08203E", endColorstr="#557C93", GradientType=1 )'
-      }}
-    >
+    <div className="min-h-screen text-white flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
       {/* Dotted grid background */}
       <div 
         className="absolute inset-0 opacity-20"
