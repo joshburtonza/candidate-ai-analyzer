@@ -59,13 +59,27 @@
   background-clip: text;
 }
 
-/* Base styles */
+/* Base styles with new gradient background */
 body {
-  background-color: #000;
-  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0);
-  background-size: 20px 20px;
+  background: hsla(213, 77%, 14%, 1);
+  background: linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%);
+  background: -moz-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%);
+  background: -webkit-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%);
+  filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#08203E", endColorstr="#557C93", GradientType=1 );
+  background-attachment: fixed;
+  min-height: 100vh;
   color: rgba(255,255,255,0.9);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+html {
+  background: hsla(213, 77%, 14%, 1);
+  background: linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%);
+  background: -moz-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%);
+  background: -webkit-linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%);
+  filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#08203E", endColorstr="#557C93", GradientType=1 );
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -75,9 +89,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dot-grid-bg {
-  background-color: #000;
-  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0);
-  background-size: 20px 20px;
+  background: transparent;
 }
 
 .elegant-gradient {
