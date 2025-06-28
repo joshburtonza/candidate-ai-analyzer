@@ -68,29 +68,44 @@ serve(async (req) => {
       );
     }
 
-    // Check for existing candidate with same email
+    // Check for existing candidate with same email - FIXED DUPLICATE CHECK
     console.log('Checking for duplicate candidate with email:', candidateData.email_address);
-    const { data: existingCandidate, error: duplicateCheckError } = await supabase
-      .from('cv_uploads')
-      .select('id, extracted_json')
-      .eq('processing_status', 'completed')
-      .not('extracted_json', 'is', null)
-      .maybeSingle();
+    
+    try {
+      const { data: existingCandidates, error: duplicateCheckError } = await supabase
+        .from('cv_uploads')
+        .select('id, extracted_json')
+        .eq('processing_status', 'completed')
+        .not('extracted_json', 'is', null);
 
-    if (duplicateCheckError) {
-      console.error('Error checking for duplicates:', duplicateCheckError);
-      // Continue processing - don't fail on duplicate check error
-    } else if (existingCandidate) {
-      // Check if the extracted JSON contains the same email
-      const existingEmail = existingCandidate.extracted_json?.email_address;
-      if (existingEmail === candidateData.email_address) {
-        console.log('Duplicate candidate found:', candidateData.email_address);
+      if (duplicateCheckError) {
+        console.error('Error checking for duplicates:', duplicateCheckError);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Database error while checking for duplicates', 
+            details: duplicateCheckError.message 
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Check if any existing candidate has the same email
+      const duplicateCandidate = existingCandidates?.find(candidate => {
+        const existingEmail = candidate.extracted_json?.email_address;
+        return existingEmail && existingEmail.toLowerCase() === candidateData.email_address.toLowerCase();
+      });
+
+      if (duplicateCandidate) {
+        console.log('Duplicate candidate found with email:', candidateData.email_address);
         return new Response(
           JSON.stringify({ 
             error: 'Duplicate candidate',
             message: 'A candidate with this email already exists in the system',
             email_address: candidateData.email_address,
-            existing_id: existingCandidate.id
+            existing_id: duplicateCandidate.id
           }),
           { 
             status: 409, 
@@ -98,6 +113,20 @@ serve(async (req) => {
           }
         );
       }
+
+      console.log('No duplicate found, proceeding with candidate creation');
+    } catch (duplicateError) {
+      console.error('Unexpected error during duplicate check:', duplicateError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Error checking for duplicates', 
+          details: duplicateError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     // Find the user that matches the source email

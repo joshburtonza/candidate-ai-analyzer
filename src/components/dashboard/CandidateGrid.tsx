@@ -53,14 +53,14 @@ const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
     const candidateEmail = upload.extracted_json.email_address;
 
-    // Filter out duplicates based on email
-    if (candidateEmail && seenEmails.has(candidateEmail.toLowerCase())) {
-      console.log('Filtering out duplicate candidate:', candidateEmail);
-      return false;
-    }
-
+    // STRENGTHENED: Filter out duplicates based on email (case-insensitive)
     if (candidateEmail) {
-      seenEmails.add(candidateEmail.toLowerCase());
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        console.log('Frontend: Filtering out duplicate candidate with email:', candidateEmail);
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
     }
 
     return true;
