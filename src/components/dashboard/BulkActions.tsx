@@ -80,7 +80,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
             <Checkbox
               checked={selectedIds.size === uploads.length}
               onCheckedChange={toggleSelectAll}
-              className="border-brand/50 data-[state=checked]:bg-brand"
+              className="border-brand/50 data-[state=checked]:bg-brand-gradient"
             />
             <span className="text-white/80 text-sm">
               Select All ({uploads.length})
@@ -128,7 +128,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
             <Checkbox
               checked={selectedIds.has(upload.id)}
               onCheckedChange={() => toggleSelection(upload.id)}
-              className="border-brand/50 data-[state=checked]:bg-brand"
+              className="border-brand/50 data-[state=checked]:bg-brand-gradient"
             />
             <span className="text-white/80 text-sm truncate">
               {upload.extracted_json?.candidate_name || 'Unknown Candidate'}

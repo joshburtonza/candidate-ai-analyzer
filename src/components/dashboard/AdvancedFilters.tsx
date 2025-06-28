@@ -163,14 +163,14 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
               placeholder="Search candidates..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 bg-white/5 backdrop-blur-xl border-orange-500/30 text-white placeholder:text-white/50"
+              className="pl-10 bg-white/5 backdrop-blur-xl border-brand/30 text-white placeholder:text-white/50"
             />
           </div>
           
           <Button
             onClick={() => setShowFilters(!showFilters)}
             variant="outline"
-            className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+            className="border-brand/30 text-brand hover:bg-brand/10"
           >
             <Filter className="w-4 h-4 mr-2" />
             Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
@@ -194,7 +194,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
           {/* Country Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-orange-400" />
+              <MapPin className="w-4 h-4 text-brand" />
               <label className="text-sm font-medium text-white">Countries</label>
             </div>
             <Select
@@ -204,10 +204,10 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
                 }
               }}
             >
-              <SelectTrigger className="bg-white/5 border-orange-500/30 text-white">
+              <SelectTrigger className="bg-white/5 border-brand/30 text-white">
                 <SelectValue placeholder="Select countries..." />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-orange-500/30 text-white">
+              <SelectContent className="bg-gray-800 border-brand/30 text-white">
                 {availableCountries.map(country => (
                   <SelectItem key={country} value={country}>
                     {country}
@@ -221,7 +221,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
                   <Badge
                     key={country}
                     variant="secondary"
-                    className="bg-orange-500/20 text-orange-300 border-orange-500/30"
+                    className="bg-brand/20 text-brand border-brand/30"
                   >
                     {country}
                     <X
@@ -237,7 +237,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
           {/* Skills Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-orange-400" />
+              <Briefcase className="w-4 h-4 text-brand" />
               <label className="text-sm font-medium text-white">Skills</label>
             </div>
             <Select
@@ -247,10 +247,10 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
                 }
               }}
             >
-              <SelectTrigger className="bg-white/5 border-orange-500/30 text-white">
+              <SelectTrigger className="bg-white/5 border-brand/30 text-white">
                 <SelectValue placeholder="Select skills..." />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-orange-500/30 text-white max-h-48 overflow-auto">
+              <SelectContent className="bg-gray-800 border-brand/30 text-white max-h-48 overflow-auto">
                 {availableSkills.map(skill => (
                   <SelectItem key={skill} value={skill}>
                     {skill}
@@ -280,7 +280,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
           {/* Score Range Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-orange-400" />
+              <Award className="w-4 h-4 text-brand" />
               <label className="text-sm font-medium text-white">Score Range</label>
             </div>
             <div className="space-y-2">

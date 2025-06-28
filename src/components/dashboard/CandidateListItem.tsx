@@ -21,9 +21,9 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-brand bg-brand';
-    if (score >= 6) return 'text-yellow-400 bg-yellow-500';
-    return 'text-red-400 bg-red-500';
+    if (score >= 8) return 'text-white bg-brand-gradient';
+    if (score >= 6) return 'text-white bg-gradient-to-br from-yellow-400 to-yellow-600';
+    return 'text-white bg-gradient-to-br from-red-400 to-red-600';
   };
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
@@ -52,7 +52,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3 bg-gradient-to-br from-brand/20 to-brand/40 rounded-lgx w-14 h-14 flex items-center justify-center">
+          <div className="p-3 bg-brand-gradient/20 rounded-lgx w-14 h-14 flex items-center justify-center border border-brand/30">
             <User className="w-7 h-7 text-brand" />
           </div>
           <div className="min-w-0">
@@ -95,8 +95,8 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
 
         {/* Score */}
         <div className="text-center">
-          <div className={`w-12 h-12 rounded-full ${getScoreColor(score).split(' ')[1]} flex items-center justify-center`}>
-            <span className="text-black font-bold text-lg">{score}</span>
+          <div className={`w-12 h-12 rounded-full ${getScoreColor(score)} flex items-center justify-center shadow-lg`}>
+            <span className="font-bold text-lg">{score}</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">ASSESSMENT</div>
         </div>

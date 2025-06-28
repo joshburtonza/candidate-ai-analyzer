@@ -257,7 +257,13 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                     backdropFilter: 'blur(24px)'
                   }} 
                 />
-                <Bar dataKey="count" fill="#ff7a00" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="count" fill="url(#brandGradient)" radius={[8, 8, 0, 0]} />
+                <defs>
+                  <linearGradient id="brandGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FFA62E" />
+                    <stop offset="100%" stopColor="#EA4D2C" />
+                  </linearGradient>
+                </defs>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -284,7 +290,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                     label={({ country, count }) => `${country}: ${count}`}
                   >
                     {countryData.map((entry, index) => (
-                      <Cell key={`country-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`country-cell-${index}`} fill={index === 0 ? '#FFA62E' : COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip 
@@ -333,9 +339,9 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                 <Line 
                   type="monotone" 
                   dataKey="candidates" 
-                  stroke="#ff7a00" 
+                  stroke="#FFA62E" 
                   strokeWidth={3}
-                  dot={{ fill: '#ff7a00', strokeWidth: 2, r: 6 }}
+                  dot={{ fill: '#FFA62E', strokeWidth: 2, r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -365,7 +371,13 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                       backdropFilter: 'blur(24px)'
                     }} 
                   />
-                  <Bar dataKey="count" fill="#ffa84d" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="count" fill="url(#skillsGradient)" radius={[0, 8, 8, 0]} />
+                  <defs>
+                    <linearGradient id="skillsGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#FFA62E" />
+                      <stop offset="100%" stopColor="#EA4D2C" />
+                    </linearGradient>
+                  </defs>
                 </BarChart>
               </ResponsiveContainer>
             ) : (

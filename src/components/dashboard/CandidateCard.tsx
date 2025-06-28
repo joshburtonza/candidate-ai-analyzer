@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
@@ -26,9 +25,9 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const scorePercentage = (score / 10) * 100; // For progress bar
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'bg-brand';
-    if (score >= 6) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (score >= 8) return 'bg-brand-gradient';
+    if (score >= 6) return 'bg-gradient-to-br from-yellow-400 to-yellow-600';
+    return 'bg-gradient-to-br from-red-400 to-red-600';
   };
 
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
@@ -65,11 +64,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           {/* Header with Avatar and Score */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-4 bg-gradient-to-br from-brand/20 to-brand/40 rounded-lgx w-16 h-16 flex items-center justify-center">
+              <div className="p-4 bg-brand-gradient/20 rounded-lgx w-16 h-16 flex items-center justify-center border border-brand/30">
                 <User className="w-8 h-8 text-brand" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-brand transition-colors">
+                <h3 className="text-xl font-bold text-white group-hover:text-brand-gradient transition-colors">
                   {data.candidate_name || 'Unknown'}
                 </h3>
               </div>
@@ -77,8 +76,8 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             
             {/* Score Circle */}
             <div className="relative flex-shrink-0">
-              <div className={`w-16 h-16 rounded-full ${getScoreColor(score)} flex items-center justify-center`}>
-                <span className="text-black font-bold text-xl">{score}</span>
+              <div className={`w-16 h-16 rounded-full ${getScoreColor(score)} flex items-center justify-center shadow-lg`}>
+                <span className="text-white font-bold text-xl">{score}</span>
               </div>
               <div className="text-center mt-2">
                 <span className="text-xs text-white/80 font-medium">ASSESSMENT SCORE</span>
@@ -112,7 +111,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           {skills.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-brand rounded"></div>
+                <div className="w-1 h-6 bg-brand-gradient rounded"></div>
                 <h4 className="text-sm font-bold text-white/90 tracking-wider">EXPERTISE</h4>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -140,7 +139,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           {/* Professional Assessment */}
           <div className="space-y-3 flex-1">
             <div className="flex items-center gap-2">
-              <div className="w-1 h-6 bg-brand rounded"></div>
+              <div className="w-1 h-6 bg-brand-gradient rounded"></div>
               <h4 className="text-sm font-bold text-white/90 tracking-wider">PROFESSIONAL ASSESSMENT</h4>
             </div>
             <p className="text-sm text-white/80 line-clamp-4 leading-relaxed">
@@ -166,7 +165,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           >
             <Button
               onClick={() => navigate(`/candidate/${upload.id}`)}
-              className="w-full bg-brand hover:bg-brand/80 text-black font-semibold hover-lift"
+              className="w-full bg-brand-gradient hover:opacity-90 text-white font-semibold hover-lift shadow-lg shadow-brand/25"
             >
               <Eye className="w-4 h-4 mr-2" />
               VIEW PROFILE
