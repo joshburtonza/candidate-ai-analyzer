@@ -207,7 +207,7 @@ const CandidateProfile = () => {
             {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Assessment */}
-              <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
+              <Card className="glass-card elegant-border p-8">
                 <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
                 <HoverCard>
                   <HoverCardTrigger asChild>
@@ -229,7 +229,7 @@ const CandidateProfile = () => {
 
               {/* Education */}
               {data.educational_qualifications && (
-                <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
+                <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <GraduationCap className="w-6 h-6 text-slate-400" />
                     <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
@@ -255,7 +255,7 @@ const CandidateProfile = () => {
 
               {/* Work Experience */}
               {data.job_history && (
-                <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
+                <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <Briefcase className="w-6 h-6 text-slate-400" />
                     <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
@@ -280,7 +280,7 @@ const CandidateProfile = () => {
               )}
 
               {/* File Info */}
-              <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
+              <Card className="glass-card elegant-border p-8">
                 <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
