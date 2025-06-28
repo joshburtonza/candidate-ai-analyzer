@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Users } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { GoogleDocUpload } from './GoogleDocUpload';
 
 interface UploadSectionProps {
@@ -25,6 +25,7 @@ interface UploadFile {
 export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file => ({
@@ -43,6 +44,10 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
   const processFile = async (uploadFile: UploadFile, index: number) => {
     try {
+      if (!user) {
+        throw new Error('User must be authenticated to upload files');
+      }
+
       const fileExt = uploadFile.file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `cv-uploads/${fileName}`;
@@ -71,7 +76,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           original_filename: uploadFile.file.name,
           file_url: filePath,
           file_size: uploadFile.file.size,
-          processing_status: 'pending'
+          processing_status: 'pending',
+          user_id: user.id
         })
         .select()
         .single();
