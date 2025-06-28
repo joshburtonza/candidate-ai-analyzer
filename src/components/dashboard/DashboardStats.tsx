@@ -35,7 +35,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
     : 0;
 
   // Get unique countries with proper type checking
-  const uniqueCountries = new Set();
+  const uniqueCountries = new Set<string>();
   validCandidates.forEach(upload => {
     const countries = upload.extracted_json?.countries;
     if (countries) {
@@ -45,7 +45,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
           uniqueCountries.add(country.trim());
         });
       } else if (Array.isArray(countries)) {
-        countries.forEach(country => {
+        countries.forEach((country: any) => {
           if (typeof country === 'string') {
             uniqueCountries.add(country.trim());
           }
