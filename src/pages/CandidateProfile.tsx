@@ -98,9 +98,9 @@ const CandidateProfile = () => {
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'from-blue-400 to-blue-600';
-    if (score >= 6) return 'from-blue-500 to-blue-700';
-    return 'from-blue-600 to-blue-800';
+    if (score >= 8) return 'from-slate-400 to-slate-600';
+    if (score >= 6) return 'from-slate-500 to-slate-700';
+    return 'from-slate-600 to-slate-800';
   };
 
   return (
@@ -129,7 +129,7 @@ const CandidateProfile = () => {
             {data.email_address && (
               <Button
                 onClick={() => window.open(`mailto:${data.email_address}`, '_blank')}
-                className="bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-semibold text-elegant tracking-wider"
+                className="bg-gradient-to-r from-slate-400 to-slate-600 hover:from-slate-500 hover:to-slate-700 text-white font-semibold text-elegant tracking-wider"
               >
                 <Mail className="w-4 h-4 mr-2" />
                 EMAIL CANDIDATE
@@ -142,8 +142,8 @@ const CandidateProfile = () => {
             <div className="space-y-6">
               <Card className="glass-card elegant-border p-8">
                 <div className="text-center">
-                  <div className="p-6 bg-gradient-to-br from-blue-400/20 to-blue-600/30 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                    <User className="w-12 h-12 text-blue-400" />
+                  <div className="p-6 bg-gradient-to-br from-slate-400/20 to-slate-600/30 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <User className="w-12 h-12 text-slate-400" />
                   </div>
                   <h1 className="text-3xl font-bold text-white mb-4 text-elegant tracking-wider break-words">
                     {data.candidate_name || 'UNKNOWN CANDIDATE'}
@@ -162,19 +162,19 @@ const CandidateProfile = () => {
                   <div className="space-y-4 text-left">
                     {data.email_address && (
                       <div className="flex items-center gap-4 text-white/90">
-                        <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
                         <span className="break-all min-w-0">{data.email_address}</span>
                       </div>
                     )}
                     {data.contact_number && (
                       <div className="flex items-center gap-4 text-white/90">
-                        <Phone className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
                         <span className="break-words min-w-0">{data.contact_number}</span>
                       </div>
                     )}
                     {data.countries && (
                       <div className="flex items-center gap-4 text-white/90">
-                        <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
                         <span className="break-words min-w-0">{data.countries}</span>
                       </div>
                     )}
@@ -186,7 +186,7 @@ const CandidateProfile = () => {
               {skills.length > 0 && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <Star className="w-6 h-6 text-blue-400" />
+                    <Star className="w-6 h-6 text-slate-400" />
                     <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">EXPERTISE</h3>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -207,17 +207,17 @@ const CandidateProfile = () => {
             {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
               {/* Assessment */}
-              <Card className="glass-card elegant-border p-8 hover:border-blue-400/30 transition-colors">
+              <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
                 <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
                 <HoverCard>
                   <HoverCardTrigger asChild>
                     <div className="text-white/90 leading-relaxed text-lg cursor-pointer">
-                      <p className="whitespace-pre-wrap break-words line-clamp-4">
+                      <p className="whitespace-pre-wrap break-words">
                         {data.justification || 'Assessment pending analysis'}
                       </p>
                     </div>
                   </HoverCardTrigger>
-                  <HoverCardContent className="bg-slate-800/95 border-slate-600/50 text-white">
+                  <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
                     <div className="text-sm leading-relaxed">
                       <p className="whitespace-pre-wrap break-words">
                         {data.justification || 'Assessment pending analysis'}
@@ -229,20 +229,20 @@ const CandidateProfile = () => {
 
               {/* Education */}
               {data.educational_qualifications && (
-                <Card className="glass-card elegant-border p-8 hover:border-blue-400/30 transition-colors">
+                <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
                   <div className="flex items-center gap-3 mb-6">
-                    <GraduationCap className="w-6 h-6 text-blue-400" />
+                    <GraduationCap className="w-6 h-6 text-slate-400" />
                     <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
                   </div>
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <div className="text-white/90 leading-relaxed cursor-pointer">
-                        <p className="whitespace-pre-wrap break-words line-clamp-4">
+                        <p className="whitespace-pre-wrap break-words">
                           {data.educational_qualifications}
                         </p>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent className="bg-slate-800/95 border-slate-600/50 text-white">
+                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
                       <div className="text-sm leading-relaxed">
                         <p className="whitespace-pre-wrap break-words">
                           {data.educational_qualifications}
@@ -255,20 +255,20 @@ const CandidateProfile = () => {
 
               {/* Work Experience */}
               {data.job_history && (
-                <Card className="glass-card elegant-border p-8 hover:border-blue-400/30 transition-colors">
+                <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
                   <div className="flex items-center gap-3 mb-6">
-                    <Briefcase className="w-6 h-6 text-blue-400" />
+                    <Briefcase className="w-6 h-6 text-slate-400" />
                     <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
                   </div>
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <div className="text-white/90 leading-relaxed cursor-pointer">
-                        <p className="whitespace-pre-wrap break-words line-clamp-4">
+                        <p className="whitespace-pre-wrap break-words">
                           {data.job_history}
                         </p>
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent className="bg-slate-800/95 border-slate-600/50 text-white">
+                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
                       <div className="text-sm leading-relaxed">
                         <p className="whitespace-pre-wrap break-words">
                           {data.job_history}
@@ -280,7 +280,7 @@ const CandidateProfile = () => {
               )}
 
               {/* File Info */}
-              <Card className="glass-card elegant-border p-8 hover:border-blue-400/30 transition-colors">
+              <Card className="glass-card elegant-border p-8 hover:border-slate-400/30 transition-colors">
                 <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
