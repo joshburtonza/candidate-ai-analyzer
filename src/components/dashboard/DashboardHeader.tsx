@@ -1,5 +1,5 @@
 
-import { Search, Grid3X3, List, User, LogOut, Settings, Brain } from 'lucide-react';
+import { Search, Grid3X3, List, User, LogOut, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Profile } from '@/types/candidate';
-import { DateFilter } from './DateFilter';
 
 interface DashboardHeaderProps {
   profile: Profile | null;
@@ -28,13 +27,11 @@ export const DashboardHeader = ({
   viewMode,
   onViewModeChange,
   sortBy,
-  onSortChange,
-  onDateRangeChange
+  onSortChange
 }: DashboardHeaderProps) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Only show admin badge to Joshua
   const isJoshuaAdmin = profile?.email === 'joshuaburton096@gmail.com' && profile?.is_admin;
 
   return (
@@ -56,18 +53,6 @@ export const DashboardHeader = ({
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
-              <Input
-                placeholder="Search candidates..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="w-64 pl-10 bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white placeholder:text-white/60 focus:border-orange-500"
-              />
-            </div>
-
-            <DateFilter onDateRangeChange={onDateRangeChange} />
-
             <Select value={sortBy} onValueChange={onSortChange}>
               <SelectTrigger className="w-32 bg-white/5 backdrop-blur-xl border border-orange-500/30 text-white">
                 <SelectValue />
