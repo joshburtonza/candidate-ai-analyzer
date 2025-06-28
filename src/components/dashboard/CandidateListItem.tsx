@@ -20,12 +20,6 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-slate-800 bg-brand-gradient';
-    if (score >= 6) return 'text-white bg-gradient-to-br from-yellow-400 to-yellow-600';
-    return 'text-white bg-gradient-to-br from-red-400 to-red-600';
-  };
-
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -49,7 +43,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
         <X className="w-4 h-4" />
       </Button>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 pr-12">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="p-3 bg-slate-500/20 rounded-lgx w-14 h-14 flex items-center justify-center border border-slate-400/30">
@@ -94,9 +88,9 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
         </div>
 
         {/* Score */}
-        <div className="text-center">
-          <div className={`w-12 h-12 rounded-full ${getScoreColor(score)} flex items-center justify-center shadow-lg`}>
-            <span className="font-bold text-lg">{score}</span>
+        <div className="text-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+            <span className="font-bold text-lg text-slate-800">{score}</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">ASSESSMENT</div>
         </div>
@@ -106,7 +100,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
           onClick={() => navigate(`/candidate/${upload.id}`)}
           variant="outline"
           size="sm"
-          className="border-slate-400/30 text-slate-400 hover:bg-slate-400/10 backdrop-blur-sm hover-lift"
+          className="border-slate-400/30 text-slate-400 hover:bg-slate-400/10 backdrop-blur-sm hover-lift flex-shrink-0"
         >
           <Eye className="w-4 h-4 mr-2" />
           VIEW

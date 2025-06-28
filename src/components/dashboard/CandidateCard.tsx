@@ -25,12 +25,6 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
   const scorePercentage = (score / 10) * 100; // For progress bar
 
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'bg-brand-gradient';
-    if (score >= 6) return 'from-yellow-400 to-yellow-600';
-    return 'from-red-400 to-red-600';
-  };
-
   const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -69,7 +63,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
           <div className="space-y-6 flex-1 flex flex-col">
             {/* Header with Avatar and Score */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pr-12">
               <div className="flex items-center gap-4">
                 <div className="p-4 bg-slate-500/10 rounded-xl w-16 h-16 flex items-center justify-center border border-slate-500/20">
                   <User className="w-8 h-8 text-slate-400" />
@@ -83,8 +77,8 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               
               {/* Score Circle */}
               <div className="relative flex-shrink-0">
-                <div className={`w-16 h-16 rounded-full ${score >= 8 ? 'bg-brand-gradient' : `bg-gradient-to-r ${getScoreColor(score)}`} flex items-center justify-center shadow-lg`}>
-                  <span className={`font-bold text-xl ${score >= 8 ? 'text-slate-800' : 'text-white'}`}>{score}</span>
+                <div className="w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+                  <span className="font-bold text-xl text-slate-800">{score}</span>
                 </div>
                 <div className="text-center mt-2">
                   <span className="text-xs text-gray-400 font-medium tracking-wider">SCORE</span>
