@@ -1,3 +1,4 @@
+
 import { CVUpload } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
@@ -85,7 +86,20 @@ const normalizeSkillName = (skill: string): string => {
     'sql': 'SQL',
     'mysql': 'MySQL',
     'postgresql': 'PostgreSQL',
-    'postgres': 'PostgreSQL'
+    'postgres': 'PostgreSQL',
+    'student engagement': 'Student Engagement',
+    'adaptability': 'Adaptability',
+    'powerpoint': 'PowerPoint',
+    'curriculum development': 'Curriculum Development',
+    'lesson planning': 'Lesson Planning',
+    'classroom management': 'Classroom Management',
+    'microsoft office': 'Microsoft Office',
+    'excel': 'Excel',
+    'word': 'Word',
+    'communication': 'Communication',
+    'leadership': 'Leadership',
+    'teamwork': 'Teamwork',
+    'project management': 'Project Management'
   };
   
   return skillMappings[normalized] || skill.trim();
@@ -116,18 +130,38 @@ const extractSkills = (skillsData: any): string[] => {
   let skills: string[] = [];
   
   if (typeof skillsData === 'string') {
-    skills = skillsData.split(/[,;|]/).map(s => s.trim()).filter(s => s.length > 0);
+    // Split by various delimiters and handle multi-line strings
+    skills = skillsData
+      .split(/[,;|\n\r•\-\*]/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .filter(s => !s.match(/^[\d\.\-\s]*$/)); // Remove numeric-only entries
   } else if (Array.isArray(skillsData)) {
-    skills = skillsData.map(s => String(s).trim()).filter(s => s.length > 0);
+    skills = skillsData
+      .map(s => String(s).trim())
+      .filter(s => s.length > 0)
+      .filter(s => !s.match(/^[\d\.\-\s]*$/)); // Remove numeric-only entries
+  } else if (typeof skillsData === 'object' && skillsData !== null) {
+    // Handle object format - extract values
+    skills = Object.values(skillsData)
+      .filter(value => typeof value === 'string')
+      .map(s => String(s).trim())
+      .filter(s => s.length > 0);
   }
   
+  console.log('Extracted skills before normalization:', skills);
+  
   // Normalize skill names
-  return skills.map(normalizeSkillName);
+  const normalizedSkills = skills.map(normalizeSkillName);
+  console.log('Normalized skills:', normalizedSkills);
+  
+  return normalizedSkills;
 };
 
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   const validUploads = filterValidCandidates(uploads);
   console.log('Valid uploads for analytics:', validUploads.length);
+  console.log('Sample upload data:', validUploads[0]?.extracted_json);
 
   // Score distribution data
   const scoreDistribution = validUploads.reduce((acc, upload) => {
@@ -183,7 +217,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   const skillsDistribution = validUploads.reduce((acc, upload) => {
     const skills = extractSkills(upload.extracted_json?.skill_set);
     skills.forEach(skill => {
-      if (skill) {
+      if (skill && skill.length > 1) { // Filter out single character skills
         acc[skill] = (acc[skill] || 0) + 1;
       }
     });
@@ -195,6 +229,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
+  console.log('Skills distribution:', skillsDistribution);
   console.log('Top skills:', topSkills);
 
   return (
