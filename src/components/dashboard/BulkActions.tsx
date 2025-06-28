@@ -70,19 +70,17 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
     exportToCSV(selectedUploads, 'selected_candidates');
   };
 
-  const selectedUploads = uploads.filter(u => selectedIds.has(u.id));
-
   if (uploads.length === 0) return null;
 
   return (
-    <div className="glass-card elegant-border p-4 rounded-xl">
+    <div className="glass p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Checkbox
               checked={selectedIds.size === uploads.length}
               onCheckedChange={toggleSelectAll}
-              className="border-orange-500/50 data-[state=checked]:bg-orange-500"
+              className="border-brand/50 data-[state=checked]:bg-brand"
             />
             <span className="text-white/80 text-sm">
               Select All ({uploads.length})
@@ -90,7 +88,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
           </div>
           
           {selectedIds.size > 0 && (
-            <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+            <Badge variant="secondary" className="glass text-brand border-brand/30">
               <Users className="w-3 h-3 mr-1" />
               {selectedIds.size} selected
             </Badge>
@@ -103,7 +101,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
               onClick={handleBulkExport}
               variant="outline"
               size="sm"
-              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover-lift"
             >
               <Download className="w-4 h-4 mr-2" />
               Export Selected
@@ -114,7 +112,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
               variant="outline"
               size="sm"
               disabled={isDeleting}
-              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+              className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover-lift"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Selected
@@ -126,11 +124,11 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
       {/* Selection indicators for each candidate */}
       <div className="mt-4 grid grid-cols-1 gap-2 max-h-32 overflow-auto">
         {uploads.map(upload => (
-          <div key={upload.id} className="flex items-center gap-2 p-2 rounded bg-white/5">
+          <div key={upload.id} className="flex items-center gap-2 p-2 rounded-lgx glass">
             <Checkbox
               checked={selectedIds.has(upload.id)}
               onCheckedChange={() => toggleSelection(upload.id)}
-              className="border-orange-500/50 data-[state=checked]:bg-orange-500"
+              className="border-brand/50 data-[state=checked]:bg-brand"
             />
             <span className="text-white/80 text-sm truncate">
               {upload.extracted_json?.candidate_name || 'Unknown Candidate'}

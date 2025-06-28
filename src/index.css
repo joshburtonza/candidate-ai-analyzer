@@ -3,169 +3,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Updated design system with black theme and orange accents */
-
-@layer base {
-  :root {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 25 95% 53%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 25 95% 53%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 25 95% 53%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 25 95% 53%;
-  }
-
-  .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 25 95% 53%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 25 95% 53%;
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 25 95% 53%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 25 95% 53%;
-  }
+/* Glass-morphism utility classes */
+.glass {
+  @apply bg-glass border border-border rounded-lgx shadow-glass
+         backdrop-blur-xl backdrop-saturate-150;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-  }
+.hover-lift {
+  @apply transition-transform duration-150 ease-swift will-change-transform;
 }
 
-/* Custom styles */
-@layer components {
-  .dot-grid-bg {
-    background-color: #121212;
-    background-image: 
-      radial-gradient(circle, #333333 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
+.hover-lift:hover { 
+  transform: scale(1.025); 
+}
 
-  .chrome-glass {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 165, 0, 0.3);
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 0 0 1px rgba(255, 165, 0, 0.1);
-  }
+.hover-lift:active { 
+  transform: scale(0.99); 
+  box-shadow: 0 2px 16px rgba(0,0,0,0.35); 
+}
 
-  .chrome-glass-hover {
-    transition: all 0.3s ease;
-  }
+/* Base styles */
+body {
+  background-color: #000;
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 0);
+  background-size: 10px 10px;
+  color: rgba(255,255,255,0.9);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
+}
 
-  .chrome-glass-hover:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 165, 0, 0.5);
-    box-shadow: 
-      0 12px 40px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15),
-      0 0 0 1px rgba(255, 165, 0, 0.2),
-      0 0 20px rgba(255, 165, 0, 0.1);
-  }
-
-  .orange-accent {
-    color: hsl(25, 95%, 53%);
-  }
-
-  .dark-card {
-    background: rgba(32, 32, 32, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
-
-  .stat-card {
-    background: rgba(40, 40, 40, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
-
-  .upload-area {
-    background: rgba(32, 32, 32, 0.8);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-  }
-
-  .candidate-card {
-    background: rgba(40, 40, 40, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
-
-  .header-bg {
-    background: rgba(20, 20, 20, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
+h1, h2, h3, h4, h5, h6 {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', Roboto, 'Helvetica Neue', sans-serif;
+  font-weight: 600;
 }

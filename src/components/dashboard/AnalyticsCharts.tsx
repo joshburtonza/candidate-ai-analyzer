@@ -241,25 +241,26 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="glass-card elegant-border p-6">
+          <div className="glass hover-lift p-6">
             <h3 className="text-lg font-bold text-white mb-6 tracking-wide">SCORE DISTRIBUTION</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={scoreData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="score" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="score" stroke="rgba(255,255,255,0.7)" />
+                <YAxis stroke="rgba(255,255,255,0.7)" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
+                    backgroundColor: 'rgba(0,0,0,0.8)', 
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '20px',
+                    color: '#ffffff',
+                    backdropFilter: 'blur(24px)'
                   }} 
                 />
-                <Bar dataKey="count" fill="#f97316" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#ff7a00" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
+          </div>
         </motion.div>
 
         {/* Country Distribution */}
@@ -268,7 +269,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="glass-card elegant-border p-6">
+          <div className="glass hover-lift p-6">
             <h3 className="text-lg font-bold text-white mb-6 tracking-wide">TOP COUNTRIES</h3>
             {countryData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -288,10 +289,11 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB'
+                      backgroundColor: 'rgba(0,0,0,0.8)', 
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '20px',
+                      color: '#ffffff',
+                      backdropFilter: 'blur(24px)'
                     }} 
                   />
                 </PieChart>
@@ -301,7 +303,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                 <p className="text-gray-400">No country data available</p>
               </div>
             )}
-          </Card>
+          </div>
         </motion.div>
       </div>
 
@@ -312,31 +314,32 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="glass-card elegant-border p-6">
+          <div className="glass hover-lift p-6">
             <h3 className="text-lg font-bold text-white mb-6 tracking-wide">7-DAY TREND</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="date" stroke="rgba(255,255,255,0.7)" />
+                <YAxis stroke="rgba(255,255,255,0.7)" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#F9FAFB'
+                    backgroundColor: 'rgba(0,0,0,0.8)', 
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '20px',
+                    color: '#ffffff',
+                    backdropFilter: 'blur(24px)'
                   }} 
                 />
                 <Line 
                   type="monotone" 
                   dataKey="candidates" 
-                  stroke="#f97316" 
+                  stroke="#ff7a00" 
                   strokeWidth={3}
-                  dot={{ fill: '#f97316', strokeWidth: 2, r: 6 }}
+                  dot={{ fill: '#ff7a00', strokeWidth: 2, r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
-          </Card>
+          </div>
         </motion.div>
 
         {/* Top Skills */}
@@ -345,23 +348,24 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <Card className="glass-card elegant-border p-6">
+          <div className="glass hover-lift p-6">
             <h3 className="text-lg font-bold text-white mb-6 tracking-wide">TOP SKILLS</h3>
             {topSkills.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={topSkills} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis type="number" stroke="#9CA3AF" />
-                  <YAxis dataKey="skill" type="category" stroke="#9CA3AF" width={100} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis type="number" stroke="rgba(255,255,255,0.7)" />
+                  <YAxis dataKey="skill" type="category" stroke="rgba(255,255,255,0.7)" width={100} />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB'
+                      backgroundColor: 'rgba(0,0,0,0.8)', 
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '20px',
+                      color: '#ffffff',
+                      backdropFilter: 'blur(24px)'
                     }} 
                   />
-                  <Bar dataKey="count" fill="#eab308" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="count" fill="#ffa84d" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -369,7 +373,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
                 <p className="text-gray-400">No skills data available</p>
               </div>
             )}
-          </Card>
+          </div>
         </motion.div>
       </div>
     </div>

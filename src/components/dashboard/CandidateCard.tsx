@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { CVUpload } from '@/types/candidate';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +26,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const scorePercentage = (score / 10) * 100; // For progress bar
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'bg-orange-500';
+    if (score >= 8) return 'bg-brand';
     if (score >= 6) return 'bg-yellow-500';
     return 'bg-red-500';
   };
@@ -50,7 +49,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
       transition={{ duration: 0.2 }}
       className="h-full relative"
     >
-      <Card className="chrome-glass chrome-glass-hover p-6 h-full rounded-xl cursor-pointer group flex flex-col">
+      <div className="glass hover-lift p-6 h-full cursor-pointer group flex flex-col">
         {/* Clear Button */}
         <Button
           onClick={handleDelete}
@@ -66,11 +65,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           {/* Header with Avatar and Score */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-4 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full w-16 h-16 flex items-center justify-center">
-                <User className="w-8 h-8 gold-accent" />
+              <div className="p-4 bg-gradient-to-br from-brand/20 to-brand/40 rounded-lgx w-16 h-16 flex items-center justify-center">
+                <User className="w-8 h-8 text-brand" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">
+                <h3 className="text-xl font-bold text-white group-hover:text-brand transition-colors">
                   {data.candidate_name || 'Unknown'}
                 </h3>
               </div>
@@ -91,19 +90,19 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           <div className="space-y-3">
             {data.email_address && (
               <div className="flex items-center gap-3 text-white/90">
-                <Mail className="w-5 h-5 gold-accent flex-shrink-0" />
+                <Mail className="w-5 h-5 text-brand flex-shrink-0" />
                 <span className="truncate">{data.email_address}</span>
               </div>
             )}
             {data.contact_number && (
               <div className="flex items-center gap-3 text-white/90">
-                <Phone className="w-5 h-5 gold-accent flex-shrink-0" />
+                <Phone className="w-5 h-5 text-brand flex-shrink-0" />
                 <span className="truncate">{data.contact_number}</span>
               </div>
             )}
             {data.countries && (
               <div className="flex items-center gap-3 text-white/90">
-                <MapPin className="w-5 h-5 gold-accent flex-shrink-0" />
+                <MapPin className="w-5 h-5 text-brand flex-shrink-0" />
                 <span className="truncate">{data.countries}</span>
               </div>
             )}
@@ -113,15 +112,15 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           {skills.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-gold-accent rounded"></div>
-                <h4 className="text-sm font-bold text-white/90 text-elegant tracking-wider">EXPERTISE</h4>
+                <div className="w-1 h-6 bg-brand rounded"></div>
+                <h4 className="text-sm font-bold text-white/90 tracking-wider">EXPERTISE</h4>
               </div>
               <div className="flex flex-wrap gap-2">
                 {skills.slice(0, 6).map((skill, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="bg-white/10 text-white border-white/20 px-3 py-1 text-xs"
+                    className="glass text-white border-border px-3 py-1 text-xs"
                   >
                     {skill}
                   </Badge>
@@ -129,7 +128,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 {skills.length > 6 && (
                   <Badge
                     variant="secondary"
-                    className="bg-white/10 text-white border-white/20 px-3 py-1 text-xs"
+                    className="glass text-white border-border px-3 py-1 text-xs"
                   >
                     +{skills.length - 6}
                   </Badge>
@@ -141,8 +140,8 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           {/* Professional Assessment */}
           <div className="space-y-3 flex-1">
             <div className="flex items-center gap-2">
-              <div className="w-1 h-6 bg-gold-accent rounded"></div>
-              <h4 className="text-sm font-bold text-white/90 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h4>
+              <div className="w-1 h-6 bg-brand rounded"></div>
+              <h4 className="text-sm font-bold text-white/90 tracking-wider">PROFESSIONAL ASSESSMENT</h4>
             </div>
             <p className="text-sm text-white/80 line-clamp-4 leading-relaxed">
               {data.justification || 'Assessment pending analysis'}
@@ -167,14 +166,14 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
           >
             <Button
               onClick={() => navigate(`/candidate/${upload.id}`)}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-black font-semibold"
+              className="w-full bg-brand hover:bg-brand/80 text-black font-semibold hover-lift"
             >
               <Eye className="w-4 h-4 mr-2" />
               VIEW PROFILE
             </Button>
           </motion.div>
         </div>
-      </Card>
+      </div>
     </motion.div>
   );
 };

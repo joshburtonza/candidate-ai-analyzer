@@ -1,6 +1,5 @@
 
 import { CVUpload } from '@/types/candidate';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, MapPin, Eye, X } from 'lucide-react';
@@ -22,7 +21,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-orange-400 bg-orange-500';
+    if (score >= 8) return 'text-brand bg-brand';
     if (score >= 6) return 'text-yellow-400 bg-yellow-500';
     return 'text-red-400 bg-red-500';
   };
@@ -38,7 +37,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   };
 
   return (
-    <Card className="chrome-glass chrome-glass-hover p-6 rounded-xl relative">
+    <div className="glass hover-lift p-6 relative">
       {/* Clear Button */}
       <Button
         onClick={handleDelete}
@@ -53,8 +52,8 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
       <div className="flex items-center gap-6">
         {/* Avatar & Basic Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3 bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 rounded-full w-14 h-14 flex items-center justify-center">
-            <User className="w-7 h-7 gold-accent" />
+          <div className="p-3 bg-gradient-to-br from-brand/20 to-brand/40 rounded-lgx w-14 h-14 flex items-center justify-center">
+            <User className="w-7 h-7 text-brand" />
           </div>
           <div className="min-w-0">
             <h3 className="text-lg font-bold text-white truncate">
@@ -62,18 +61,18 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
             </h3>
             <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
               <div className="flex items-center gap-1">
-                <Mail className="w-3 h-3 text-orange-500" />
+                <Mail className="w-3 h-3 text-brand" />
                 <span className="truncate">{data.email_address}</span>
               </div>
               {data.contact_number && (
                 <div className="flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-orange-500" />
+                  <Phone className="w-3 h-3 text-brand" />
                   <span>{data.contact_number}</span>
                 </div>
               )}
               {data.countries && (
                 <div className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-orange-500" />
+                  <MapPin className="w-3 h-3 text-brand" />
                   <span>{data.countries}</span>
                 </div>
               )}
@@ -87,7 +86,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
             <Badge
               key={index}
               variant="secondary"
-              className="bg-white/10 text-white border-white/20 text-xs hover:bg-white/20 transition-colors backdrop-blur-sm"
+              className="glass text-white border-border text-xs hover:bg-white/20 transition-colors backdrop-blur-sm"
             >
               {skill}
             </Badge>
@@ -107,12 +106,12 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
           onClick={() => navigate(`/candidate/${upload.id}`)}
           variant="outline"
           size="sm"
-          className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 backdrop-blur-sm"
+          className="border-brand/30 text-brand hover:bg-brand/10 backdrop-blur-sm hover-lift"
         >
           <Eye className="w-4 h-4 mr-2" />
           VIEW
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
