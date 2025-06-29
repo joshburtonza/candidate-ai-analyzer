@@ -8,7 +8,7 @@ export interface CandidateData {
   skill_set: string;
   score: string;
   justification: string;
-  countries: string;
+  countries: string; // Keep as string for consistency in UI
 }
 
 export interface CVUpload {

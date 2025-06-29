@@ -18,9 +18,23 @@ export const N8nApiInfo = () => {
     skill_set: "JavaScript, React, Python, Node.js",
     score: "85",
     justification: "Strong technical background with relevant experience",
-    countries: "USA",
+    countries: "USA", // Can be string or array - system handles both
     original_filename: "john_doe_cv.pdf",
     source_email: "info@sa-recruitment.com"
+  };
+
+  const arrayFormatExample = {
+    candidate_name: "Jane Smith",
+    email_address: "jane@example.com",
+    contact_number: "+1234567890",
+    educational_qualifications: "Master's in Engineering",
+    job_history: "8 years project management experience",
+    skill_set: ["Project Management", "Agile", "Leadership", "Technical Writing"],
+    score: "92",
+    justification: "Excellent leadership and technical skills",
+    countries: ["USA", "Canada"], // Array format also supported
+    original_filename: "jane_smith_cv.pdf",
+    source_email: "hr@sa-recruitment.com"
   };
 
   const copyToClipboard = (text: string) => {
@@ -69,7 +83,7 @@ export const N8nApiInfo = () => {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-300">Sample JSON Payload:</label>
+            <label className="text-sm font-medium text-gray-300">Sample JSON Payload (String Format):</label>
             <div className="flex items-start gap-2 mt-1">
               <pre className="bg-gray-800 text-gray-300 px-3 py-2 rounded text-xs flex-1 overflow-x-auto">
 {JSON.stringify(sampleData, null, 2)}
@@ -78,6 +92,23 @@ export const N8nApiInfo = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => copyToClipboard(JSON.stringify(sampleData, null, 2))}
+                className="border-slate-500/30 text-slate-400 hover:bg-slate-500/10 mt-1"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-300">Sample JSON Payload (Array Format - Also Supported):</label>
+            <div className="flex items-start gap-2 mt-1">
+              <pre className="bg-gray-800 text-gray-300 px-3 py-2 rounded text-xs flex-1 overflow-x-auto">
+{JSON.stringify(arrayFormatExample, null, 2)}
+              </pre>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => copyToClipboard(JSON.stringify(arrayFormatExample, null, 2))}
                 className="border-slate-500/30 text-slate-400 hover:bg-slate-500/10 mt-1"
               >
                 <Copy className="w-4 h-4" />
@@ -96,11 +127,14 @@ export const N8nApiInfo = () => {
           </div>
 
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-            <h4 className="text-blue-400 font-medium mb-2">Email Mapping:</h4>
-            <p className="text-sm text-gray-300">
-              The <code>source_email</code> field determines which user the CV will be assigned to. 
-              Make sure this email matches a registered user in the system.
+            <h4 className="text-blue-400 font-medium mb-2">Data Format Flexibility:</h4>
+            <p className="text-sm text-gray-300 mb-2">
+              The system now handles both string and array formats for fields like <code>skill_set</code> and <code>countries</code>:
             </p>
+            <ul className="text-sm text-gray-300 space-y-1">
+              <li>• String format: <code>"JavaScript, React, Python"</code></li>
+              <li>• Array format: <code>["JavaScript", "React", "Python"]</code></li>
+            </ul>
           </div>
 
           <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
@@ -109,6 +143,7 @@ export const N8nApiInfo = () => {
 {JSON.stringify({
   success: true,
   message: "Candidate tile created successfully",
+  action: "created", // or "merged" if duplicate found
   id: "uuid-here",
   candidate_name: "John Doe",
   assigned_to_user: "info@sa-recruitment.com",

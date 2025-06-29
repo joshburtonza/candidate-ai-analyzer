@@ -16,9 +16,33 @@ interface CandidateData {
   skill_set: string;
   score: string;
   justification: string;
-  countries: string;
+  countries: string | string[]; // Allow both string and array
   original_filename?: string;
   source_email: string; // Now required - the email the CV was sent to
+}
+
+// Helper function to safely convert arrays or strings to normalized string format
+function normalizeToString(value: string | string[] | null | undefined): string {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).join(', ');
+  }
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return String(value).trim();
+}
+
+// Helper function to safely split strings, handling both string and array inputs
+function safeSplit(value: string | string[] | null | undefined): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).map(item => item.trim());
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+  return [];
 }
 
 // Helper function to merge candidate data intelligently
@@ -64,27 +88,28 @@ function mergeCandidateData(existing: any, incoming: CandidateData): any {
     }
   }
   
-  // Skills: merge unique skills
+  // Skills: merge unique skills - using safe handling
   if (incoming.skill_set) {
+    const normalizedIncomingSkills = normalizeToString(incoming.skill_set);
     if (!merged.skill_set) {
-      merged.skill_set = incoming.skill_set;
+      merged.skill_set = normalizedIncomingSkills;
     } else {
-      const existingSkills = merged.skill_set.split(',').map((s: string) => s.trim().toLowerCase());
-      const incomingSkills = incoming.skill_set.split(',').map((s: string) => s.trim());
+      const existingSkills = safeSplit(merged.skill_set).map(s => s.toLowerCase());
+      const incomingSkills = safeSplit(normalizedIncomingSkills);
       const newSkills = incomingSkills.filter(skill => 
         !existingSkills.includes(skill.toLowerCase()) && skill.length > 0
       );
       if (newSkills.length > 0) {
-        merged.skill_set = merged.skill_set + ', ' + newSkills.join(', ');
+        merged.skill_set = normalizeToString(merged.skill_set) + ', ' + newSkills.join(', ');
       }
     }
   }
   
   // Score: prefer higher score
-  const incomingScore = parseFloat(incoming.score || '0');
-  const existingScore = parseFloat(merged.score || '0');
+  const incomingScore = parseFloat(String(incoming.score) || '0');
+  const existingScore = parseFloat(String(merged.score) || '0');
   if (incomingScore > existingScore) {
-    merged.score = incoming.score;
+    merged.score = String(incoming.score);
     // Also update justification if score is better
     if (incoming.justification && incoming.justification.length > (merged.justification || '').length) {
       merged.justification = incoming.justification;
@@ -99,18 +124,19 @@ function mergeCandidateData(existing: any, incoming: CandidateData): any {
     }
   }
   
-  // Countries: merge unique countries
+  // Countries: merge unique countries - using safe handling for both arrays and strings
   if (incoming.countries) {
+    const normalizedIncomingCountries = normalizeToString(incoming.countries);
     if (!merged.countries) {
-      merged.countries = incoming.countries;
+      merged.countries = normalizedIncomingCountries;
     } else {
-      const existingCountries = merged.countries.split(',').map((c: string) => c.trim().toLowerCase());
-      const incomingCountries = incoming.countries.split(',').map((c: string) => c.trim());
+      const existingCountries = safeSplit(merged.countries).map(c => c.toLowerCase());
+      const incomingCountries = safeSplit(normalizedIncomingCountries);
       const newCountries = incomingCountries.filter(country => 
         !existingCountries.includes(country.toLowerCase()) && country.length > 0
       );
       if (newCountries.length > 0) {
-        merged.countries = merged.countries + ', ' + newCountries.join(', ');
+        merged.countries = normalizeToString(merged.countries) + ', ' + newCountries.join(', ');
       }
     }
   }
@@ -254,7 +280,7 @@ serve(async (req) => {
       if (duplicateCandidate) {
         console.log('Found existing candidate, merging data for:', candidateData.candidate_name);
         
-        // Merge the candidate data
+        // Merge the candidate data with safe handling
         const mergedData = mergeCandidateData(duplicateCandidate.extracted_json, candidateData);
         
         console.log('Merged candidate data:', mergedData);
@@ -318,7 +344,7 @@ serve(async (req) => {
       );
     }
 
-    // Create the CV upload record with the mapped user ID
+    // Create the CV upload record with the mapped user ID - normalize data before storing
     const cvUploadData = {
       user_id: profile.id, // Use the actual user ID from profile lookup
       file_url: '', // No actual file for n8n uploads
@@ -329,10 +355,10 @@ serve(async (req) => {
         contact_number: candidateData.contact_number || '',
         educational_qualifications: candidateData.educational_qualifications || '',
         job_history: candidateData.job_history || '',
-        skill_set: candidateData.skill_set || '',
-        score: candidateData.score || '0',
+        skill_set: normalizeToString(candidateData.skill_set),
+        score: String(candidateData.score || '0'),
         justification: candidateData.justification || '',
-        countries: candidateData.countries || ''
+        countries: normalizeToString(candidateData.countries) // Normalize to string format
       },
       processing_status: 'completed',
       source_email: candidateData.source_email, // Use the actual source email from request
