@@ -145,7 +145,7 @@ serve(async (req) => {
       .trim()
 
     // Truncate if too long but keep more text for better analysis
-    const maxLength = 12000
+    const maxLength = 15000
     if (cleanedText.length > maxLength) {
       cleanedText = cleanedText.substring(0, maxLength) + '...'
       console.log('Text truncated to:', cleanedText.length, 'characters')
@@ -161,7 +161,7 @@ serve(async (req) => {
       console.log('Using filename-based analysis due to insufficient text')
     }
 
-    // Enhanced OpenAI prompt for better extraction
+    // Enhanced OpenAI prompt for comprehensive job history extraction
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -182,29 +182,36 @@ Required JSON format:
   "candidate_name": "Full name (required)",
   "email_address": "Email address or empty string",
   "contact_number": "Phone number or empty string", 
-  "educational_qualifications": "Complete education details including degrees, institutions, years",
-  "job_history": "Complete work experience with companies, positions, dates, responsibilities",
+  "educational_qualifications": "Complete education details including degrees, institutions, years, grades",
+  "job_history": "COMPREHENSIVE work experience with ALL positions, companies, dates, and detailed responsibilities",
   "skill_set": "All technical and soft skills, comma-separated",
   "score": 85,
   "justification": "Detailed explanation of the score based on experience, education, skills",
   "countries": "Location, countries, or regions mentioned"
 }
 
-Instructions:
-- Extract ALL available information, don't leave fields empty unless truly no information exists
-- For educational_qualifications: Include degree types, institution names, graduation years, GPAs if mentioned
-- For job_history: Include all positions, company names, employment dates, key responsibilities and achievements
-- For skill_set: Extract technical skills, programming languages, tools, certifications, soft skills
-- Score should be 0-100 based on overall qualifications, experience level, and skill diversity
-- Be thorough in justification explaining why this score was given
-- Return ONLY the JSON object, no other text`
+CRITICAL INSTRUCTIONS FOR JOB HISTORY:
+- Extract EVERY job position mentioned in the CV
+- Include ALL company names, job titles, and employment periods
+- Include ALL responsibilities, achievements, and duties for each role
+- Preserve chronological order and specific details
+- Include part-time, full-time, contract, and volunteer positions
+- Capture specific skills used in each role
+- Include any coaching, teaching, or leadership roles
+- Do NOT summarize - include ALL details found in the original text
+
+For educational_qualifications: Include degree types, institution names, graduation years, GPAs if mentioned
+For skill_set: Extract technical skills, programming languages, tools, certifications, soft skills
+Score should be 0-100 based on overall qualifications, experience level, and skill diversity
+Be thorough in justification explaining why this score was given
+Return ONLY the JSON object, no other text`
           },
           {
             role: 'user',
-            content: `Analyze this CV content thoroughly and extract all information:\n\n${cleanedText}`
+            content: `Analyze this CV content thoroughly and extract ALL job history information with complete details:\n\n${cleanedText}`
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.1
       })
     })
@@ -273,7 +280,7 @@ Instructions:
         email_address: emailMatch ? emailMatch[0] : "",
         contact_number: phoneMatch ? phoneMatch[0] : "",
         educational_qualifications: "",
-        job_history: "",
+        job_history: "Limited information could be extracted from the document. This may be due to the document format or image-based content.",
         skill_set: skills || "",
         score: 40,
         justification: "Limited information could be extracted from the document. This may be due to the document format or image-based content.",
@@ -282,6 +289,7 @@ Instructions:
     }
 
     console.log('Final extracted data for dashboard:', extractedData)
+    console.log('Job history length:', extractedData.job_history?.length || 0)
 
     // Update the database record with extracted data
     const { error: updateError } = await supabase
