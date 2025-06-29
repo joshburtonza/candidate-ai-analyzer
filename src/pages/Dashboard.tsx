@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { BarChart3, Download, Users } from 'lucide-react';
+import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -170,12 +171,9 @@ const Dashboard = () => {
     exportToCSV(filteredUploads, 'all_candidates');
   };
 
-  // Apply calendar date filter to filtered uploads - now handles single day selection
+  // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
   const displayUploads = selectedCalendarDate 
-    ? filteredUploads.filter(upload => {
-        const uploadDate = new Date(upload.uploaded_at);
-        return isSameDay(uploadDate, selectedCalendarDate);
-      })
+    ? filterValidCandidatesForDate(uploads, selectedCalendarDate)
     : filteredUploads;
 
   // Sort uploads
@@ -262,7 +260,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-brand-gradient rounded-full"></div>
                 <p className="text-white/80 text-sm">
-                  Showing complete profiles with scores ≥ 5/10 sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
+                  Showing candidates with email addresses sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
                 </p>
               </div>
             </motion.div>

@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { CVUpload } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { filterValidCandidates } from '@/utils/candidateFilters';
+import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
@@ -70,13 +70,8 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
   }, []);
 
   const getQualifiedCountForDate = (date: Date) => {
-    const uploadsForDate = realtimeUploads.filter(upload => {
-      const uploadDate = new Date(upload.uploaded_at);
-      return isSameDay(uploadDate, date);
-    });
-
-    // Use the same filtering logic as the rest of the app
-    const validCandidates = filterValidCandidates(uploadsForDate);
+    // Use the new date-specific filtering logic that shows all historical uploads
+    const validCandidates = filterValidCandidatesForDate(realtimeUploads, date);
     return validCandidates.length;
   };
 
@@ -131,7 +126,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
               QUALIFIED CANDIDATES
             </h2>
             <p className="text-sm text-white/60 mt-1">
-              Click on a day to filter candidates • Shows qualified candidates only
+              Click on a day to filter candidates • Shows all candidates with email addresses
             </p>
           </div>
         </div>

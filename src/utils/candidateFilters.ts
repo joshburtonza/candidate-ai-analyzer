@@ -10,25 +10,14 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
 
   const data = upload.extracted_json;
   
-  // Must have at least candidate name and email address
-  const hasMinimumRequiredFields = !!(
-    data.candidate_name &&
-    data.email_address
-  );
+  // Only require email address - be very permissive with other fields
+  const hasEmail = !!(data.email_address && data.email_address.trim());
 
-  if (!hasMinimumRequiredFields) {
+  if (!hasEmail) {
     return false;
   }
 
-  // Filter out low scores (below 5/10) - but only if score exists
-  if (data.score) {
-    const rawScore = parseFloat(data.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-    if (score < 5) {
-      return false;
-    }
-  }
-
+  // Allow all candidates with email, regardless of score or other missing info
   return true;
 };
 
@@ -57,30 +46,33 @@ export const isTestCandidate = (upload: CVUpload): boolean => {
   return testPatterns.some(pattern => name.includes(pattern));
 };
 
-export const isUploadedToday = (upload: CVUpload): boolean => {
+export const isUploadedOnDate = (upload: CVUpload, targetDate: Date): boolean => {
   const uploadDate = new Date(upload.uploaded_at);
-  const today = new Date();
   
-  // Create time range from 12:00 AM to 11:59 PM of current day
-  const startOfToday = startOfDay(today);
-  const endOfToday = endOfDay(today);
+  // Create time range from 12:00 AM to 11:59 PM of target day
+  const startOfTargetDay = startOfDay(targetDate);
+  const endOfTargetDay = endOfDay(targetDate);
   
   return isWithinInterval(uploadDate, {
-    start: startOfToday,
-    end: endOfToday
+    start: startOfTargetDay,
+    end: endOfTargetDay
   });
+};
+
+export const isUploadedToday = (upload: CVUpload): boolean => {
+  return isUploadedOnDate(upload, new Date());
 };
 
 export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    // Filter out uploads not from today
+    // Filter out uploads not from today for the main dashboard view
     if (!isUploadedToday(upload)) {
       return false;
     }
 
-    // Filter out incomplete uploads and low scores (but more permissive now)
+    // Filter out incomplete uploads (only requires email now)
     if (!isQualifiedCandidate(upload)) {
       return false;
     }
@@ -98,6 +90,41 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
       const normalizedEmail = candidateEmail.toLowerCase().trim();
       if (seenEmails.has(normalizedEmail)) {
         console.log('Filtering out duplicate candidate with email:', candidateEmail);
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+};
+
+// New function to filter candidates for any specific date (for calendar)
+export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  return uploads.filter(upload => {
+    // Filter for specific date instead of just today
+    if (!isUploadedOnDate(upload, targetDate)) {
+      return false;
+    }
+
+    // Filter out incomplete uploads (only requires email now)
+    if (!isQualifiedCandidate(upload)) {
+      return false;
+    }
+
+    // Filter out test candidates
+    if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
         return false;
       }
       seenEmails.add(normalizedEmail);
