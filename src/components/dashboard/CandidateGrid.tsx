@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
@@ -24,8 +24,10 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
     setLocalUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
-  // Use the centralized filtering logic
-  const validUploads = filterValidCandidates(localUploads);
+  // Memoize the filtering to prevent unnecessary recalculations
+  const validUploads = useMemo(() => {
+    return filterValidCandidates(localUploads);
+  }, [localUploads]);
 
   if (validUploads.length === 0) {
     return (

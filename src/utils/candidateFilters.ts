@@ -63,10 +63,20 @@ export const isUploadedToday = (upload: CVUpload): boolean => {
   return isUploadedOnDate(upload, new Date());
 };
 
+// Memoized filtering function to prevent infinite loops
+const filterCache = new Map<string, CVUpload[]>();
+
 export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  // Create cache key based on uploads length and today's date
+  const cacheKey = `today-${uploads.length}-${new Date().toDateString()}`;
+  
+  if (filterCache.has(cacheKey)) {
+    return filterCache.get(cacheKey)!;
+  }
+
   const seenEmails = new Set<string>();
   
-  return uploads.filter(upload => {
+  const filtered = uploads.filter(upload => {
     // Filter out uploads not from today for the main dashboard view
     if (!isUploadedToday(upload)) {
       return false;
@@ -79,7 +89,6 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
     // Filter out test candidates
     if (isTestCandidate(upload)) {
-      console.log('Filtering out test candidate:', upload.extracted_json?.candidate_name);
       return false;
     }
 
@@ -89,7 +98,6 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
     if (candidateEmail) {
       const normalizedEmail = candidateEmail.toLowerCase().trim();
       if (seenEmails.has(normalizedEmail)) {
-        console.log('Filtering out duplicate candidate with email:', candidateEmail);
         return false;
       }
       seenEmails.add(normalizedEmail);
@@ -97,13 +105,30 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
     return true;
   });
+
+  // Cache the result
+  filterCache.set(cacheKey, filtered);
+  
+  // Clear old cache entries to prevent memory leaks
+  if (filterCache.size > 10) {
+    const firstKey = filterCache.keys().next().value;
+    filterCache.delete(firstKey);
+  }
+
+  return filtered;
 };
 
-// New function to filter candidates for any specific date (for calendar)
+// Memoized function for date-specific filtering
 export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
+  const cacheKey = `date-${uploads.length}-${targetDate.toDateString()}`;
+  
+  if (filterCache.has(cacheKey)) {
+    return filterCache.get(cacheKey)!;
+  }
+
   const seenEmails = new Set<string>();
   
-  return uploads.filter(upload => {
+  const filtered = uploads.filter(upload => {
     // Filter for specific date instead of just today
     if (!isUploadedOnDate(upload, targetDate)) {
       return false;
@@ -132,4 +157,15 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
     return true;
   });
+
+  // Cache the result
+  filterCache.set(cacheKey, filtered);
+  
+  // Clear old cache entries to prevent memory leaks
+  if (filterCache.size > 10) {
+    const firstKey = filterCache.keys().next().value;
+    filterCache.delete(firstKey);
+  }
+
+  return filtered;
 };

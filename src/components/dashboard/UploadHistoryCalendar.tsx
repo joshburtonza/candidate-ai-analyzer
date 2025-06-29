@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
@@ -23,59 +23,80 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     setRealtimeUploads(uploads);
   }, [uploads]);
 
-  // Set up real-time subscription for new uploads
-  useEffect(() => {
-    console.log('UploadHistoryCalendar: Setting up realtime subscription');
-    
-    const channel = supabase
-      .channel('calendar_cv_uploads_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'cv_uploads'
-        },
-        (payload) => {
-          console.log('UploadHistoryCalendar: New upload received via realtime:', payload);
-          const newUpload = payload.new as CVUpload;
-          
-          setRealtimeUploads(prev => [newUpload, ...prev]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'cv_uploads'
-        },
-        (payload) => {
-          console.log('UploadHistoryCalendar: Upload updated via realtime:', payload);
-          const updatedUpload = payload.new as CVUpload;
-          
-          setRealtimeUploads(prev => 
-            prev.map(upload => 
-              upload.id === updatedUpload.id ? updatedUpload : upload
-            )
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('UploadHistoryCalendar: Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const getQualifiedCountForDate = (date: Date) => {
-    // Use the new date-specific filtering logic that shows all historical uploads
+  // Memoized function to get qualified count for a specific date
+  const getQualifiedCountForDate = useCallback((date: Date) => {
     const validCandidates = filterValidCandidatesForDate(realtimeUploads, date);
     return validCandidates.length;
-  };
+  }, [realtimeUploads]);
 
-  const getWeekDays = () => {
+  // Debounced realtime subscription setup
+  useEffect(() => {
+    let mounted = true;
+    
+    const setupSubscription = () => {
+      if (!mounted) return;
+      
+      console.log('UploadHistoryCalendar: Setting up realtime subscription');
+      
+      const channel = supabase
+        .channel(`calendar_cv_uploads_${Date.now()}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'cv_uploads'
+          },
+          (payload) => {
+            if (!mounted) return;
+            console.log('UploadHistoryCalendar: New upload received via realtime:', payload);
+            const newUpload = payload.new as CVUpload;
+            
+            setRealtimeUploads(prev => {
+              // Prevent duplicates
+              const exists = prev.some(upload => upload.id === newUpload.id);
+              if (exists) return prev;
+              return [newUpload, ...prev];
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'cv_uploads'
+          },
+          (payload) => {
+            if (!mounted) return;
+            console.log('UploadHistoryCalendar: Upload updated via realtime:', payload);
+            const updatedUpload = payload.new as CVUpload;
+            
+            setRealtimeUploads(prev => 
+              prev.map(upload => 
+                upload.id === updatedUpload.id ? updatedUpload : upload
+              )
+            );
+          }
+        )
+        .subscribe();
+
+      return channel;
+    };
+
+    const channel = setupSubscription();
+
+    return () => {
+      mounted = false;
+      if (channel) {
+        console.log('UploadHistoryCalendar: Cleaning up realtime subscription');
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []); // Empty dependency array to prevent re-subscription
+
+  // Memoized week days calculation
+  const weekDays = useMemo(() => {
     const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
     const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
     
@@ -83,32 +104,28 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
       date,
       count: getQualifiedCountForDate(date)
     }));
-  };
+  }, [currentWeek, getQualifiedCountForDate]);
 
-  const getTotalQualifiedThisWeek = () => {
-    const weekDays = getWeekDays();
+  const totalQualifiedThisWeek = useMemo(() => {
     return weekDays.reduce((sum, day) => sum + day.count, 0);
-  };
+  }, [weekDays]);
 
-  const weekDays = getWeekDays();
-  const totalQualifiedThisWeek = getTotalQualifiedThisWeek();
-
-  const handleDateSelect = (date: Date) => {
+  const handleDateSelect = useCallback((date: Date) => {
     onDateSelect(date);
-  };
+  }, [onDateSelect]);
 
-  const navigateToNextWeek = () => {
+  const navigateToNextWeek = useCallback(() => {
     setCurrentWeek(addWeeks(currentWeek, 1));
-  };
+  }, [currentWeek]);
 
-  const navigateToPrevWeek = () => {
+  const navigateToPrevWeek = useCallback(() => {
     setCurrentWeek(subWeeks(currentWeek, 1));
-  };
+  }, [currentWeek]);
 
-  const isDaySelected = (date: Date) => {
+  const isDaySelected = useCallback((date: Date) => {
     if (!selectedDate) return false;
     return isSameDay(date, selectedDate);
-  };
+  }, [selectedDate]);
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });

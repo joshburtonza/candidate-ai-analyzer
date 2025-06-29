@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,15 +22,16 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
   const [scoreRange, setScoreRange] = useState<[number, number]>([5, 10]);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Use the centralized filtering logic
-  const validUploads = filterValidCandidates(uploads);
+  // Memoize the valid uploads to prevent recalculation
+  const validUploads = useMemo(() => {
+    return filterValidCandidates(uploads);
+  }, [uploads]);
 
-  // Extract unique countries with proper type checking
+  // Extract unique countries with proper type checking - memoized
   const availableCountries = useMemo(() => {
     const countrySet = new Set<string>();
     validUploads.forEach(upload => {
       const countries = upload.extracted_json?.countries;
-      // Type guard to ensure countries is a string before calling split
       if (typeof countries === 'string' && countries) {
         countries.split(',').forEach(country => {
           const trimmed = country.trim();
@@ -41,12 +42,11 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     return Array.from(countrySet).sort();
   }, [validUploads]);
 
-  // Extract unique skills with proper type checking
+  // Extract unique skills with proper type checking - memoized
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
     validUploads.forEach(upload => {
       const skills = upload.extracted_json?.skill_set;
-      // Type guard to ensure skills is a string before calling split
       if (typeof skills === 'string' && skills) {
         skills.split(',').forEach(skill => {
           const trimmed = skill.trim();
@@ -57,8 +57,8 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     return Array.from(skillSet).sort();
   }, [validUploads]);
 
-  // Apply filters
-  useEffect(() => {
+  // Debounced filter application
+  const applyFilters = useCallback(() => {
     let filtered = validUploads;
 
     // Search filter
@@ -111,20 +111,29 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     onFilterChange(filtered);
   }, [validUploads, searchQuery, selectedCountries, selectedSkills, scoreRange, onFilterChange]);
 
-  const clearFilters = () => {
+  // Apply filters with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      applyFilters();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [applyFilters]);
+
+  const clearFilters = useCallback(() => {
     setSelectedCountries([]);
     setSelectedSkills([]);
     setScoreRange([5, 10]);
     onSearchChange('');
-  };
+  }, [onSearchChange]);
 
-  const removeCountry = (country: string) => {
+  const removeCountry = useCallback((country: string) => {
     setSelectedCountries(prev => prev.filter(c => c !== country));
-  };
+  }, []);
 
-  const removeSkill = (skill: string) => {
+  const removeSkill = useCallback((skill: string) => {
     setSelectedSkills(prev => prev.filter(s => s !== skill));
-  };
+  }, []);
 
   const activeFiltersCount = selectedCountries.length + selectedSkills.length + (scoreRange[0] > 5 || scoreRange[1] < 10 ? 1 : 0);
 
