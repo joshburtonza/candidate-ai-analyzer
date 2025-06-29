@@ -63,15 +63,19 @@ export const isUploadedToday = (upload: CVUpload): boolean => {
   return isUploadedOnDate(upload, new Date());
 };
 
-// Memoized filtering function to prevent infinite loops
-const filterCache = new Map<string, CVUpload[]>();
+// Optimized filtering function with better memoization
+const filterCache = new Map<string, { result: CVUpload[], timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 seconds
 
 export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   // Create cache key based on uploads length and today's date
-  const cacheKey = `today-${uploads.length}-${new Date().toDateString()}`;
+  const today = new Date();
+  const cacheKey = `today-${uploads.length}-${today.toDateString()}`;
   
-  if (filterCache.has(cacheKey)) {
-    return filterCache.get(cacheKey)!;
+  // Check if we have a valid cached result
+  const cached = filterCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    return cached.result;
   }
 
   const seenEmails = new Set<string>();
@@ -106,24 +110,26 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
     return true;
   });
 
-  // Cache the result
-  filterCache.set(cacheKey, filtered);
+  // Cache the result with timestamp
+  filterCache.set(cacheKey, { result: filtered, timestamp: Date.now() });
   
   // Clear old cache entries to prevent memory leaks
-  if (filterCache.size > 10) {
-    const firstKey = filterCache.keys().next().value;
-    filterCache.delete(firstKey);
+  if (filterCache.size > 20) {
+    const oldestKey = Array.from(filterCache.keys())[0];
+    filterCache.delete(oldestKey);
   }
 
   return filtered;
 };
 
-// Memoized function for date-specific filtering
+// Optimized function for date-specific filtering
 export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
   const cacheKey = `date-${uploads.length}-${targetDate.toDateString()}`;
   
-  if (filterCache.has(cacheKey)) {
-    return filterCache.get(cacheKey)!;
+  // Check if we have a valid cached result
+  const cached = filterCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    return cached.result;
   }
 
   const seenEmails = new Set<string>();
@@ -158,13 +164,13 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
     return true;
   });
 
-  // Cache the result
-  filterCache.set(cacheKey, filtered);
+  // Cache the result with timestamp
+  filterCache.set(cacheKey, { result: filtered, timestamp: Date.now() });
   
   // Clear old cache entries to prevent memory leaks
-  if (filterCache.size > 10) {
-    const firstKey = filterCache.keys().next().value;
-    filterCache.delete(firstKey);
+  if (filterCache.size > 20) {
+    const oldestKey = Array.from(filterCache.keys())[0];
+    filterCache.delete(oldestKey);
   }
 
   return filtered;

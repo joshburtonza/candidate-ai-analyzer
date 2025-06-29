@@ -16,6 +16,18 @@ interface AdvancedFiltersProps {
   onSearchChange: (query: string) => void;
 }
 
+// Helper functions to safely handle array or string data
+const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).map(item => item.trim());
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+  return [];
+};
+
 export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearchChange }: AdvancedFiltersProps) => {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -27,32 +39,28 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     return filterValidCandidates(uploads);
   }, [uploads]);
 
-  // Extract unique countries with proper type checking - memoized
+  // Extract unique countries with proper handling of both arrays and strings - memoized
   const availableCountries = useMemo(() => {
     const countrySet = new Set<string>();
     validUploads.forEach(upload => {
       const countries = upload.extracted_json?.countries;
-      if (typeof countries === 'string' && countries) {
-        countries.split(',').forEach(country => {
-          const trimmed = country.trim();
-          if (trimmed) countrySet.add(trimmed);
-        });
-      }
+      const countryArray = normalizeToArray(countries);
+      countryArray.forEach(country => {
+        if (country) countrySet.add(country);
+      });
     });
     return Array.from(countrySet).sort();
   }, [validUploads]);
 
-  // Extract unique skills with proper type checking - memoized
+  // Extract unique skills with proper handling of both arrays and strings - memoized
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
     validUploads.forEach(upload => {
       const skills = upload.extracted_json?.skill_set;
-      if (typeof skills === 'string' && skills) {
-        skills.split(',').forEach(skill => {
-          const trimmed = skill.trim();
-          if (trimmed) skillSet.add(trimmed);
-        });
-      }
+      const skillArray = normalizeToArray(skills);
+      skillArray.forEach(skill => {
+        if (skill) skillSet.add(skill);
+      });
     });
     return Array.from(skillSet).sort();
   }, [validUploads]);
@@ -69,8 +77,8 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
         return (
           data.candidate_name?.toLowerCase().includes(query) ||
           data.email_address?.toLowerCase().includes(query) ||
-          data.skill_set?.toLowerCase().includes(query) ||
-          data.countries?.toLowerCase().includes(query)
+          normalizeToArray(data.skill_set).some(skill => skill.toLowerCase().includes(query)) ||
+          normalizeToArray(data.countries).some(country => country.toLowerCase().includes(query))
         );
       });
     }
@@ -78,26 +86,20 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Country filter
     if (selectedCountries.length > 0) {
       filtered = filtered.filter(upload => {
-        const countries = upload.extracted_json?.countries;
-        if (typeof countries === 'string') {
-          return selectedCountries.some(selectedCountry =>
-            countries.toLowerCase().includes(selectedCountry.toLowerCase())
-          );
-        }
-        return false;
+        const countries = normalizeToArray(upload.extracted_json?.countries);
+        return selectedCountries.some(selectedCountry =>
+          countries.some(country => country.toLowerCase().includes(selectedCountry.toLowerCase()))
+        );
       });
     }
 
     // Skills filter
     if (selectedSkills.length > 0) {
       filtered = filtered.filter(upload => {
-        const skills = upload.extracted_json?.skill_set;
-        if (typeof skills === 'string') {
-          return selectedSkills.some(selectedSkill =>
-            skills.toLowerCase().includes(selectedSkill.toLowerCase())
-          );
-        }
-        return false;
+        const skills = normalizeToArray(upload.extracted_json?.skill_set);
+        return selectedSkills.some(selectedSkill =>
+          skills.some(skill => skill.toLowerCase().includes(selectedSkill.toLowerCase()))
+        );
       });
     }
 

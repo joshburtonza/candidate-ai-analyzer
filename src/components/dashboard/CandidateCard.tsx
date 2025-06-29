@@ -14,6 +14,29 @@ interface CandidateCardProps {
   onDelete?: (id: string) => void;
 }
 
+// Helper function to safely handle array or string data
+const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).map(item => item.trim());
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+  return [];
+};
+
+const normalizeToString = (value: string | string[] | null | undefined): string => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).join(', ');
+  }
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return String(value).trim();
+};
+
 export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
@@ -25,7 +48,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
   const scorePercentage = (score / 10) * 100; // For progress bar
 
-  const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+  // Handle skills as both string and array
+  const skills = normalizeToArray(data.skill_set);
+  
+  // Handle countries as both string and array
+  const countries = normalizeToString(data.countries);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -100,10 +127,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                   <span className="truncate">{data.contact_number}</span>
                 </div>
               )}
-              {data.countries && (
+              {countries && (
                 <div className="flex items-center gap-3 text-gray-300">
                   <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{data.countries}</span>
+                  <span className="truncate">{countries}</span>
                 </div>
               )}
             </div>

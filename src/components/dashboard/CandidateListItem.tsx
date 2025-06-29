@@ -11,6 +11,29 @@ interface CandidateListItemProps {
   onDelete?: (id: string) => void;
 }
 
+// Helper function to safely handle array or string data
+const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).map(item => item.trim());
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+  return [];
+};
+
+const normalizeToString = (value: string | string[] | null | undefined): string => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).join(', ');
+  }
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return String(value).trim();
+};
+
 export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) => {
   const navigate = useNavigate();
   const { deleteCandidate, isDeleting } = useDeleteCandidate();
@@ -20,7 +43,11 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
-  const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).slice(0, 4) : [];
+  // Handle skills as both string and array
+  const skills = normalizeToArray(data.skill_set).slice(0, 4);
+  
+  // Handle countries as both string and array
+  const countries = normalizeToString(data.countries);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,10 +91,10 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
                   <span>{data.contact_number}</span>
                 </div>
               )}
-              {data.countries && (
+              {countries && (
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-slate-400" />
-                  <span>{data.countries}</span>
+                  <span>{countries}</span>
                 </div>
               )}
             </div>
