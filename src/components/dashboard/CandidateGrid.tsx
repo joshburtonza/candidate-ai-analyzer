@@ -5,14 +5,15 @@ import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
-import { filterValidCandidates } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
+  selectedDate?: Date | null;
 }
 
-export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
+export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
   
   // Update local uploads when prop changes
@@ -26,10 +27,17 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
 
   // Memoize the filtering to prevent unnecessary recalculations
   const validUploads = useMemo(() => {
+    if (selectedDate) {
+      return filterValidCandidatesForDate(localUploads, selectedDate);
+    }
     return filterValidCandidates(localUploads);
-  }, [localUploads]);
+  }, [localUploads, selectedDate]);
 
   if (validUploads.length === 0) {
+    const dateText = selectedDate 
+      ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      : 'TODAY';
+    
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -39,8 +47,15 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
         <div className="inline-flex items-center justify-center w-20 h-20 glass-card rounded-2xl mb-6 elegant-border">
           <Calendar className="w-10 h-10 gold-accent" />
         </div>
-        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">NO CANDIDATES TODAY</h3>
-        <p className="text-white/70 text-lg">Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here</p>
+        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">
+          NO CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
+        </h3>
+        <p className="text-white/70 text-lg">
+          {selectedDate 
+            ? `No candidates were uploaded on ${selectedDate.toLocaleDateString()} with email addresses`
+            : 'Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here'
+          }
+        </p>
         <p className="text-white/50 text-sm mt-2">All duplicates are automatically merged into single profiles</p>
       </motion.div>
     );

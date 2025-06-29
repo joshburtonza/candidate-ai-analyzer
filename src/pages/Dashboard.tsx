@@ -173,7 +173,7 @@ const Dashboard = () => {
 
   // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
   const displayUploads = selectedCalendarDate 
-    ? filterValidCandidatesForDate(uploads, selectedCalendarDate)
+    ? uploads // Pass all uploads and let CandidateGrid handle the filtering
     : filteredUploads;
 
   // Sort uploads
@@ -359,7 +359,11 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                <CandidateGrid uploads={sortedUploads} viewMode={viewMode} />
+                <CandidateGrid 
+                  uploads={sortedUploads} 
+                  viewMode={viewMode} 
+                  selectedDate={selectedCalendarDate}
+                />
               </motion.div>
             </TabsContent>
 
