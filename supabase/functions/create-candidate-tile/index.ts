@@ -21,6 +21,103 @@ interface CandidateData {
   source_email: string; // Now required - the email the CV was sent to
 }
 
+// Helper function to merge candidate data intelligently
+function mergeCandidateData(existing: any, incoming: CandidateData): any {
+  const merged = { ...existing };
+  
+  // Merge each field, prioritizing non-empty values and combining complementary information
+  
+  // Name: prefer the more complete name
+  if (incoming.candidate_name && incoming.candidate_name.length > (merged.candidate_name || '').length) {
+    merged.candidate_name = incoming.candidate_name;
+  }
+  
+  // Contact info: prefer non-empty values
+  if (incoming.email_address && !merged.email_address) {
+    merged.email_address = incoming.email_address;
+  }
+  if (incoming.contact_number && !merged.contact_number) {
+    merged.contact_number = incoming.contact_number;
+  }
+  
+  // Education: combine if different, prefer longer/more detailed
+  if (incoming.educational_qualifications) {
+    if (!merged.educational_qualifications) {
+      merged.educational_qualifications = incoming.educational_qualifications;
+    } else if (incoming.educational_qualifications.length > merged.educational_qualifications.length) {
+      // Check if they're different before replacing
+      if (!merged.educational_qualifications.includes(incoming.educational_qualifications.substring(0, 50))) {
+        merged.educational_qualifications = incoming.educational_qualifications;
+      }
+    }
+  }
+  
+  // Job history: combine if different, prefer longer/more detailed
+  if (incoming.job_history) {
+    if (!merged.job_history) {
+      merged.job_history = incoming.job_history;
+    } else if (incoming.job_history.length > merged.job_history.length) {
+      // Check if they're different before replacing
+      if (!merged.job_history.includes(incoming.job_history.substring(0, 50))) {
+        merged.job_history = incoming.job_history;
+      }
+    }
+  }
+  
+  // Skills: merge unique skills
+  if (incoming.skill_set) {
+    if (!merged.skill_set) {
+      merged.skill_set = incoming.skill_set;
+    } else {
+      const existingSkills = merged.skill_set.split(',').map((s: string) => s.trim().toLowerCase());
+      const incomingSkills = incoming.skill_set.split(',').map((s: string) => s.trim());
+      const newSkills = incomingSkills.filter(skill => 
+        !existingSkills.includes(skill.toLowerCase()) && skill.length > 0
+      );
+      if (newSkills.length > 0) {
+        merged.skill_set = merged.skill_set + ', ' + newSkills.join(', ');
+      }
+    }
+  }
+  
+  // Score: prefer higher score
+  const incomingScore = parseFloat(incoming.score || '0');
+  const existingScore = parseFloat(merged.score || '0');
+  if (incomingScore > existingScore) {
+    merged.score = incoming.score;
+    // Also update justification if score is better
+    if (incoming.justification && incoming.justification.length > (merged.justification || '').length) {
+      merged.justification = incoming.justification;
+    }
+  }
+  
+  // Justification: prefer longer/more detailed if score is similar
+  if (incoming.justification && incoming.justification.length > (merged.justification || '').length) {
+    const scoreDiff = Math.abs(incomingScore - existingScore);
+    if (scoreDiff <= 1) { // If scores are similar, prefer better justification
+      merged.justification = incoming.justification;
+    }
+  }
+  
+  // Countries: merge unique countries
+  if (incoming.countries) {
+    if (!merged.countries) {
+      merged.countries = incoming.countries;
+    } else {
+      const existingCountries = merged.countries.split(',').map((c: string) => c.trim().toLowerCase());
+      const incomingCountries = incoming.countries.split(',').map((c: string) => c.trim());
+      const newCountries = incomingCountries.filter(country => 
+        !existingCountries.includes(country.toLowerCase()) && country.length > 0
+      );
+      if (newCountries.length > 0) {
+        merged.countries = merged.countries + ', ' + newCountries.join(', ');
+      }
+    }
+  }
+  
+  return merged;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -51,7 +148,7 @@ serve(async (req) => {
     console.log('Received candidate data:', candidateData);
 
     // Validate required fields
-    const requiredFields = ['candidate_name', 'email_address', 'score', 'source_email'];
+    const requiredFields = ['candidate_name', 'source_email'];
     const missingFields = requiredFields.filter(field => !candidateData[field]);
     
     if (missingFields.length > 0) {
@@ -63,67 +160,6 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Check for existing candidate with same email - FIXED DUPLICATE CHECK
-    console.log('Checking for duplicate candidate with email:', candidateData.email_address);
-    
-    try {
-      const { data: existingCandidates, error: duplicateCheckError } = await supabase
-        .from('cv_uploads')
-        .select('id, extracted_json')
-        .eq('processing_status', 'completed')
-        .not('extracted_json', 'is', null);
-
-      if (duplicateCheckError) {
-        console.error('Error checking for duplicates:', duplicateCheckError);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Database error while checking for duplicates', 
-            details: duplicateCheckError.message 
-          }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      // Check if any existing candidate has the same email
-      const duplicateCandidate = existingCandidates?.find(candidate => {
-        const existingEmail = candidate.extracted_json?.email_address;
-        return existingEmail && existingEmail.toLowerCase() === candidateData.email_address.toLowerCase();
-      });
-
-      if (duplicateCandidate) {
-        console.log('Duplicate candidate found with email:', candidateData.email_address);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Duplicate candidate',
-            message: 'A candidate with this email already exists in the system',
-            email_address: candidateData.email_address,
-            existing_id: duplicateCandidate.id
-          }),
-          { 
-            status: 409, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-
-      console.log('No duplicate found, proceeding with candidate creation');
-    } catch (duplicateError) {
-      console.error('Unexpected error during duplicate check:', duplicateError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Error checking for duplicates', 
-          details: duplicateError.message 
-        }),
-        { 
-          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -168,6 +204,120 @@ serve(async (req) => {
 
     console.log('Found user profile:', profile.id, 'for email:', profile.email);
 
+    // Check for existing candidate with same name or email
+    console.log('Checking for existing candidate with name:', candidateData.candidate_name, 'or email:', candidateData.email_address);
+    
+    try {
+      const { data: existingCandidates, error: duplicateCheckError } = await supabase
+        .from('cv_uploads')
+        .select('id, extracted_json, source_email')
+        .eq('processing_status', 'completed')
+        .eq('user_id', profile.id) // Only check within the same user's candidates
+        .not('extracted_json', 'is', null);
+
+      if (duplicateCheckError) {
+        console.error('Error checking for duplicates:', duplicateCheckError);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Database error while checking for duplicates', 
+            details: duplicateCheckError.message 
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Check if any existing candidate matches by name or email
+      const duplicateCandidate = existingCandidates?.find(candidate => {
+        const existingData = candidate.extracted_json;
+        if (!existingData) return false;
+        
+        // Match by email (if both have email)
+        if (candidateData.email_address && existingData.email_address) {
+          if (existingData.email_address.toLowerCase() === candidateData.email_address.toLowerCase()) {
+            return true;
+          }
+        }
+        
+        // Match by name (normalized comparison)
+        const existingName = existingData.candidate_name?.toLowerCase().trim();
+        const incomingName = candidateData.candidate_name?.toLowerCase().trim();
+        if (existingName && incomingName && existingName === incomingName) {
+          return true;
+        }
+        
+        return false;
+      });
+
+      if (duplicateCandidate) {
+        console.log('Found existing candidate, merging data for:', candidateData.candidate_name);
+        
+        // Merge the candidate data
+        const mergedData = mergeCandidateData(duplicateCandidate.extracted_json, candidateData);
+        
+        console.log('Merged candidate data:', mergedData);
+        
+        // Update the existing candidate with merged data
+        const { data: updatedCandidate, error: updateError } = await supabase
+          .from('cv_uploads')
+          .update({
+            extracted_json: mergedData,
+            source_email: candidateData.source_email // Update source email to latest
+          })
+          .eq('id', duplicateCandidate.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Error updating candidate:', updateError);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Failed to update existing candidate', 
+              details: updateError.message 
+            }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+
+        console.log('Successfully merged candidate data:', updatedCandidate);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Candidate information merged successfully',
+            action: 'merged',
+            id: duplicateCandidate.id,
+            candidate_name: mergedData.candidate_name,
+            assigned_to_user: profile.email,
+            user_id: profile.id
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      console.log('No duplicate found, creating new candidate');
+    } catch (duplicateError) {
+      console.error('Unexpected error during duplicate check:', duplicateError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Error checking for duplicates', 
+          details: duplicateError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Create the CV upload record with the mapped user ID
     const cvUploadData = {
       user_id: profile.id, // Use the actual user ID from profile lookup
@@ -175,12 +325,12 @@ serve(async (req) => {
       original_filename: candidateData.original_filename || `${candidateData.candidate_name}_processed.json`,
       extracted_json: {
         candidate_name: candidateData.candidate_name,
-        email_address: candidateData.email_address,
+        email_address: candidateData.email_address || '',
         contact_number: candidateData.contact_number || '',
         educational_qualifications: candidateData.educational_qualifications || '',
         job_history: candidateData.job_history || '',
         skill_set: candidateData.skill_set || '',
-        score: candidateData.score,
+        score: candidateData.score || '0',
         justification: candidateData.justification || '',
         countries: candidateData.countries || ''
       },
@@ -217,6 +367,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         message: 'Candidate tile created successfully',
+        action: 'created',
         id: data.id,
         candidate_name: candidateData.candidate_name,
         assigned_to_user: profile.email,
