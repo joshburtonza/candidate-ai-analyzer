@@ -4,7 +4,7 @@ import { CVUpload } from '@/types/candidate';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
-import { FileText } from 'lucide-react';
+import { FileText, Calendar } from 'lucide-react';
 import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
@@ -35,10 +35,11 @@ export const CandidateGrid = ({ uploads, viewMode }: CandidateGridProps) => {
         className="text-center py-16"
       >
         <div className="inline-flex items-center justify-center w-20 h-20 glass-card rounded-2xl mb-6 elegant-border">
-          <FileText className="w-10 h-10 gold-accent" />
+          <Calendar className="w-10 h-10 gold-accent" />
         </div>
-        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">NO QUALIFIED CANDIDATES</h3>
-        <p className="text-white/70 text-lg">Upload CVs with complete profiles and scores ≥ 5/10 to see candidates</p>
+        <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">NO CANDIDATES TODAY</h3>
+        <p className="text-white/70 text-lg">Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here</p>
+        <p className="text-white/50 text-sm mt-2">All duplicates are automatically merged into single profiles</p>
       </motion.div>
     );
   }

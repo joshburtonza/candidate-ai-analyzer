@@ -1,5 +1,6 @@
 
 import { CVUpload } from '@/types/candidate';
+import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
 export const isQualifiedCandidate = (upload: CVUpload): boolean => {
   // Filter out incomplete uploads
@@ -9,27 +10,23 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
 
   const data = upload.extracted_json;
   
-  // Check all required fields for a complete profile
-  const hasRequiredFields = !!(
+  // Must have at least candidate name and email address
+  const hasMinimumRequiredFields = !!(
     data.candidate_name &&
-    data.contact_number &&
-    data.email_address &&
-    data.countries &&
-    data.skill_set &&
-    data.educational_qualifications &&
-    data.job_history &&
-    data.justification
+    data.email_address
   );
 
-  if (!hasRequiredFields) {
+  if (!hasMinimumRequiredFields) {
     return false;
   }
 
-  // Filter out low scores (below 5/10)
-  const rawScore = parseFloat(data.score || '0');
-  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-  if (score < 5) {
-    return false;
+  // Filter out low scores (below 5/10) - but only if score exists
+  if (data.score) {
+    const rawScore = parseFloat(data.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    if (score < 5) {
+      return false;
+    }
   }
 
   return true;
@@ -60,11 +57,30 @@ export const isTestCandidate = (upload: CVUpload): boolean => {
   return testPatterns.some(pattern => name.includes(pattern));
 };
 
+export const isUploadedToday = (upload: CVUpload): boolean => {
+  const uploadDate = new Date(upload.uploaded_at);
+  const today = new Date();
+  
+  // Create time range from 12:00 AM to 11:59 PM of current day
+  const startOfToday = startOfDay(today);
+  const endOfToday = endOfDay(today);
+  
+  return isWithinInterval(uploadDate, {
+    start: startOfToday,
+    end: endOfToday
+  });
+};
+
 export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    // Filter out incomplete uploads and low scores
+    // Filter out uploads not from today
+    if (!isUploadedToday(upload)) {
+      return false;
+    }
+
+    // Filter out incomplete uploads and low scores (but more permissive now)
     if (!isQualifiedCandidate(upload)) {
       return false;
     }

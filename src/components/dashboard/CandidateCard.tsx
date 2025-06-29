@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +20,12 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const { deleteCandidate, isDeleting } = useDeleteCandidate();
   const data = upload.extracted_json!;
   
-  // Convert score to be out of 10 instead of 100
+  // Convert score to be out of 10 instead of 100, handle missing scores
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
   const scorePercentage = (score / 10) * 100; // For progress bar
 
-  const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
+  const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -72,15 +73,17 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 </div>
               </div>
               
-              {/* Score Circle */}
-              <div className="relative flex-shrink-0">
-                <div className="w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
-                  <span className="font-bold text-xl text-slate-800">{score}</span>
+              {/* Score Circle - only show if score exists */}
+              {data.score && (
+                <div className="relative flex-shrink-0">
+                  <div className="w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+                    <span className="font-bold text-xl text-slate-800">{score}</span>
+                  </div>
+                  <div className="text-center mt-2">
+                    <span className="text-xs text-gray-400 font-medium tracking-wider">SCORE</span>
+                  </div>
                 </div>
-                <div className="text-center mt-2">
-                  <span className="text-xs text-gray-400 font-medium tracking-wider">SCORE</span>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Contact Info */}
@@ -105,7 +108,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               )}
             </div>
 
-            {/* Expertise Section */}
+            {/* Expertise Section - only show if skills exist */}
             {skills.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -134,25 +137,29 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               </div>
             )}
 
-            {/* Professional Assessment */}
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                <h4 className="text-sm font-bold text-gray-300 tracking-wider">ASSESSMENT</h4>
+            {/* Professional Assessment - only show if justification exists */}
+            {data.justification && (
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">ASSESSMENT</h4>
+                </div>
+                <p className="text-sm text-gray-400 line-clamp-4 leading-relaxed">
+                  {data.justification}
+                </p>
               </div>
-              <p className="text-sm text-gray-400 line-clamp-4 leading-relaxed">
-                {data.justification || 'Assessment pending analysis'}
-              </p>
-            </div>
+            )}
 
-            {/* Score Progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">FIT SCORE</span>
-                <span className="text-sm font-medium text-white">{score}/10</span>
+            {/* Score Progress - only show if score exists */}
+            {data.score && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">FIT SCORE</span>
+                  <span className="text-sm font-medium text-white">{score}/10</span>
+                </div>
+                <Progress value={scorePercentage} className="h-2" />
               </div>
-              <Progress value={scorePercentage} className="h-2" />
-            </div>
+            )}
 
             {/* Action Button */}
             <motion.div
