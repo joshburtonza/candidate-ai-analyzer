@@ -46,6 +46,66 @@ export type Database = {
           },
         ]
       }
+      cv_uploads: {
+        Row: {
+          extracted_json: Json | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          original_filename: string | null
+          processing_status: string | null
+          source_email: string | null
+          uploaded_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          extracted_json?: Json | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          original_filename?: string | null
+          processing_status?: string | null
+          source_email?: string | null
+          uploaded_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          extracted_json?: Json | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          original_filename?: string | null
+          processing_status?: string | null
+          source_email?: string | null
+          uploaded_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          is_admin?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+        }
+        Relationships: []
+      }
       resume_audit_log: {
         Row: {
           action: string

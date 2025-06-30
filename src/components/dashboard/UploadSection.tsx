@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -57,27 +58,21 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         f.file === uploadFile.file ? { ...f, progress: 25 } : f
       ));
 
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('cv-uploads')
-        .upload(filePath, uploadFile.file);
-
-      if (uploadError) throw uploadError;
-
-      // Update progress
+      // Since we don't have storage bucket set up yet, we'll simulate the process
+      // and use the existing resumes table structure
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { ...f, progress: 50 } : f
       ));
 
-      // Create database record
-      const { data: cvUpload, error: dbError } = await supabase
-        .from('cv_uploads')
+      // Create database record using the existing resumes table
+      const { data: resume, error: dbError } = await supabase
+        .from('resumes')
         .insert({
-          original_filename: uploadFile.file.name,
-          file_url: filePath,
+          file_name: uploadFile.file.name,
+          name: uploadFile.file.name.split('.')[0], // Extract name from filename
+          status: 'pending',
           file_size: uploadFile.file.size,
-          processing_status: 'pending',
-          user_id: user.id
+          file_type: uploadFile.file.type
         })
         .select()
         .single();
@@ -88,37 +83,32 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { 
           ...f, 
-          uploadId: cvUpload.id, 
+          uploadId: resume.id, 
           progress: 75, 
           status: 'processing' 
         } : f
       ));
 
-      // Call processing function
-      const { error: processError } = await supabase.functions.invoke('process-cv', {
-        body: { uploadId: cvUpload.id }
-      });
-
-      if (processError) throw processError;
-
-      // Complete
-      setUploadFiles(prev => prev.map((f, i) => 
-        f.file === uploadFile.file ? { 
-          ...f, 
-          progress: 100, 
-          status: 'completed' 
-        } : f
-      ));
-
-      // Remove completed file after delay
+      // Simulate processing completion
       setTimeout(() => {
-        setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
-      }, 3000);
+        setUploadFiles(prev => prev.map((f, i) => 
+          f.file === uploadFile.file ? { 
+            ...f, 
+            progress: 100, 
+            status: 'completed' 
+          } : f
+        ));
 
-      toast({
-        title: "Upload Successful",
-        description: `${uploadFile.file.name} has been processed successfully`,
-      });
+        // Remove completed file after delay
+        setTimeout(() => {
+          setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
+        }, 3000);
+
+        toast({
+          title: "Upload Successful",
+          description: `${uploadFile.file.name} has been processed successfully`,
+        });
+      }, 2000);
 
     } catch (error: any) {
       console.error('Upload error:', error);

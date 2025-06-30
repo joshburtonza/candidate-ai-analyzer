@@ -25,16 +25,10 @@ export const ProfileSettings = ({ profile }: ProfileSettingsProps) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ full_name: fullName })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
+      // Since we don't have profiles table yet, we'll show a message
       toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
+        title: "Profile Update",
+        description: "Profile updates will be available once the database schema is updated.",
       });
     } catch (error: any) {
       toast({
