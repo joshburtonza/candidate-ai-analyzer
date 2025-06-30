@@ -4,39 +4,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { CVUpload } from '@/types/candidate';
 import { FileText, Upload, Calendar, TrendingUp, Clock, CheckCircle } from 'lucide-react';
-
-interface CVUpload {
-  id: string;
-  original_filename: string;
-  uploaded_at: string;
-  processing_status: string;
-  file_size?: number;
-}
 
 export const UsageStats = () => {
   const { user } = useAuth();
-  const [cvUploads, setCvUploads] = useState<CVUpload[]>([]);
+  const [uploads, setUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      fetchUserCVs();
+      fetchUserUploads();
     }
   }, [user]);
 
-  const fetchUserCVs = async () => {
+  const fetchUserUploads = async () => {
     try {
       const { data, error } = await supabase
         .from('cv_uploads')
-        .select('id, original_filename, uploaded_at, processing_status, file_size')
+        .select('*')
+        .eq('user_id', user?.id)
         .order('uploaded_at', { ascending: false });
 
       if (error) throw error;
 
-      setCvUploads(data || []);
+      const typedUploads: CVUpload[] = (data || []).map(upload => ({
+        ...upload,
+        extracted_json: upload.extracted_json as any,
+        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      }));
+      
+      setUploads(typedUploads);
     } catch (error) {
-      console.error('Error fetching CV uploads:', error);
+      console.error('Error fetching uploads:', error);
     } finally {
       setLoading(false);
     }
@@ -52,19 +52,19 @@ export const UsageStats = () => {
     );
   }
 
-  const totalUploads = cvUploads.length;
-  const completedUploads = cvUploads.filter(cv => cv.processing_status === 'completed').length;
-  const pendingUploads = cvUploads.filter(cv => cv.processing_status === 'pending').length;
-  const failedUploads = cvUploads.filter(cv => cv.processing_status === 'error').length;
+  const totalUploads = uploads.length;
+  const completedUploads = uploads.filter(u => u.processing_status === 'completed').length;
+  const pendingUploads = uploads.filter(u => u.processing_status === 'pending' || u.processing_status === 'processing').length;
+  const errorUploads = uploads.filter(u => u.processing_status === 'error').length;
 
-  const thisMonthUploads = cvUploads.filter(cv => {
-    const uploadDate = new Date(cv.uploaded_at);
+  const thisMonthUploads = uploads.filter(u => {
+    const uploadDate = new Date(u.uploaded_at);
     const now = new Date();
     return uploadDate.getMonth() === now.getMonth() && uploadDate.getFullYear() === now.getFullYear();
   }).length;
 
-  const thisWeekUploads = cvUploads.filter(cv => {
-    const uploadDate = new Date(cv.uploaded_at);
+  const thisWeekUploads = uploads.filter(u => {
+    const uploadDate = new Date(u.uploaded_at);
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     return uploadDate >= weekAgo;
@@ -72,13 +72,13 @@ export const UsageStats = () => {
 
   const stats = [
     {
-      title: 'Total CVs',
+      title: 'Total Uploads',
       value: totalUploads,
       icon: FileText,
       color: 'from-blue-500 to-cyan-500',
     },
     {
-      title: 'Processed',
+      title: 'Completed',
       value: completedUploads,
       icon: CheckCircle,
       color: 'from-green-500 to-emerald-500',
@@ -123,14 +123,14 @@ export const UsageStats = () => {
         <CardHeader>
           <CardTitle className="text-white">Processing Status</CardTitle>
           <CardDescription className="text-slate-300">
-            Overview of your CV processing status
+            Overview of your upload processing status
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-slate-300">Processed</span>
+                <span className="text-sm text-slate-300">Completed</span>
                 <span className="text-sm text-white">{completedUploads}/{totalUploads}</span>
               </div>
               <Progress 
@@ -142,7 +142,7 @@ export const UsageStats = () => {
             {pendingUploads > 0 && (
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-slate-300">Pending</span>
+                  <span className="text-sm text-slate-300">Processing</span>
                   <span className="text-sm text-white">{pendingUploads}/{totalUploads}</span>
                 </div>
                 <Progress 
@@ -152,14 +152,14 @@ export const UsageStats = () => {
               </div>
             )}
 
-            {failedUploads > 0 && (
+            {errorUploads > 0 && (
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-slate-300">Failed</span>
-                  <span className="text-sm text-white">{failedUploads}/{totalUploads}</span>
+                  <span className="text-sm text-slate-300">Errors</span>
+                  <span className="text-sm text-white">{errorUploads}/{totalUploads}</span>
                 </div>
                 <Progress 
-                  value={totalUploads > 0 ? (failedUploads / totalUploads) * 100 : 0} 
+                  value={totalUploads > 0 ? (errorUploads / totalUploads) * 100 : 0} 
                   className="h-2"
                 />
               </div>
@@ -173,19 +173,19 @@ export const UsageStats = () => {
         <CardHeader>
           <CardTitle className="text-white">Recent Activity</CardTitle>
           <CardDescription className="text-slate-300">
-            Your latest CV uploads and their status
+            Your latest uploads and their status
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {cvUploads.length === 0 ? (
+          {uploads.length === 0 ? (
             <div className="text-center py-8">
               <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <p className="text-slate-300">No CV uploads yet</p>
+              <p className="text-slate-300">No uploads yet</p>
               <p className="text-sm text-slate-400">Start by uploading your first CV</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {cvUploads.slice(0, 5).map((upload) => (
+              {uploads.slice(0, 5).map((upload) => (
                 <div key={upload.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
                   <FileText className="w-5 h-5 text-violet-400" />
                   <div className="flex-1 min-w-0">

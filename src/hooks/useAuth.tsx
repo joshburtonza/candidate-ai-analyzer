@@ -36,31 +36,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('useAuth: User found, fetching profile');
-          // Fetch actual profile from database
-          setTimeout(async () => {
-            try {
-              const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-
-              if (error && error.code !== 'PGRST116') {
-                console.error('useAuth: Error fetching profile:', error);
-              }
-
-              if (mounted) {
-                setProfile(profileData || null);
-                setLoading(false);
-              }
-            } catch (error) {
-              console.error('useAuth: Error in profile fetch:', error);
-              if (mounted) {
-                setLoading(false);
-              }
-            }
-          }, 0);
+          console.log('useAuth: User found, will fetch profile async');
+          // Don't block loading on profile fetch
+          setLoading(false);
+          fetchProfile(session.user.id);
         } else {
           console.log('useAuth: No user, clearing profile');
           setProfile(null);
@@ -89,28 +68,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch actual profile from database
-          try {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-
-            if (profileError && profileError.code !== 'PGRST116') {
-              console.error('useAuth: Error fetching profile:', profileError);
-            }
-
-            if (mounted) {
-              setProfile(profileData || null);
-              setLoading(false);
-            }
-          } catch (error) {
-            console.error('useAuth: Error in profile fetch:', error);
-            if (mounted) {
-              setLoading(false);
-            }
-          }
+          // Don't block on profile fetch
+          setLoading(false);
+          fetchProfile(session.user.id);
         } else {
           setLoading(false);
         }
@@ -130,6 +90,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      console.log('useAuth: Fetching profile for user:', userId);
+      
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('useAuth: Error fetching profile:', error);
+        return;
+      }
+      
+      if (!profileData) {
+        console.log('useAuth: No profile found, creating basic one');
+        // Create a basic profile if none exists
+        const newProfile = {
+          id: userId,
+          email: user?.email || '',
+          full_name: user?.email?.split('@')[0] || 'User',
+          is_admin: false
+        };
+        
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .maybeSingle();
+        
+        if (createError) {
+          console.error('useAuth: Error creating profile:', createError);
+        } else if (createdProfile) {
+          console.log('useAuth: Profile created successfully');
+          setProfile(createdProfile as Profile);
+        }
+      } else {
+        console.log('useAuth: Profile fetched successfully:', profileData?.email);
+        setProfile(profileData as Profile);
+      }
+    } catch (error) {
+      console.error('useAuth: Error in fetchProfile:', error);
+    }
+  };
 
   const signOut = async () => {
     console.log('useAuth: Signing out');

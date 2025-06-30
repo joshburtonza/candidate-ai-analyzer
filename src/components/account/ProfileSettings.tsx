@@ -25,16 +25,16 @@ export const ProfileSettings = ({ profile }: ProfileSettingsProps) => {
 
     setLoading(true);
     try {
-      // Use the update_profile function
-      const { error } = await supabase.rpc('update_profile', {
-        user_full_name: fullName
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName })
+        .eq('id', profile.id);
 
       if (error) throw error;
 
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated successfully.",
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
       });
     } catch (error: any) {
       toast({

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -50,39 +49,35 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       }
 
       const fileExt = uploadFile.file.name.split('.').pop();
-      const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `cv-uploads/${fileName}`;
 
-      // Update progress for upload start
+      // Update progress for upload
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { ...f, progress: 25 } : f
       ));
 
       // Upload file to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('cv-uploads')
-        .upload(fileName, uploadFile.file);
+        .upload(filePath, uploadFile.file);
 
       if (uploadError) throw uploadError;
 
-      // Update progress for storage upload complete
+      // Update progress
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { ...f, progress: 50 } : f
       ));
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('cv-uploads')
-        .getPublicUrl(fileName);
 
       // Create database record
       const { data: cvUpload, error: dbError } = await supabase
         .from('cv_uploads')
         .insert({
-          user_id: user.id,
           original_filename: uploadFile.file.name,
-          file_url: publicUrl,
+          file_url: filePath,
           file_size: uploadFile.file.size,
-          processing_status: 'pending'
+          processing_status: 'pending',
+          user_id: user.id
         })
         .select()
         .single();
@@ -99,40 +94,31 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Simulate processing completion (in real app, this would be done by background job)
+      // Call processing function
+      const { error: processError } = await supabase.functions.invoke('process-cv', {
+        body: { uploadId: cvUpload.id }
+      });
+
+      if (processError) throw processError;
+
+      // Complete
+      setUploadFiles(prev => prev.map((f, i) => 
+        f.file === uploadFile.file ? { 
+          ...f, 
+          progress: 100, 
+          status: 'completed' 
+        } : f
+      ));
+
+      // Remove completed file after delay
       setTimeout(() => {
-        setUploadFiles(prev => prev.map((f, i) => 
-          f.file === uploadFile.file ? { 
-            ...f, 
-            progress: 100, 
-            status: 'completed' 
-          } : f
-        ));
+        setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
+      }, 3000);
 
-        // Create CVUpload object for callback
-        const completedUpload: CVUpload = {
-          id: cvUpload.id,
-          user_id: user.id,
-          file_url: publicUrl,
-          extracted_json: null,
-          original_filename: uploadFile.file.name,
-          uploaded_at: cvUpload.uploaded_at,
-          file_size: uploadFile.file.size,
-          processing_status: 'completed'
-        };
-
-        onUploadComplete(completedUpload);
-
-        // Remove completed file after delay
-        setTimeout(() => {
-          setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
-        }, 3000);
-
-        toast({
-          title: "Upload Successful",
-          description: `${uploadFile.file.name} has been uploaded and is being processed`,
-        });
-      }, 2000);
+      toast({
+        title: "Upload Successful",
+        description: `${uploadFile.file.name} has been processed successfully`,
+      });
 
     } catch (error: any) {
       console.error('Upload error:', error);

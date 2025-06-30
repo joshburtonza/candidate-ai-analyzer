@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidCandidatesForDate, filterValidCandidates } from '@/utils/candidateFilters';
+import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
