@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
-import { isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
