@@ -192,6 +192,11 @@ const Dashboard = () => {
     }
   });
 
+  // Get the actual filtered candidates that will be displayed
+  const actualDisplayedCandidates = selectedCalendarDate 
+    ? filterValidCandidatesForDate(uploads, selectedCalendarDate)
+    : filterValidCandidates(uploads);
+
   // Show loading only if auth is loading
   if (authLoading) {
     console.log('Dashboard: Showing auth loading screen');
@@ -303,7 +308,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
               >
-                <DashboardStats uploads={sortedUploads} />
+                <DashboardStats uploads={actualDisplayedCandidates} />
               </motion.div>
 
               <motion.div
@@ -341,7 +346,7 @@ const Dashboard = () => {
                     className="border-green-500/30 text-green-400 hover:bg-green-500/10"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export All ({filteredUploads.length})
+                    Export All ({actualDisplayedCandidates.length})
                   </Button>
                 </div>
               </motion.div>
@@ -351,7 +356,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
-                <BulkActions uploads={sortedUploads} onBulkDelete={handleBulkDelete} />
+                <BulkActions uploads={actualDisplayedCandidates} onBulkDelete={handleBulkDelete} />
               </motion.div>
 
               <motion.div
