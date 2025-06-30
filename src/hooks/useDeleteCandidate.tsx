@@ -8,15 +8,22 @@ export const useDeleteCandidate = () => {
   const { toast } = useToast();
 
   const deleteCandidate = async (candidateId: string, candidateName: string) => {
+    console.log('Attempting to delete candidate:', candidateId, candidateName);
     setIsDeleting(true);
+    
     try {
       const { error } = await supabase
         .from('cv_uploads')
         .delete()
         .eq('id', candidateId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
 
+      console.log('Successfully deleted candidate:', candidateId);
+      
       toast({
         title: "Candidate Deleted",
         description: `${candidateName} has been permanently removed from the database`,
@@ -26,8 +33,8 @@ export const useDeleteCandidate = () => {
     } catch (error: any) {
       console.error('Error deleting candidate:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete candidate from database",
+        title: "Delete Failed",
+        description: `Failed to delete ${candidateName}. Please try again.`,
         variant: "destructive",
       });
       return false;

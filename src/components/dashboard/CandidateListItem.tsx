@@ -2,7 +2,7 @@
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Phone, MapPin, Eye, X } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 
@@ -51,23 +51,34 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    
+    console.log('Delete button clicked for candidate:', upload.id, data.candidate_name);
+    
     const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
+    
     if (success && onDelete) {
+      console.log('Calling onDelete callback');
       onDelete(upload.id);
     }
   };
 
   return (
     <div className="glass hover-lift p-6 relative">
-      {/* Clear Button */}
+      {/* Delete Button */}
       <Button
         onClick={handleDelete}
         disabled={isDeleting}
         variant="ghost"
         size="sm"
-        className="absolute top-2 right-2 z-10 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300"
+        className="absolute top-2 right-2 z-10 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110"
+        title={`Delete ${data.candidate_name || 'candidate'}`}
       >
-        <X className="w-4 h-4" />
+        {isDeleting ? (
+          <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Trash2 className="w-4 h-4" />
+        )}
       </Button>
 
       <div className="flex items-center gap-6 pr-12">
