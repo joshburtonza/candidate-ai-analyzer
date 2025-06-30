@@ -9,319 +9,319 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      batch_uploads: {
+      batch_resumes: {
         Row: {
-          batch_name: string
-          completed_at: string | null
-          created_at: string | null
-          failed_files: number
-          id: string
-          metadata: Json | null
-          processed_files: number
-          status: string
-          total_files: number
-          user_id: string
+          batch_id: string
+          resume_id: string
         }
         Insert: {
-          batch_name: string
-          completed_at?: string | null
-          created_at?: string | null
-          failed_files?: number
-          id?: string
-          metadata?: Json | null
-          processed_files?: number
-          status?: string
-          total_files?: number
-          user_id: string
+          batch_id: string
+          resume_id: string
         }
         Update: {
-          batch_name?: string
-          completed_at?: string | null
-          created_at?: string | null
-          failed_files?: number
-          id?: string
-          metadata?: Json | null
-          processed_files?: number
-          status?: string
-          total_files?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      candidate_notes: {
-        Row: {
-          created_at: string | null
-          id: string
-          note_text: string
-          note_type: string | null
-          upload_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          note_text: string
-          note_type?: string | null
-          upload_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          note_text?: string
-          note_type?: string | null
-          upload_id?: string
-          user_id?: string
+          batch_id?: string
+          resume_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_notes_upload_id_fkey"
-            columns: ["upload_id"]
-            isOneToOne: false
-            referencedRelation: "cv_uploads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      cv_uploads: {
-        Row: {
-          batch_id: string | null
-          candidate_status: string | null
-          extracted_json: Json | null
-          file_size: number | null
-          file_url: string
-          id: string
-          last_updated_by: string | null
-          notes: string | null
-          original_filename: string
-          processing_status: string | null
-          score_breakdown: Json | null
-          source_email: string | null
-          tags: string[] | null
-          uploaded_at: string | null
-          user_id: string
-        }
-        Insert: {
-          batch_id?: string | null
-          candidate_status?: string | null
-          extracted_json?: Json | null
-          file_size?: number | null
-          file_url: string
-          id?: string
-          last_updated_by?: string | null
-          notes?: string | null
-          original_filename: string
-          processing_status?: string | null
-          score_breakdown?: Json | null
-          source_email?: string | null
-          tags?: string[] | null
-          uploaded_at?: string | null
-          user_id: string
-        }
-        Update: {
-          batch_id?: string | null
-          candidate_status?: string | null
-          extracted_json?: Json | null
-          file_size?: number | null
-          file_url?: string
-          id?: string
-          last_updated_by?: string | null
-          notes?: string | null
-          original_filename?: string
-          processing_status?: string | null
-          score_breakdown?: Json | null
-          source_email?: string | null
-          tags?: string[] | null
-          uploaded_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cv_uploads_batch_id_fkey"
+            foreignKeyName: "batch_resumes_batch_id_fkey"
             columns: ["batch_id"]
             isOneToOne: false
-            referencedRelation: "batch_uploads"
+            referencedRelation: "upload_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_resumes_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "recent_resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_resumes_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
             referencedColumns: ["id"]
           },
         ]
       }
-      gmail_integrations: {
+      resume_audit_log: {
         Row: {
-          access_token: string
+          action: string
+          changes: Json | null
           created_at: string
-          gmail_email: string
-          history_id: string | null
           id: string
-          is_active: boolean
-          refresh_token: string
-          token_expires_at: string
-          updated_at: string
-          user_id: string
-          watch_expiration: string | null
+          ip_address: unknown | null
+          performed_by: string | null
+          resume_id: string | null
+          user_agent: string | null
         }
         Insert: {
-          access_token: string
+          action: string
+          changes?: Json | null
           created_at?: string
-          gmail_email: string
-          history_id?: string | null
           id?: string
-          is_active?: boolean
-          refresh_token: string
-          token_expires_at: string
-          updated_at?: string
-          user_id: string
-          watch_expiration?: string | null
+          ip_address?: unknown | null
+          performed_by?: string | null
+          resume_id?: string | null
+          user_agent?: string | null
         }
         Update: {
-          access_token?: string
+          action?: string
+          changes?: Json | null
           created_at?: string
-          gmail_email?: string
-          history_id?: string | null
           id?: string
-          is_active?: boolean
-          refresh_token?: string
-          token_expires_at?: string
-          updated_at?: string
-          user_id?: string
-          watch_expiration?: string | null
-        }
-        Relationships: []
-      }
-      processed_emails: {
-        Row: {
-          cv_upload_ids: string[] | null
-          error_message: string | null
-          gmail_integration_id: string
-          gmail_message_id: string
-          id: string
-          processed_at: string
-          processing_status: string
-          sender_email: string | null
-          subject: string | null
-          user_id: string
-        }
-        Insert: {
-          cv_upload_ids?: string[] | null
-          error_message?: string | null
-          gmail_integration_id: string
-          gmail_message_id: string
-          id?: string
-          processed_at?: string
-          processing_status?: string
-          sender_email?: string | null
-          subject?: string | null
-          user_id: string
-        }
-        Update: {
-          cv_upload_ids?: string[] | null
-          error_message?: string | null
-          gmail_integration_id?: string
-          gmail_message_id?: string
-          id?: string
-          processed_at?: string
-          processing_status?: string
-          sender_email?: string | null
-          subject?: string | null
-          user_id?: string
+          ip_address?: unknown | null
+          performed_by?: string | null
+          resume_id?: string | null
+          user_agent?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "processed_emails_gmail_integration_id_fkey"
-            columns: ["gmail_integration_id"]
+            foreignKeyName: "resume_audit_log_resume_id_fkey"
+            columns: ["resume_id"]
             isOneToOne: false
-            referencedRelation: "gmail_integrations"
+            referencedRelation: "recent_resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resume_audit_log_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      resumes: {
         Row: {
-          created_at: string | null
+          ai_insights: Json | null
+          certifications: Json | null
+          created_at: string
+          current_company: string | null
+          education_details: Json | null
+          education_level: Database["public"]["Enums"]["education_level"] | null
           email: string | null
-          full_name: string | null
+          error_details: Json | null
+          experience_years: number | null
+          file_name: string
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          fit_score: number | null
           id: string
-          is_admin: boolean | null
+          is_archived: boolean | null
+          justification: string | null
+          languages: Json | null
+          location: string | null
+          name: string
+          nationality: string | null
+          notes: string | null
+          original_text: string | null
+          parsed_data: Json | null
+          parsing_confidence: number | null
+          parsing_method: string | null
+          phone: string | null
+          processed_at: string | null
+          processing_time_ms: number | null
+          role_title: string | null
+          score_components: Json | null
+          skills: string[] | null
+          source: Database["public"]["Enums"]["file_source"] | null
+          status: Database["public"]["Enums"]["resume_status"] | null
+          tags: string[] | null
+          total_experience_months: number | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          ai_insights?: Json | null
+          certifications?: Json | null
+          created_at?: string
+          current_company?: string | null
+          education_details?: Json | null
+          education_level?:
+            | Database["public"]["Enums"]["education_level"]
+            | null
           email?: string | null
-          full_name?: string | null
-          id: string
-          is_admin?: boolean | null
+          error_details?: Json | null
+          experience_years?: number | null
+          file_name: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          fit_score?: number | null
+          id?: string
+          is_archived?: boolean | null
+          justification?: string | null
+          languages?: Json | null
+          location?: string | null
+          name: string
+          nationality?: string | null
+          notes?: string | null
+          original_text?: string | null
+          parsed_data?: Json | null
+          parsing_confidence?: number | null
+          parsing_method?: string | null
+          phone?: string | null
+          processed_at?: string | null
+          processing_time_ms?: number | null
+          role_title?: string | null
+          score_components?: Json | null
+          skills?: string[] | null
+          source?: Database["public"]["Enums"]["file_source"] | null
+          status?: Database["public"]["Enums"]["resume_status"] | null
+          tags?: string[] | null
+          total_experience_months?: number | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          ai_insights?: Json | null
+          certifications?: Json | null
+          created_at?: string
+          current_company?: string | null
+          education_details?: Json | null
+          education_level?:
+            | Database["public"]["Enums"]["education_level"]
+            | null
           email?: string | null
-          full_name?: string | null
+          error_details?: Json | null
+          experience_years?: number | null
+          file_name?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          fit_score?: number | null
           id?: string
-          is_admin?: boolean | null
+          is_archived?: boolean | null
+          justification?: string | null
+          languages?: Json | null
+          location?: string | null
+          name?: string
+          nationality?: string | null
+          notes?: string | null
+          original_text?: string | null
+          parsed_data?: Json | null
+          parsing_confidence?: number | null
+          parsing_method?: string | null
+          phone?: string | null
+          processed_at?: string | null
+          processing_time_ms?: number | null
+          role_title?: string | null
+          score_components?: Json | null
+          skills?: string[] | null
+          source?: Database["public"]["Enums"]["file_source"] | null
+          status?: Database["public"]["Enums"]["resume_status"] | null
+          tags?: string[] | null
+          total_experience_months?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
-      saved_searches: {
+      scoring_configs: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: string
+          is_active: boolean | null
           name: string
-          search_criteria: Json
-          user_id: string
+          preferred_locations: string[] | null
+          required_skills: string[] | null
+          weights: Json
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: string
+          is_active?: boolean | null
           name: string
-          search_criteria: Json
-          user_id: string
+          preferred_locations?: string[] | null
+          required_skills?: string[] | null
+          weights?: Json
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: string
+          is_active?: boolean | null
           name?: string
-          search_criteria?: Json
-          user_id?: string
+          preferred_locations?: string[] | null
+          required_skills?: string[] | null
+          weights?: Json
+        }
+        Relationships: []
+      }
+      upload_batches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          failed_files: number | null
+          id: string
+          processed_files: number | null
+          source_email: string | null
+          status: string | null
+          total_files: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          failed_files?: number | null
+          id?: string
+          processed_files?: number | null
+          source_email?: string | null
+          status?: string | null
+          total_files?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          failed_files?: number | null
+          id?: string
+          processed_files?: number | null
+          source_email?: string | null
+          status?: string | null
+          total_files?: number | null
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      recent_resumes: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          experience_years: number | null
+          fit_score: number | null
+          id: string | null
+          location: string | null
+          name: string | null
+          skills: string[] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      can_access_upload_by_email: {
+      get_resume_statistics: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_joshua_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      refresh_gmail_token: {
-        Args: {
-          integration_id: string
-          new_access_token: string
-          new_expires_at: string
-        }
-        Returns: undefined
-      }
-      update_batch_progress: {
-        Args: { batch_uuid: string }
-        Returns: undefined
-      }
-      update_gmail_watch: {
-        Args: {
-          integration_id: string
-          new_expiration: string
-          new_history_id?: string
-        }
-        Returns: undefined
+        Returns: {
+          total_count: number
+          avg_score: number
+          avg_experience: number
+          total_today: number
+          status_breakdown: Json
+        }[]
       }
     }
     Enums: {
-      [_ in never]: never
+      education_level:
+        | "high_school"
+        | "diploma"
+        | "bachelors"
+        | "masters"
+        | "phd"
+        | "other"
+      file_source: "manual_upload" | "email" | "api" | "webhook"
+      resume_status: "pending" | "processed" | "failed" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -436,6 +436,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      education_level: [
+        "high_school",
+        "diploma",
+        "bachelors",
+        "masters",
+        "phd",
+        "other",
+      ],
+      file_source: ["manual_upload", "email", "api", "webhook"],
+      resume_status: ["pending", "processed", "failed", "archived"],
+    },
   },
 } as const
