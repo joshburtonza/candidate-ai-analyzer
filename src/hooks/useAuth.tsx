@@ -36,17 +36,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('useAuth: User found, creating mock profile');
-          // Since we don't have profiles table yet, create a mock profile
-          const mockProfile: Profile = {
-            id: session.user.id,
-            email: session.user.email || '',
-            full_name: session.user.email?.split('@')[0] || 'User',
-            is_admin: false,
-            created_at: new Date().toISOString()
-          };
-          setProfile(mockProfile);
-          setLoading(false);
+          console.log('useAuth: User found, fetching profile');
+          // Fetch actual profile from database
+          setTimeout(async () => {
+            try {
+              const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+              if (error && error.code !== 'PGRST116') {
+                console.error('useAuth: Error fetching profile:', error);
+              }
+
+              if (mounted) {
+                setProfile(profileData || null);
+                setLoading(false);
+              }
+            } catch (error) {
+              console.error('useAuth: Error in profile fetch:', error);
+              if (mounted) {
+                setLoading(false);
+              }
+            }
+          }, 0);
         } else {
           console.log('useAuth: No user, clearing profile');
           setProfile(null);
@@ -75,16 +89,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Create mock profile
-          const mockProfile: Profile = {
-            id: session.user.id,
-            email: session.user.email || '',
-            full_name: session.user.email?.split('@')[0] || 'User',
-            is_admin: false,
-            created_at: new Date().toISOString()
-          };
-          setProfile(mockProfile);
-          setLoading(false);
+          // Fetch actual profile from database
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error('useAuth: Error fetching profile:', profileError);
+            }
+
+            if (mounted) {
+              setProfile(profileData || null);
+              setLoading(false);
+            }
+          } catch (error) {
+            console.error('useAuth: Error in profile fetch:', error);
+            if (mounted) {
+              setLoading(false);
+            }
+          }
         } else {
           setLoading(false);
         }

@@ -46,6 +46,74 @@ export type Database = {
           },
         ]
       }
+      batch_uploads: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          failed_files: number | null
+          id: string
+          processed_files: number | null
+          source_email: string | null
+          status: string | null
+          total_files: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          failed_files?: number | null
+          id?: string
+          processed_files?: number | null
+          source_email?: string | null
+          status?: string | null
+          total_files?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          failed_files?: number | null
+          id?: string
+          processed_files?: number | null
+          source_email?: string | null
+          status?: string | null
+          total_files?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      candidate_notes: {
+        Row: {
+          created_at: string | null
+          cv_upload_id: string | null
+          id: string
+          note: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cv_upload_id?: string | null
+          id?: string
+          note: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cv_upload_id?: string | null
+          id?: string
+          note?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_notes_cv_upload_id_fkey"
+            columns: ["cv_upload_id"]
+            isOneToOne: false
+            referencedRelation: "cv_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_uploads: {
         Row: {
           extracted_json: Json | null
@@ -82,6 +150,30 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_emails: {
+        Row: {
+          email_id: string
+          files_extracted: number | null
+          id: string
+          processed_at: string | null
+          source_email: string
+        }
+        Insert: {
+          email_id: string
+          files_extracted?: number | null
+          id?: string
+          processed_at?: string | null
+          source_email: string
+        }
+        Update: {
+          email_id?: string
+          files_extracted?: number | null
+          id?: string
+          processed_at?: string | null
+          source_email?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -89,6 +181,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
@@ -96,6 +189,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_admin?: boolean | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
@@ -103,6 +197,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -281,6 +376,30 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          created_at: string | null
+          id: string
+          search_criteria: Json
+          search_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          search_criteria: Json
+          search_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          search_criteria?: Json
+          search_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       scoring_configs: {
         Row: {
           created_at: string
@@ -370,6 +489,18 @@ export type Database = {
           total_today: number
           status_breakdown: Json
         }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_joshua_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      update_profile: {
+        Args: { user_full_name: string }
+        Returns: undefined
       }
     }
     Enums: {

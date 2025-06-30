@@ -50,29 +50,39 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       }
 
       const fileExt = uploadFile.file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `cv-uploads/${fileName}`;
+      const fileName = `${user.id}/${Math.random()}.${fileExt}`;
 
-      // Update progress for upload
+      // Update progress for upload start
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { ...f, progress: 25 } : f
       ));
 
-      // Since we don't have storage bucket set up yet, we'll simulate the process
-      // and use the existing resumes table structure
+      // Upload file to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('cv-uploads')
+        .upload(fileName, uploadFile.file);
+
+      if (uploadError) throw uploadError;
+
+      // Update progress for storage upload complete
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { ...f, progress: 50 } : f
       ));
 
-      // Create database record using the existing resumes table
-      const { data: resume, error: dbError } = await supabase
-        .from('resumes')
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('cv-uploads')
+        .getPublicUrl(fileName);
+
+      // Create database record
+      const { data: cvUpload, error: dbError } = await supabase
+        .from('cv_uploads')
         .insert({
-          file_name: uploadFile.file.name,
-          name: uploadFile.file.name.split('.')[0], // Extract name from filename
-          status: 'pending',
+          user_id: user.id,
+          original_filename: uploadFile.file.name,
+          file_url: publicUrl,
           file_size: uploadFile.file.size,
-          file_type: uploadFile.file.type
+          processing_status: 'pending'
         })
         .select()
         .single();
@@ -83,13 +93,13 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       setUploadFiles(prev => prev.map((f, i) => 
         f.file === uploadFile.file ? { 
           ...f, 
-          uploadId: resume.id, 
+          uploadId: cvUpload.id, 
           progress: 75, 
           status: 'processing' 
         } : f
       ));
 
-      // Simulate processing completion
+      // Simulate processing completion (in real app, this would be done by background job)
       setTimeout(() => {
         setUploadFiles(prev => prev.map((f, i) => 
           f.file === uploadFile.file ? { 
@@ -99,6 +109,20 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
           } : f
         ));
 
+        // Create CVUpload object for callback
+        const completedUpload: CVUpload = {
+          id: cvUpload.id,
+          user_id: user.id,
+          file_url: publicUrl,
+          extracted_json: null,
+          original_filename: uploadFile.file.name,
+          uploaded_at: cvUpload.uploaded_at,
+          file_size: uploadFile.file.size,
+          processing_status: 'completed'
+        };
+
+        onUploadComplete(completedUpload);
+
         // Remove completed file after delay
         setTimeout(() => {
           setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
@@ -106,7 +130,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
         toast({
           title: "Upload Successful",
-          description: `${uploadFile.file.name} has been processed successfully`,
+          description: `${uploadFile.file.name} has been uploaded and is being processed`,
         });
       }, 2000);
 

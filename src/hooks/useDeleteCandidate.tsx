@@ -12,6 +12,26 @@ export const useDeleteCandidate = () => {
     setIsDeleting(true);
     
     try {
+      // First delete from storage if file exists
+      const { data: upload } = await supabase
+        .from('cv_uploads')
+        .select('file_url')
+        .eq('id', candidateId)
+        .single();
+
+      if (upload?.file_url) {
+        // Extract file path from URL for storage deletion
+        const urlParts = upload.file_url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        const userId = urlParts[urlParts.length - 2];
+        const filePath = `${userId}/${fileName}`;
+
+        await supabase.storage
+          .from('cv-uploads')
+          .remove([filePath]);
+      }
+
+      // Delete from database
       const { error } = await supabase
         .from('cv_uploads')
         .delete()

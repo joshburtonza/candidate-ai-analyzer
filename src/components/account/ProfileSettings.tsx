@@ -25,10 +25,16 @@ export const ProfileSettings = ({ profile }: ProfileSettingsProps) => {
 
     setLoading(true);
     try {
-      // Since we don't have profiles table yet, we'll show a message
+      // Use the update_profile function
+      const { error } = await supabase.rpc('update_profile', {
+        user_full_name: fullName
+      });
+
+      if (error) throw error;
+
       toast({
-        title: "Profile Update",
-        description: "Profile updates will be available once the database schema is updated.",
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
       });
     } catch (error: any) {
       toast({
