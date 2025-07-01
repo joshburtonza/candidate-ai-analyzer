@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -122,7 +123,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
       // Convert the database response to match our CVUpload interface
       const typedCvUpload: CVUpload = {
         ...cvUpload,
-        extracted_json: cvUpload.extracted_json as CandidateData | null,
+        extracted_json: cvUpload.extracted_json as unknown as CandidateData | null,
         processing_status: cvUpload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       };
 
