@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { CVUpload } from '@/types/candidate';
+import { CVUpload, CandidateData } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { GoogleDocUpload } from './GoogleDocUpload';
@@ -120,11 +119,18 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
       console.log('Database record created:', cvUpload.id);
 
+      // Convert the database response to match our CVUpload interface
+      const typedCvUpload: CVUpload = {
+        ...cvUpload,
+        extracted_json: cvUpload.extracted_json as CandidateData | null,
+        processing_status: cvUpload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      };
+
       // Update with upload ID and processing status
       setUploadFiles(prev => prev.map(f => 
         f.file === uploadFile.file ? { 
           ...f, 
-          uploadId: cvUpload.id, 
+          uploadId: typedCvUpload.id, 
           progress: 70, 
           status: 'processing' 
         } : f
@@ -142,8 +148,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Notify parent component
-      onUploadComplete(cvUpload);
+      // Notify parent component with properly typed upload
+      onUploadComplete(typedCvUpload);
 
       // Remove completed file after delay
       setTimeout(() => {
