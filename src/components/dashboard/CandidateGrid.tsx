@@ -11,9 +11,10 @@ interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
+  onCandidateDelete?: (id: string) => void;
 }
 
-export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGridProps) => {
+export const CandidateGrid = ({ uploads, viewMode, selectedDate, onCandidateDelete }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
   
   // Update local uploads when prop changes
@@ -22,7 +23,12 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGrid
   }, [uploads]);
 
   const handleCandidateDelete = (deletedId: string) => {
+    console.log('CandidateGrid: Handling candidate delete:', deletedId);
     setLocalUploads(prev => prev.filter(upload => upload.id !== deletedId));
+    // Also notify parent component to update its state
+    if (onCandidateDelete) {
+      onCandidateDelete(deletedId);
+    }
   };
 
   // Memoize the filtering to prevent unnecessary recalculations

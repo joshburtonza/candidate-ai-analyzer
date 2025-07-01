@@ -154,6 +154,12 @@ const Dashboard = () => {
     setUploads(prev => [newUpload, ...prev]);
   };
 
+  const handleCandidateDelete = (deletedId: string) => {
+    console.log('Dashboard: Removing candidate from uploads:', deletedId);
+    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
+    setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
+  };
+
   const handleCalendarDateSelect = (date: Date) => {
     setSelectedCalendarDate(date);
   };
@@ -368,6 +374,7 @@ const Dashboard = () => {
                   uploads={sortedUploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
+                  onCandidateDelete={handleCandidateDelete}
                 />
               </motion.div>
             </TabsContent>
