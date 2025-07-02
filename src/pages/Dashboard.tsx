@@ -174,7 +174,7 @@ const Dashboard = () => {
   };
 
   const handleExportAll = () => {
-    exportToCSV(filteredUploads, 'all_candidates');
+    exportToCSV(actualDisplayedCandidates, 'all_candidates');
   };
 
   // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
