@@ -68,7 +68,10 @@ const hasTeachingDegree = (data: any): boolean => {
     'diploma in education',
     'master of education',
     'm.ed',
-    'm. ed'
+    'm. ed',
+    'postgraduate certificate in education',
+    'pgde',
+    'postgraduate diploma in education'
   ];
   
   return teachingDegreeKeywords.some(keyword => education.includes(keyword));
@@ -115,7 +118,11 @@ const hasValidTeachingSubject = (data: any): boolean => {
     'data entry',
     'reception',
     'cleaning',
-    'maintenance'
+    'maintenance',
+    'it support',
+    'technical support',
+    'administrative',
+    'clerical'
   ];
 
   // Check if candidate has excluded subjects
