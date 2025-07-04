@@ -4,10 +4,11 @@ import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2, GraduationCap, Calendar, BookOpen, CheckCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
+import { extractDegree, extractYearsExperience, extractTeachingSubject, extractDateOfBirth, getProcessingStatus } from '@/utils/candidateHelpers';
 
 interface CandidateCardProps {
   upload: CVUpload;
@@ -53,6 +54,13 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
+
+  // Extract additional candidate information
+  const degree = extractDegree(data);
+  const yearsExperience = extractYearsExperience(data);
+  const teachingSubject = extractTeachingSubject(data);
+  const dateOfBirth = extractDateOfBirth(data);
+  const processingStatus = getProcessingStatus(upload);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -143,6 +151,55 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                   <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
                   <span className="truncate">{countries}</span>
                 </div>
+              )}
+            </div>
+
+            {/* Professional Qualifications */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                <h4 className="text-sm font-bold text-gray-300 tracking-wider">QUALIFICATIONS</h4>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 text-gray-300">
+                  <GraduationCap className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className={`text-sm ${degree === 'No Degree' ? 'text-gray-500' : ''}`}>
+                    {degree}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-3 text-gray-300">
+                  <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-sm">{yearsExperience}</span>
+                </div>
+                
+                <div className="flex items-center gap-3 text-gray-300">
+                  <BookOpen className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="text-sm">{teachingSubject}</span>
+                </div>
+
+                {dateOfBirth && (
+                  <div className="flex items-center gap-3 text-gray-300">
+                    <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-sm">DOB: {dateOfBirth}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Processing Status */}
+            <div className="flex items-center gap-2">
+              {processingStatus === 'processed' ? (
+                <>
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400">Processed</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4 text-yellow-400" />
+                  <span className="text-sm text-yellow-400">Pending</span>
+                </>
               )}
             </div>
 

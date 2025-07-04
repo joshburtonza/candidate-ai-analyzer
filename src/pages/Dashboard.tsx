@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
-import { BarChart3, Download, Users } from 'lucide-react';
+import { BarChart3, Download, Users, RotateCcw } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
@@ -174,7 +174,17 @@ const Dashboard = () => {
   };
 
   const handleExportAll = () => {
-    exportToCSV(actualDisplayedCandidates, 'all_candidates');
+    exportToCSV(actualDisplayedCandidates, 'qualified_teaching_candidates');
+  };
+
+  const handleForceResync = () => {
+    toast({
+      title: "Force Resync",
+      description: "Manually triggering resync to pull any missed candidates from inbox...",
+    });
+    
+    // Trigger a fresh fetch
+    fetchUploads();
   };
 
   // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
@@ -271,11 +281,25 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-brand-gradient rounded-full"></div>
                 <p className="text-white/80 text-sm">
-                  Showing candidates with email addresses sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
+                  Showing qualified teaching candidates sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
                 </p>
               </div>
             </motion.div>
           )}
+
+          {/* Qualification Notice */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-4 rounded-xl elegant-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <p className="text-white/80 text-sm">
+                Only candidates with teaching qualifications, 2+ years experience, valid subjects, and from approved countries are shown.
+              </p>
+            </div>
+          </motion.div>
 
           {/* Main Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -352,7 +376,16 @@ const Dashboard = () => {
                     className="border-green-500/30 text-green-400 hover:bg-green-500/10"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export All ({actualDisplayedCandidates.length})
+                    Export Qualified ({actualDisplayedCandidates.length})
+                  </Button>
+                  
+                  <Button
+                    onClick={handleForceResync}
+                    variant="outline"
+                    className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Force Resync
                   </Button>
                 </div>
               </motion.div>
