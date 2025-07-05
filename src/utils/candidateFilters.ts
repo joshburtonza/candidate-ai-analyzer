@@ -22,24 +22,29 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
 export const isQualifiedTeacher = (upload: CVUpload): boolean => {
   // First check basic qualifications
   if (!isQualifiedCandidate(upload)) {
+    console.log('Failed basic qualifications:', upload.id, upload.extracted_json?.candidate_name);
     return false;
   }
 
   // Check for teaching qualifications
   if (!hasTeachingQualifications(upload)) {
+    console.log('No teaching qualifications:', upload.id, upload.extracted_json?.candidate_name, upload.extracted_json?.educational_qualifications);
     return false;
   }
 
   // Check for teaching experience
   if (!hasTeachingExperience(upload)) {
+    console.log('No teaching experience:', upload.id, upload.extracted_json?.candidate_name, upload.extracted_json?.job_history);
     return false;
   }
 
   // Check for approved countries
   if (!isFromApprovedCountry(upload)) {
+    console.log('Not from approved country:', upload.id, upload.extracted_json?.candidate_name, upload.extracted_json?.countries);
     return false;
   }
 
+  console.log('✅ Qualified teacher found:', upload.id, upload.extracted_json?.candidate_name);
   return true;
 };
 
