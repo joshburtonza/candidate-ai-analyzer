@@ -200,27 +200,6 @@ const CandidateProfile = () => {
 
             {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Assessment */}
-              <Card className="glass-card elegant-border p-8">
-                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <div className="text-white/90 leading-relaxed text-lg cursor-pointer">
-                      <p className="whitespace-pre-wrap break-words">
-                        {data.justification || 'Assessment pending analysis'}
-                      </p>
-                    </div>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
-                    <div className="text-sm leading-relaxed">
-                      <p className="whitespace-pre-wrap break-words">
-                        {data.justification || 'Assessment pending analysis'}
-                      </p>
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-              </Card>
-
               {/* Education */}
               {data.educational_qualifications && (
                 <Card className="glass-card elegant-border p-8">
