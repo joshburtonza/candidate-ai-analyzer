@@ -16,6 +16,15 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
     return false;
   }
 
+  return true;
+};
+
+export const isQualifiedTeacher = (upload: CVUpload): boolean => {
+  // First check basic qualifications
+  if (!isQualifiedCandidate(upload)) {
+    return false;
+  }
+
   // Check for teaching qualifications
   if (!hasTeachingQualifications(upload)) {
     return false;
@@ -221,6 +230,114 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
     // Filter out incomplete uploads (only requires email now)
     if (!isQualifiedCandidate(upload)) {
+      return false;
+    }
+
+    // Filter out test candidates
+    if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+
+  // Cache the result with timestamp
+  filterCache.set(cacheKey, { result: filtered, timestamp: Date.now() });
+  
+  // Clear old cache entries to prevent memory leaks
+  if (filterCache.size > 20) {
+    const oldestKey = Array.from(filterCache.keys())[0];
+    filterCache.delete(oldestKey);
+  }
+
+  return filtered;
+};
+
+// New function for qualified teachers filtering
+export const filterQualifiedTeachers = (uploads: CVUpload[]): CVUpload[] => {
+  const cacheKey = `teachers-today-${uploads.length}-${new Date().toDateString()}`;
+  
+  // Check if we have a valid cached result
+  const cached = filterCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    return cached.result;
+  }
+
+  const seenEmails = new Set<string>();
+  
+  const filtered = uploads.filter(upload => {
+    // Filter out uploads not from today for the main dashboard view
+    if (!isUploadedToday(upload)) {
+      return false;
+    }
+
+    // Apply strict teacher qualifications
+    if (!isQualifiedTeacher(upload)) {
+      return false;
+    }
+
+    // Filter out test candidates
+    if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+
+  // Cache the result with timestamp
+  filterCache.set(cacheKey, { result: filtered, timestamp: Date.now() });
+  
+  // Clear old cache entries to prevent memory leaks
+  if (filterCache.size > 20) {
+    const oldestKey = Array.from(filterCache.keys())[0];
+    filterCache.delete(oldestKey);
+  }
+
+  return filtered;
+};
+
+// Qualified teachers for specific date
+export const filterQualifiedTeachersForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
+  const cacheKey = `teachers-date-${uploads.length}-${targetDate.toDateString()}`;
+  
+  // Check if we have a valid cached result
+  const cached = filterCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    return cached.result;
+  }
+
+  const seenEmails = new Set<string>();
+  
+  const filtered = uploads.filter(upload => {
+    // Filter for specific date
+    if (!isUploadedOnDate(upload, targetDate)) {
+      return false;
+    }
+
+    // Apply strict teacher qualifications
+    if (!isQualifiedTeacher(upload)) {
       return false;
     }
 

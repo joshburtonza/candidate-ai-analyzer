@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -29,6 +29,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
+  const [candidateView, setCandidateView] = useState<'all' | 'qualified'>('all');
   const [activeTab, setActiveTab] = useState('candidates');
   const { toast } = useToast();
   const { exportToCSV } = useExport();
@@ -198,10 +199,14 @@ const Dashboard = () => {
     }
   });
 
-  // Get the actual filtered candidates that will be displayed
+  // Get the actual filtered candidates that will be displayed based on candidate view
   const actualDisplayedCandidates = selectedCalendarDate 
-    ? filterValidCandidatesForDate(uploads, selectedCalendarDate)
-    : filterValidCandidates(uploads);
+    ? (candidateView === 'qualified' 
+        ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
+        : filterValidCandidatesForDate(uploads, selectedCalendarDate))
+    : (candidateView === 'qualified' 
+        ? filterQualifiedTeachers(uploads)
+        : filterValidCandidates(uploads));
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -257,6 +262,8 @@ const Dashboard = () => {
           onViewModeChange={setViewMode}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          candidateView={candidateView}
+          onCandidateViewChange={setCandidateView}
           onDateRangeChange={() => {}} // Legacy prop - functionality moved to AdvancedFilters
         />
 
@@ -374,6 +381,7 @@ const Dashboard = () => {
                   uploads={sortedUploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
+                  candidateView={candidateView}
                   onCandidateDelete={handleCandidateDelete}
                 />
               </motion.div>
