@@ -179,25 +179,29 @@ const Dashboard = () => {
   };
 
   // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
-  const displayUploads = selectedCalendarDate 
-    ? uploads // Pass all uploads and let CandidateGrid handle the filtering
-    : filteredUploads;
+  const displayUploads = useMemo(() => {
+    return selectedCalendarDate 
+      ? uploads // Pass all uploads and let CandidateGrid handle the filtering
+      : filteredUploads;
+  }, [selectedCalendarDate, uploads, filteredUploads]);
 
   // Sort uploads
-  const sortedUploads = [...displayUploads].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        const scoreA = parseInt(a.extracted_json?.score || '0');
-        const scoreB = parseInt(b.extracted_json?.score || '0');
-        return scoreB - scoreA;
-      case 'name':
-        const nameA = a.extracted_json?.candidate_name || '';
-        const nameB = b.extracted_json?.candidate_name || '';
-        return nameA.localeCompare(nameB);
-      default:
-        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
-    }
-  });
+  const sortedUploads = useMemo(() => {
+    return [...displayUploads].sort((a, b) => {
+      switch (sortBy) {
+        case 'score':
+          const scoreA = parseInt(a.extracted_json?.score || '0');
+          const scoreB = parseInt(b.extracted_json?.score || '0');
+          return scoreB - scoreA;
+        case 'name':
+          const nameA = a.extracted_json?.candidate_name || '';
+          const nameB = b.extracted_json?.candidate_name || '';
+          return nameA.localeCompare(nameB);
+        default:
+          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+      }
+    });
+  }, [displayUploads, sortBy]);
 
   // Get the actual filtered candidates that will be displayed based on candidate view
   const actualDisplayedCandidates = useMemo(() => {
