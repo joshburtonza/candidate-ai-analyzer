@@ -271,7 +271,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-brand-gradient rounded-full"></div>
                 <p className="text-white/80 text-sm">
-                  Showing candidates with email addresses sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
+                  Showing qualified teaching candidates sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
                 </p>
               </div>
             </motion.div>
@@ -285,7 +285,7 @@ const Dashboard = () => {
                 className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
               >
                 <Users className="w-4 h-4 mr-2" />
-                Candidates
+                Teaching Candidates
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
@@ -352,7 +352,7 @@ const Dashboard = () => {
                     className="border-green-500/30 text-green-400 hover:bg-green-500/10"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export All ({actualDisplayedCandidates.length})
+                    Export Teaching Candidates ({actualDisplayedCandidates.length})
                   </Button>
                 </div>
               </motion.div>

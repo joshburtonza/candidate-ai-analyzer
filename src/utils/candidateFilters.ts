@@ -10,15 +10,94 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
 
   const data = upload.extracted_json;
   
-  // Only require email address - be very permissive with other fields
+  // Require email address
   const hasEmail = !!(data.email_address && data.email_address.trim());
-
   if (!hasEmail) {
     return false;
   }
 
-  // Allow all candidates with email, regardless of score or other missing info
+  // Check for teaching qualifications
+  if (!hasTeachingQualifications(upload)) {
+    return false;
+  }
+
+  // Check for teaching experience
+  if (!hasTeachingExperience(upload)) {
+    return false;
+  }
+
+  // Check for approved countries
+  if (!isFromApprovedCountry(upload)) {
+    return false;
+  }
+
   return true;
+};
+
+export const hasTeachingQualifications = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json) return false;
+  
+  const data = upload.extracted_json;
+  const qualifications = (data.educational_qualifications || '').toLowerCase();
+  
+  // Teaching qualification keywords
+  const teachingQualifications = [
+    'education', 'pgce', 'b.ed', 'bachelor of education', 'master of education', 
+    'm.ed', 'teaching', 'qualified teacher status', 'qts', 'teaching certificate',
+    'teaching diploma', 'education degree', 'teacher training', 'postgraduate certificate in education'
+  ];
+  
+  return teachingQualifications.some(qual => qualifications.includes(qual));
+};
+
+export const hasTeachingExperience = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json) return false;
+  
+  const data = upload.extracted_json;
+  const jobHistory = (data.job_history || '').toLowerCase();
+  
+  // Teaching experience keywords
+  const teachingRoles = [
+    'teacher', 'educator', 'instructor', 'lecturer', 'tutor', 'head teacher',
+    'teaching assistant', 'school', 'classroom', 'curriculum', 'lesson planning',
+    'primary school', 'secondary school', 'high school', 'elementary'
+  ];
+  
+  // Check for minimum 2 years experience (rough heuristic)
+  const hasRelevantExperience = teachingRoles.some(role => jobHistory.includes(role));
+  const hasLongTermExperience = jobHistory.includes('year') || jobHistory.includes('years');
+  
+  return hasRelevantExperience && hasLongTermExperience;
+};
+
+export const isFromApprovedCountry = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.countries) return true; // Allow if no country specified
+  
+  const countries = upload.extracted_json.countries.toLowerCase();
+  
+  // Approved English-speaking countries for teaching
+  const approvedCountries = [
+    'uk', 'united kingdom', 'england', 'scotland', 'wales', 'northern ireland',
+    'ireland', 'south africa', 'australia', 'new zealand', 'canada', 'usa', 'united states'
+  ];
+  
+  return approvedCountries.some(country => countries.includes(country));
+};
+
+export const getTeachingSubjects = (upload: CVUpload): string[] => {
+  if (!upload.extracted_json) return [];
+  
+  const skills = upload.extracted_json.skill_set || '';
+  const qualifications = upload.extracted_json.educational_qualifications || '';
+  const combined = (skills + ' ' + qualifications).toLowerCase();
+  
+  const subjects = [
+    'mathematics', 'math', 'english', 'science', 'physics', 'chemistry', 'biology',
+    'history', 'geography', 'art', 'music', 'physical education', 'pe', 'drama',
+    'computer science', 'ict', 'french', 'spanish', 'german', 'religious studies'
+  ];
+  
+  return subjects.filter(subject => combined.includes(subject));
 };
 
 export const isTestCandidate = (upload: CVUpload): boolean => {

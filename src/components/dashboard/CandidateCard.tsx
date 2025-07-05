@@ -4,10 +4,11 @@ import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2, GraduationCap, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
+import { getTeachingSubjects, hasTeachingQualifications } from '@/utils/candidateFilters';
 
 interface CandidateCardProps {
   upload: CVUpload;
@@ -53,6 +54,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
+
+  // Get teaching-specific information
+  const teachingSubjects = getTeachingSubjects(upload);
+  const hasTeachingQuals = hasTeachingQualifications(upload);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -145,6 +150,49 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 </div>
               )}
             </div>
+
+            {/* Teaching Qualifications Badge */}
+            {hasTeachingQuals && (
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="default"
+                  className="bg-green-500/20 text-green-400 border-green-500/30 px-3 py-1 text-xs rounded-xl"
+                >
+                  <GraduationCap className="w-3 h-3 mr-1" />
+                  QUALIFIED TEACHER
+                </Badge>
+              </div>
+            )}
+
+            {/* Teaching Subjects - only show if subjects exist */}
+            {teachingSubjects.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-green-400 rounded"></div>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">TEACHING SUBJECTS</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {teachingSubjects.slice(0, 4).map((subject, index) => (
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="bg-green-500/10 text-green-400 border-green-500/30 px-3 py-1 text-xs rounded-xl capitalize"
+                    >
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      {subject}
+                    </Badge>
+                  ))}
+                  {teachingSubjects.length > 4 && (
+                    <Badge
+                      variant="outline"
+                      className="bg-green-500/10 text-green-400 border-green-500/30 px-3 py-1 text-xs rounded-xl"
+                    >
+                      +{teachingSubjects.length - 4}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Expertise Section - only show if skills exist */}
             {skills.length > 0 && (
