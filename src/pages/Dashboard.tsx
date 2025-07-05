@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Resume } from '@/types/candidate';
+import { Resume, CVUpload } from '@/types/candidate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
@@ -17,6 +17,29 @@ import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
+
+// Helper function to convert Resume to CVUpload format for compatibility
+const resumeToUpload = (resume: Resume): CVUpload => ({
+  id: resume.id,
+  user_id: '', // Not needed for display
+  file_url: resume.file_url || '',
+  original_filename: resume.file_name,
+  uploaded_at: resume.created_at,
+  source_email: '',
+  file_size: resume.file_size || undefined,
+  processing_status: 'completed' as const,
+  extracted_json: {
+    candidate_name: resume.name,
+    email_address: resume.email || '',
+    contact_number: resume.phone || '',
+    educational_qualifications: typeof resume.education_details === 'string' ? resume.education_details : JSON.stringify(resume.education_details || ''),
+    job_history: `${resume.role_title || ''} at ${resume.current_company || ''} (${resume.experience_years || 0} years)`,
+    skill_set: (resume.skills || []).join(', '),
+    score: String(resume.fit_score || 0),
+    justification: resume.justification || '',
+    countries: resume.location || ''
+  }
+});
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -178,16 +201,22 @@ const Dashboard = () => {
     });
   }, [displayResumes, sortBy]);
 
+  // Convert resumes to uploads format for compatibility with existing components
+  const uploadsFromResumes = useMemo(() => 
+    resumes.map(resume => resumeToUpload(resume)), 
+    [resumes]
+  );
+
   // Get the actual filtered candidates that will be displayed based on candidate view
   const actualDisplayedCandidates = useMemo(() => {
     return selectedCalendarDate 
       ? (candidateView === 'qualified' 
-          ? filterQualifiedTeachersForDate(resumes, selectedCalendarDate)
-          : filterValidCandidatesForDate(resumes, selectedCalendarDate))
+          ? filterQualifiedTeachersForDate(uploadsFromResumes, selectedCalendarDate)
+          : filterValidCandidatesForDate(uploadsFromResumes, selectedCalendarDate))
       : (candidateView === 'qualified' 
-          ? filterQualifiedTeachers(resumes)
-          : filterValidCandidates(resumes));
-  }, [resumes, selectedCalendarDate, candidateView]);
+          ? filterQualifiedTeachers(uploadsFromResumes)
+          : filterValidCandidates(uploadsFromResumes));
+  }, [uploadsFromResumes, selectedCalendarDate, candidateView]);
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -291,7 +320,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6 }}
               >
                 <UploadHistoryCalendar 
-                  uploads={resumes} 
+                  uploads={uploadsFromResumes} 
                   onDateSelect={handleCalendarDateSelect}
                   selectedDate={selectedCalendarDate}
                 />
@@ -348,7 +377,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
                 <CandidateGrid 
-                  uploads={sortedResumes} 
+                  uploads={sortedResumes.map(r => resumeToUpload(r))} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   candidateView={candidateView}
@@ -363,7 +392,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <AnalyticsCharts uploads={resumes} />
+                <AnalyticsCharts uploads={uploadsFromResumes} />
               </motion.div>
             </TabsContent>
           </Tabs>

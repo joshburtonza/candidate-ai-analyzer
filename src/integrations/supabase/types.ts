@@ -85,70 +85,41 @@ export type Database = {
       candidate_notes: {
         Row: {
           created_at: string | null
-          cv_upload_id: string | null
           id: string
           note: string
+          resume_id: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
-          cv_upload_id?: string | null
           id?: string
           note: string
+          resume_id?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
-          cv_upload_id?: string | null
           id?: string
           note?: string
+          resume_id?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "candidate_notes_cv_upload_id_fkey"
-            columns: ["cv_upload_id"]
+            foreignKeyName: "candidate_notes_resume_id_fkey"
+            columns: ["resume_id"]
             isOneToOne: false
-            referencedRelation: "cv_uploads"
+            referencedRelation: "recent_resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_notes_resume_id_fkey"
+            columns: ["resume_id"]
+            isOneToOne: false
+            referencedRelation: "resumes"
             referencedColumns: ["id"]
           },
         ]
-      }
-      cv_uploads: {
-        Row: {
-          extracted_json: Json | null
-          file_size: number | null
-          file_url: string | null
-          id: string
-          original_filename: string | null
-          processing_status: string | null
-          source_email: string | null
-          uploaded_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          extracted_json?: Json | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string
-          original_filename?: string | null
-          processing_status?: string | null
-          source_email?: string | null
-          uploaded_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          extracted_json?: Json | null
-          file_size?: number | null
-          file_url?: string | null
-          id?: string
-          original_filename?: string | null
-          processing_status?: string | null
-          source_email?: string | null
-          uploaded_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       processed_emails: {
         Row: {
