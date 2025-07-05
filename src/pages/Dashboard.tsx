@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -200,13 +200,15 @@ const Dashboard = () => {
   });
 
   // Get the actual filtered candidates that will be displayed based on candidate view
-  const actualDisplayedCandidates = selectedCalendarDate 
-    ? (candidateView === 'qualified' 
-        ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
-        : filterValidCandidatesForDate(uploads, selectedCalendarDate))
-    : (candidateView === 'qualified' 
-        ? filterQualifiedTeachers(uploads)
-        : filterValidCandidates(uploads));
+  const actualDisplayedCandidates = useMemo(() => {
+    return selectedCalendarDate 
+      ? (candidateView === 'qualified' 
+          ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
+          : filterValidCandidatesForDate(uploads, selectedCalendarDate))
+      : (candidateView === 'qualified' 
+          ? filterQualifiedTeachers(uploads)
+          : filterValidCandidates(uploads));
+  }, [uploads, selectedCalendarDate, candidateView]);
 
   // Show loading only if auth is loading
   if (authLoading) {
