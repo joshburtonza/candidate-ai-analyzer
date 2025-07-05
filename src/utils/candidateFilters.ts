@@ -271,11 +271,14 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
 // New function for qualified teachers filtering
 export const filterQualifiedTeachers = (uploads: CVUpload[]): CVUpload[] => {
+  console.log('🔍 filterQualifiedTeachers called with', uploads.length, 'uploads');
+  
   const cacheKey = `teachers-today-${uploads.length}-${new Date().toDateString()}`;
   
   // Check if we have a valid cached result
   const cached = filterCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    console.log('📦 Using cached qualified teachers result:', cached.result.length);
     return cached.result;
   }
 
@@ -310,6 +313,8 @@ export const filterQualifiedTeachers = (uploads: CVUpload[]): CVUpload[] => {
 
     return true;
   });
+
+  console.log('📋 Qualified teachers filter result:', filtered.length, 'out of', uploads.length);
 
   // Cache the result with timestamp
   filterCache.set(cacheKey, { result: filtered, timestamp: Date.now() });
