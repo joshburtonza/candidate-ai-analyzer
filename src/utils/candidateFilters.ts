@@ -21,169 +21,6 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
   return true;
 };
 
-// Strict qualification check for teaching candidates
-export const isQualifiedTeachingCandidate = (upload: CVUpload): boolean => {
-  if (!isQualifiedCandidate(upload)) {
-    return false;
-  }
-
-  const data = upload.extracted_json!;
-  
-  // Check for teaching degree
-  if (!hasTeachingDegree(data)) {
-    return false;
-  }
-
-  // Check for minimum 2 years experience
-  if (!hasMinimumTeachingExperience(data)) {
-    return false;
-  }
-
-  // Check for valid teaching subject
-  if (!hasValidTeachingSubject(data)) {
-    return false;
-  }
-
-  // Check for approved country
-  if (!isFromApprovedCountry(data)) {
-    return false;
-  }
-
-  return true;
-};
-
-const hasTeachingDegree = (data: any): boolean => {
-  const education = (data.educational_qualifications || '').toLowerCase();
-  const teachingDegreeKeywords = [
-    'bachelor of education',
-    'b.ed',
-    'b. ed',
-    'pgce',
-    'post graduate certificate in education',
-    'teaching qualification',
-    'education degree',
-    'qualified teacher status',
-    'qts',
-    'teaching certificate',
-    'diploma in education',
-    'master of education',
-    'm.ed',
-    'm. ed',
-    'postgraduate certificate in education',
-    'pgde',
-    'postgraduate diploma in education'
-  ];
-  
-  return teachingDegreeKeywords.some(keyword => education.includes(keyword));
-};
-
-const hasMinimumTeachingExperience = (data: any): boolean => {
-  const jobHistory = (data.job_history || '').toLowerCase();
-  
-  // Extract years of experience from various formats
-  const experiencePatterns = [
-    /(\d+)\s*years?\s*(?:of\s*)?(?:teaching|experience)/gi,
-    /(?:teaching|experience)\s*(?:for\s*)?(\d+)\s*years?/gi,
-    /(\d+)\+?\s*years?\s*teacher/gi,
-    /teacher\s*(?:for\s*)?(\d+)\s*years?/gi
-  ];
-
-  let totalExperience = 0;
-  
-  for (const pattern of experiencePatterns) {
-    const matches = [...jobHistory.matchAll(pattern)];
-    for (const match of matches) {
-      const years = parseInt(match[1]);
-      if (!isNaN(years)) {
-        totalExperience = Math.max(totalExperience, years);
-      }
-    }
-  }
-
-  return totalExperience >= 2;
-};
-
-const hasValidTeachingSubject = (data: any): boolean => {
-  const skills = (data.skill_set || '').toLowerCase();
-  const jobHistory = (data.job_history || '').toLowerCase();
-  const combinedText = `${skills} ${jobHistory}`;
-  
-  // Exclude non-teaching or inappropriate subjects
-  const excludedSubjects = [
-    'xhosa',
-    'admin',
-    'pastoral',
-    'administration',
-    'office management',
-    'data entry',
-    'reception',
-    'cleaning',
-    'maintenance',
-    'it support',
-    'technical support',
-    'administrative',
-    'clerical'
-  ];
-
-  // Check if candidate has excluded subjects
-  const hasExcludedSubject = excludedSubjects.some(subject => 
-    combinedText.includes(subject)
-  );
-
-  if (hasExcludedSubject) {
-    return false;
-  }
-
-  // Look for valid teaching subjects or general teaching indicators
-  const validTeachingIndicators = [
-    'teacher',
-    'teaching',
-    'mathematics',
-    'english',
-    'science',
-    'physics',
-    'chemistry',
-    'biology',
-    'history',
-    'geography',
-    'art',
-    'music',
-    'physical education',
-    'pe teacher',
-    'primary',
-    'secondary',
-    'curriculum',
-    'lesson planning',
-    'classroom management',
-    'subject specialist'
-  ];
-
-  return validTeachingIndicators.some(indicator => 
-    combinedText.includes(indicator)
-  );
-};
-
-const isFromApprovedCountry = (data: any): boolean => {
-  const countries = (data.countries || '').toLowerCase();
-  const approvedCountries = [
-    'united kingdom',
-    'uk',
-    'usa',
-    'united states',
-    'australia',
-    'new zealand',
-    'canada',
-    'ireland',
-    'south africa',
-    'uae',
-    'dubai'
-  ];
-
-  return approvedCountries.some(country => 
-    countries.includes(country)
-  );
-};
-
 export const isTestCandidate = (upload: CVUpload): boolean => {
   if (!upload.extracted_json?.candidate_name) return false;
   
@@ -249,8 +86,8 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
       return false;
     }
 
-    // Apply strict teaching qualification filtering
-    if (!isQualifiedTeachingCandidate(upload)) {
+    // Filter out incomplete uploads (only requires email now)
+    if (!isQualifiedCandidate(upload)) {
       return false;
     }
 
@@ -303,8 +140,8 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
       return false;
     }
 
-    // Apply strict teaching qualification filtering
-    if (!isQualifiedTeachingCandidate(upload)) {
+    // Filter out incomplete uploads (only requires email now)
+    if (!isQualifiedCandidate(upload)) {
       return false;
     }
 

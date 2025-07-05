@@ -54,17 +54,15 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, onCandidateDele
           <Calendar className="w-10 h-10 gold-accent" />
         </div>
         <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">
-          NO QUALIFIED TEACHING CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
+          NO CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
         </h3>
         <p className="text-white/70 text-lg">
           {selectedDate 
-            ? `No qualified teaching candidates were uploaded on ${selectedDate.toLocaleDateString()}`
-            : 'Qualified teaching candidates uploaded today will appear here'
+            ? `No candidates were uploaded on ${selectedDate.toLocaleDateString()} with email addresses`
+            : 'Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here'
           }
         </p>
-        <p className="text-white/50 text-sm mt-2">
-          Only candidates with teaching qualifications, 2+ years experience, valid subjects, and from approved countries are displayed.
-        </p>
+        <p className="text-white/50 text-sm mt-2">All duplicates are automatically merged into single profiles</p>
       </motion.div>
     );
   }
