@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
@@ -20,7 +20,7 @@ import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTea
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
-  const [uploads, setUploads] = useState<CVUpload[]>([]);
+  const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,8 +37,8 @@ const Dashboard = () => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
     
     if (!authLoading && user) {
-      console.log('Dashboard: User authenticated, fetching uploads with email filtering');
-      fetchUploads();
+      console.log('Dashboard: User authenticated, fetching resumes');
+      fetchResumes();
       setupRealtimeSubscription();
     } else if (!authLoading && !user) {
       console.log('Dashboard: No user found after auth loaded');
@@ -61,40 +61,29 @@ const Dashboard = () => {
       subscriptionRef.current = null;
     }
 
-    console.log('Dashboard: Setting up new realtime subscription with email filtering');
+    console.log('Dashboard: Setting up new realtime subscription for resumes');
     
     const channel = supabase
-      .channel('cv_uploads_changes')
+      .channel('resumes_changes')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'cv_uploads'
+          table: 'resumes'
         },
         (payload) => {
-          console.log('Dashboard: New upload received via realtime:', payload);
+          console.log('Dashboard: New resume received via realtime:', payload);
           
-          const newUpload = payload.new as CVUpload;
+          const newResume = payload.new as Resume;
           
-          const shouldShow = !newUpload.source_email || 
-                           newUpload.source_email === '' || 
-                           newUpload.source_email === profile?.email ||
-                           profile?.is_admin;
+          // All resumes are visible since we're not filtering by email in resumes table
+          setResumes(prev => [newResume, ...prev]);
           
-          if (shouldShow) {
-            setUploads(prev => [newUpload, ...prev]);
-            
-            if (newUpload.extracted_json?.candidate_name) {
-              toast({
-                title: "New Candidate Added",
-                description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
-              });
-            }
-          } else {
-            console.log('Dashboard: Upload filtered out due to email mismatch', {
-              sourceEmail: newUpload.source_email,
-              userEmail: profile?.email
+          if (newResume.name) {
+            toast({
+              title: "New Candidate Added",
+              description: `${newResume.name} has been processed and added to your dashboard`,
             });
           }
         }
@@ -104,42 +93,37 @@ const Dashboard = () => {
     subscriptionRef.current = channel;
   };
 
-  const fetchUploads = async () => {
+  const fetchResumes = async () => {
     if (!user) {
-      console.log('Dashboard: No user available for fetching uploads');
+      console.log('Dashboard: No user available for fetching resumes');
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
+      console.log('Dashboard: Fetching resumes for user:', user.id);
       setError(null);
       
       const { data, error } = await supabase
-        .from('cv_uploads')
+        .from('resumes')
         .select('*')
-        .order('uploaded_at', { ascending: false });
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Dashboard: Error fetching uploads:', error);
+        console.error('Dashboard: Error fetching resumes:', error);
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
+      console.log('Dashboard: Fetched', data?.length || 0, 'resumes');
       
-      const typedUploads: CVUpload[] = (data || []).map(upload => ({
-        ...upload,
-        extracted_json: upload.extracted_json as any,
-        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
-      }));
-      
-      setUploads(typedUploads);
+      setResumes(data || []);
     } catch (error: any) {
-      console.error('Dashboard: Error in fetchUploads:', error);
+      console.error('Dashboard: Error in fetchResumes:', error);
       setError(error.message);
       toast({
         title: "Error",
-        description: "Failed to fetch uploads",
+        description: "Failed to fetch resumes",
         variant: "destructive",
       });
     } finally {
@@ -147,14 +131,14 @@ const Dashboard = () => {
     }
   };
 
-  const handleUploadComplete = (newUpload: CVUpload) => {
-    console.log('Dashboard: New upload completed:', newUpload.id);
-    setUploads(prev => [newUpload, ...prev]);
+  const handleUploadComplete = (newResume: Resume) => {
+    console.log('Dashboard: New resume completed:', newResume.id);
+    setResumes(prev => [newResume, ...prev]);
   };
 
   const handleCandidateDelete = (deletedId: string) => {
-    console.log('Dashboard: Removing candidate from uploads:', deletedId);
-    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
+    console.log('Dashboard: Removing candidate from resumes:', deletedId);
+    setResumes(prev => prev.filter(resume => resume.id !== deletedId));
   };
 
   const handleCalendarDateSelect = (date: Date) => {
@@ -162,48 +146,48 @@ const Dashboard = () => {
   };
 
   const handleBulkDelete = (deletedIds: string[]) => {
-    setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
+    setResumes(prev => prev.filter(resume => !deletedIds.includes(resume.id)));
   };
 
   const handleExportAll = () => {
     exportToCSV(actualDisplayedCandidates, 'all_candidates');
   };
 
-  // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
-  const displayUploads = useMemo(() => {
+  // Apply calendar date filter to filtered resumes
+  const displayResumes = useMemo(() => {
     return selectedCalendarDate 
-      ? uploads // Pass all uploads and let CandidateGrid handle the filtering
-      : uploads; // Just use uploads directly since filtering is done in CandidateGrid
-  }, [selectedCalendarDate, uploads]);
+      ? resumes // Pass all resumes and let CandidateGrid handle the filtering
+      : resumes; // Just use resumes directly since filtering is done in CandidateGrid
+  }, [selectedCalendarDate, resumes]);
 
-  // Sort uploads
-  const sortedUploads = useMemo(() => {
-    return [...displayUploads].sort((a, b) => {
+  // Sort resumes
+  const sortedResumes = useMemo(() => {
+    return [...displayResumes].sort((a, b) => {
       switch (sortBy) {
         case 'score':
-          const scoreA = parseInt(a.extracted_json?.score || '0');
-          const scoreB = parseInt(b.extracted_json?.score || '0');
+          const scoreA = a.fit_score || 0;
+          const scoreB = b.fit_score || 0;
           return scoreB - scoreA;
         case 'name':
-          const nameA = a.extracted_json?.candidate_name || '';
-          const nameB = b.extracted_json?.candidate_name || '';
+          const nameA = a.name || '';
+          const nameB = b.name || '';
           return nameA.localeCompare(nameB);
         default:
-          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
     });
-  }, [displayUploads, sortBy]);
+  }, [displayResumes, sortBy]);
 
   // Get the actual filtered candidates that will be displayed based on candidate view
   const actualDisplayedCandidates = useMemo(() => {
     return selectedCalendarDate 
       ? (candidateView === 'qualified' 
-          ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
-          : filterValidCandidatesForDate(uploads, selectedCalendarDate))
+          ? filterQualifiedTeachersForDate(resumes, selectedCalendarDate)
+          : filterValidCandidatesForDate(resumes, selectedCalendarDate))
       : (candidateView === 'qualified' 
-          ? filterQualifiedTeachers(uploads)
-          : filterValidCandidates(uploads));
-  }, [uploads, selectedCalendarDate, candidateView]);
+          ? filterQualifiedTeachers(resumes)
+          : filterValidCandidates(resumes));
+  }, [resumes, selectedCalendarDate, candidateView]);
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -235,7 +219,7 @@ const Dashboard = () => {
             onClick={() => {
               setError(null);
               setLoading(true);
-              fetchUploads();
+              fetchResumes();
             }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black rounded-lg hover:from-yellow-500 hover:to-yellow-700 font-semibold text-elegant tracking-wider"
           >
@@ -246,7 +230,7 @@ const Dashboard = () => {
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email);
+  console.log('Dashboard: Rendering dashboard with', resumes.length, 'resumes for user:', user?.id);
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -307,7 +291,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6 }}
               >
                 <UploadHistoryCalendar 
-                  uploads={uploads} 
+                  uploads={resumes} 
                   onDateSelect={handleCalendarDateSelect}
                   selectedDate={selectedCalendarDate}
                 />
@@ -364,7 +348,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
                 <CandidateGrid 
-                  uploads={sortedUploads} 
+                  uploads={sortedResumes} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   candidateView={candidateView}
@@ -379,7 +363,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <AnalyticsCharts uploads={uploads} />
+                <AnalyticsCharts uploads={resumes} />
               </motion.div>
             </TabsContent>
           </Tabs>
