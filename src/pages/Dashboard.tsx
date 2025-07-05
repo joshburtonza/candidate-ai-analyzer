@@ -9,7 +9,6 @@ import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
 import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
 import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
-import { AdvancedFilters } from '@/components/dashboard/AdvancedFilters';
 import { BulkActions } from '@/components/dashboard/BulkActions';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,7 +21,6 @@ import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTea
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
   const [uploads, setUploads] = useState<CVUpload[]>([]);
-  const [filteredUploads, setFilteredUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -136,7 +134,6 @@ const Dashboard = () => {
       }));
       
       setUploads(typedUploads);
-      setFilteredUploads(typedUploads);
     } catch (error: any) {
       console.error('Dashboard: Error in fetchUploads:', error);
       setError(error.message);
@@ -158,20 +155,14 @@ const Dashboard = () => {
   const handleCandidateDelete = (deletedId: string) => {
     console.log('Dashboard: Removing candidate from uploads:', deletedId);
     setUploads(prev => prev.filter(upload => upload.id !== deletedId));
-    setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
   const handleCalendarDateSelect = (date: Date) => {
     setSelectedCalendarDate(date);
   };
 
-  const handleFilterChange = (filtered: CVUpload[]) => {
-    setFilteredUploads(filtered);
-  };
-
   const handleBulkDelete = (deletedIds: string[]) => {
     setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
-    setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
   const handleExportAll = () => {
@@ -182,8 +173,8 @@ const Dashboard = () => {
   const displayUploads = useMemo(() => {
     return selectedCalendarDate 
       ? uploads // Pass all uploads and let CandidateGrid handle the filtering
-      : filteredUploads;
-  }, [selectedCalendarDate, uploads, filteredUploads]);
+      : uploads; // Just use uploads directly since filtering is done in CandidateGrid
+  }, [selectedCalendarDate, uploads]);
 
   // Sort uploads
   const sortedUploads = useMemo(() => {
@@ -338,18 +329,7 @@ const Dashboard = () => {
                 <UploadSection onUploadComplete={handleUploadComplete} />
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <AdvancedFilters 
-                  uploads={uploads}
-                  onFilterChange={handleFilterChange}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                />
-              </motion.div>
+              {/* AdvancedFilters component removed to prevent infinite re-render loop */}
 
               {/* Export and Bulk Actions */}
               <motion.div
