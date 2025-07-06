@@ -12,21 +12,61 @@ export const useDeleteCandidate = () => {
     setIsDeleting(true);
     
     try {
-      const { error } = await supabase
+      // First get the candidate record to extract file URL
+      const { data: candidate, error: fetchError } = await supabase
+        .from('cv_uploads')
+        .select('file_url')
+        .eq('id', candidateId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching candidate for deletion:', fetchError);
+        throw fetchError;
+      }
+
+      // Delete file from storage if it exists
+      if (candidate?.file_url) {
+        try {
+          // Extract file path from URL - remove the base URL part
+          const url = new URL(candidate.file_url);
+          const pathParts = url.pathname.split('/');
+          const bucketName = pathParts[pathParts.length - 2]; // e.g., 'cv-uploads' or 'resumes'
+          const fileName = pathParts[pathParts.length - 1];
+          
+          console.log('Deleting file from storage:', bucketName, fileName);
+          
+          const { error: storageError } = await supabase.storage
+            .from(bucketName)
+            .remove([fileName]);
+
+          if (storageError) {
+            console.error('Storage deletion error:', storageError);
+            // Continue with database deletion even if storage fails
+          } else {
+            console.log('Successfully deleted file from storage');
+          }
+        } catch (storageErr) {
+          console.error('Error parsing file URL or deleting from storage:', storageErr);
+          // Continue with database deletion
+        }
+      }
+
+      // Delete database record
+      const { error: dbError } = await supabase
         .from('cv_uploads')
         .delete()
         .eq('id', candidateId);
 
-      if (error) {
-        console.error('Supabase delete error:', error);
-        throw error;
+      if (dbError) {
+        console.error('Database delete error:', dbError);
+        throw dbError;
       }
 
       console.log('Successfully deleted candidate:', candidateId);
       
       toast({
         title: "Candidate Deleted",
-        description: `${candidateName} has been permanently removed from the database`,
+        description: `${candidateName} has been permanently removed from the database and storage`,
       });
 
       return true;
