@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -30,6 +30,7 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState('candidates');
+  const [candidateFilterType, setCandidateFilterType] = useState<'all' | 'best'>('all');
   const { toast } = useToast();
   const { exportToCSV } = useExport();
   const subscriptionRef = useRef<any>(null);
@@ -168,7 +169,8 @@ const Dashboard = () => {
   };
 
   const handleExportAll = () => {
-    exportToCSV(filteredUploads, 'all_candidates');
+    const fileName = candidateFilterType === 'best' ? 'best_candidates' : 'all_candidates';
+    exportToCSV(actualDisplayedCandidates, fileName);
   };
 
   // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
@@ -192,10 +194,21 @@ const Dashboard = () => {
     }
   });
 
-  // Get the actual filtered candidates that will be displayed
-  const actualDisplayedCandidates = selectedCalendarDate 
-    ? filterValidCandidatesForDate(uploads, selectedCalendarDate)
-    : filterValidCandidates(uploads);
+  // Get the actual filtered candidates that will be displayed based on the active filter
+  const getFilteredCandidates = (filterType: 'all' | 'best') => {
+    if (selectedCalendarDate) {
+      return filterType === 'best' 
+        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
+        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
+    }
+    return filterType === 'best' 
+      ? filterBestCandidates(uploads)
+      : filterValidCandidates(uploads);
+  };
+
+  const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType);
+  const allCandidatesCount = getFilteredCandidates('all').length;
+  const bestCandidatesCount = getFilteredCandidates('best').length;
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -364,11 +377,41 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                <CandidateGrid 
-                  uploads={sortedUploads} 
-                  viewMode={viewMode} 
-                  selectedDate={selectedCalendarDate}
-                />
+                {/* Nested Candidate Filter Tabs */}
+                <Tabs value={candidateFilterType} onValueChange={(value) => setCandidateFilterType(value as 'all' | 'best')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 bg-white/5 backdrop-blur-xl border border-slate-500/30 mb-6">
+                    <TabsTrigger 
+                      value="all" 
+                      className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
+                    >
+                      All Candidates ({allCandidatesCount})
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="best" 
+                      className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
+                    >
+                      Best Candidates ({bestCandidatesCount})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="all">
+                    <CandidateGrid 
+                      uploads={sortedUploads} 
+                      viewMode={viewMode} 
+                      selectedDate={selectedCalendarDate}
+                      filterType="all"
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="best">
+                    <CandidateGrid 
+                      uploads={sortedUploads} 
+                      viewMode={viewMode} 
+                      selectedDate={selectedCalendarDate}
+                      filterType="best"
+                    />
+                  </TabsContent>
+                </Tabs>
               </motion.div>
             </TabsContent>
 

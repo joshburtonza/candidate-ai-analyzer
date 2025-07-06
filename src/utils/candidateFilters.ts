@@ -123,6 +123,108 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 };
 
 // Optimized function for date-specific filtering
+// Helper functions for Best Candidates filtering
+export const hasValidEducation = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.educational_qualifications) return false;
+  
+  const education = upload.extracted_json.educational_qualifications.toLowerCase();
+  
+  // Check for teaching qualifications
+  const validQualifications = [
+    'b.ed', 'bachelor of education', 'bed',
+    'pgce', 'postgraduate certificate in education',
+    'education degree', 'teaching degree', 'education diploma',
+    'master of education', 'm.ed', 'med',
+    'honours in education', 'bachelor of teaching'
+  ];
+  
+  return validQualifications.some(qual => education.includes(qual));
+};
+
+export const hasValidExperience = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.job_history) return false;
+  
+  const jobHistory = upload.extracted_json.job_history.toLowerCase();
+  
+  // Extract years of teaching experience
+  const yearPatterns = [
+    /(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience)/gi,
+    /teaching\s*(?:experience|for)\s*(\d+)\s*years?/gi,
+    /(\d+)\s*years?\s*in\s*(?:teaching|education)/gi
+  ];
+  
+  let maxYears = 0;
+  
+  for (const pattern of yearPatterns) {
+    const matches = jobHistory.matchAll(pattern);
+    for (const match of matches) {
+      const years = parseInt(match[1]);
+      if (!isNaN(years) && years > maxYears) {
+        maxYears = years;
+      }
+    }
+  }
+  
+  return maxYears >= 2;
+};
+
+export const hasValidSubject = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.job_history && !upload.extracted_json?.skill_set) return false;
+  
+  const text = `${upload.extracted_json.job_history || ''} ${upload.extracted_json.skill_set || ''}`.toLowerCase();
+  
+  // Exclude non-teaching or admin roles
+  const excludedSubjects = [
+    'xhosa', 'administration', 'pastoral', 'admin', 'secretary',
+    'receptionist', 'clerk', 'office', 'data entry', 'filing',
+    'human resources', 'hr', 'finance', 'accounting', 'marketing'
+  ];
+  
+  // Check if candidate has excluded subjects/roles
+  const hasExcludedRole = excludedSubjects.some(subject => text.includes(subject));
+  
+  // Check for teaching-related keywords
+  const teachingKeywords = [
+    'teach', 'teacher', 'education', 'classroom', 'lesson',
+    'curriculum', 'student', 'pupil', 'subject', 'grade',
+    'mathematics', 'english', 'science', 'history', 'geography',
+    'physics', 'chemistry', 'biology', 'literature', 'art'
+  ];
+  
+  const hasTeachingRole = teachingKeywords.some(keyword => text.includes(keyword));
+  
+  return !hasExcludedRole && hasTeachingRole;
+};
+
+export const isFromApprovedCountry = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.countries) return false;
+  
+  const countries = upload.extracted_json.countries.toLowerCase();
+  
+  const approvedCountries = [
+    'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales',
+    'united states', 'usa', 'america', 'us',
+    'australia', 'australia',
+    'new zealand', 'nz',
+    'canada', 'canadian',
+    'ireland', 'irish',
+    'south africa', 'south african', 'sa',
+    'dubai', 'uae', 'emirates', 'united arab emirates'
+  ];
+  
+  return approvedCountries.some(country => countries.includes(country));
+};
+
+export const isBestCandidate = (upload: CVUpload): boolean => {
+  if (!isQualifiedCandidate(upload)) return false;
+  if (isTestCandidate(upload)) return false;
+  
+  return hasValidEducation(upload) &&
+         hasValidExperience(upload) &&
+         hasValidSubject(upload) &&
+         isFromApprovedCountry(upload);
+};
+
 export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
   const cacheKey = `date-${uploads.length}-${targetDate.toDateString()}`;
   
@@ -174,4 +276,63 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
   }
 
   return filtered;
+};
+
+// Filter functions for Best Candidates
+export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  return uploads.filter(upload => {
+    // Filter out uploads not from today for the main dashboard view
+    if (!isUploadedToday(upload)) {
+      return false;
+    }
+
+    // Apply best candidate filters
+    if (!isBestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+};
+
+export const filterBestCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  return uploads.filter(upload => {
+    // Filter for specific date instead of just today
+    if (!isUploadedOnDate(upload, targetDate)) {
+      return false;
+    }
+
+    // Apply best candidate filters
+    if (!isBestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
 };

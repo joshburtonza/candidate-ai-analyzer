@@ -5,15 +5,16 @@ import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
+  filterType?: 'all' | 'best';
 }
 
-export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGridProps) => {
+export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'all' }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
   
   // Update local uploads when prop changes
@@ -27,16 +28,28 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGrid
 
   // Memoize the filtering to prevent unnecessary recalculations
   const validUploads = useMemo(() => {
-    if (selectedDate) {
-      return filterValidCandidatesForDate(localUploads, selectedDate);
+    if (filterType === 'best') {
+      if (selectedDate) {
+        return filterBestCandidatesForDate(localUploads, selectedDate);
+      }
+      return filterBestCandidates(localUploads);
+    } else {
+      if (selectedDate) {
+        return filterValidCandidatesForDate(localUploads, selectedDate);
+      }
+      return filterValidCandidates(localUploads);
     }
-    return filterValidCandidates(localUploads);
-  }, [localUploads, selectedDate]);
+  }, [localUploads, selectedDate, filterType]);
 
   if (validUploads.length === 0) {
     const dateText = selectedDate 
       ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       : 'TODAY';
+    
+    const filterText = filterType === 'best' ? 'BEST ' : '';
+    const criteriaText = filterType === 'best' 
+      ? 'Candidates must have: B.Ed/PGCE qualification, 2+ years teaching experience, teach academic subjects, and be from UK/USA/Australia/NZ/Canada/Ireland/SA/Dubai'
+      : 'Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here';
     
     return (
       <motion.div
@@ -48,12 +61,12 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGrid
           <Calendar className="w-10 h-10 gold-accent" />
         </div>
         <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">
-          NO CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
+          NO {filterText}CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
         </h3>
         <p className="text-white/70 text-lg">
           {selectedDate 
-            ? `No candidates were uploaded on ${selectedDate.toLocaleDateString()} with email addresses`
-            : 'Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here'
+            ? `No ${filterType === 'best' ? 'best ' : ''}candidates were uploaded on ${selectedDate.toLocaleDateString()}`
+            : criteriaText
           }
         </p>
         <p className="text-white/50 text-sm mt-2">All duplicates are automatically merged into single profiles</p>
