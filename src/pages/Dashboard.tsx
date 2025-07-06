@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
-import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
 import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
 import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
@@ -150,10 +149,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleUploadComplete = (newUpload: CVUpload) => {
-    console.log('Dashboard: New upload completed:', newUpload.id);
-    setUploads(prev => [newUpload, ...prev]);
-  };
 
   const handleCalendarDateSelect = (date: Date) => {
     setSelectedCalendarDate(date);
@@ -324,13 +319,6 @@ const Dashboard = () => {
                 <DashboardStats uploads={actualDisplayedCandidates} />
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <UploadSection onUploadComplete={handleUploadComplete} />
-              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

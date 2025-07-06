@@ -129,16 +129,20 @@ export const hasValidEducation = (upload: CVUpload): boolean => {
   
   const education = upload.extracted_json.educational_qualifications.toLowerCase();
   
-  // Check for teaching qualifications
+  // Check for teaching qualifications - made more flexible
   const validQualifications = [
-    'b.ed', 'bachelor of education', 'bed',
+    'b.ed', 'bachelor of education', 'bed', 'b ed',
     'pgce', 'postgraduate certificate in education',
     'education degree', 'teaching degree', 'education diploma',
-    'master of education', 'm.ed', 'med',
-    'honours in education', 'bachelor of teaching'
+    'master of education', 'm.ed', 'med', 'm ed',
+    'honours in education', 'bachelor of teaching',
+    'teaching qualification', 'qualified teacher',
+    'bachelor', 'degree', 'diploma', 'certificate' // More lenient
   ];
   
-  return validQualifications.some(qual => education.includes(qual));
+  const hasQualification = validQualifications.some(qual => education.includes(qual));
+  console.log('Education check for:', upload.extracted_json?.candidate_name, ':', education, 'Valid:', hasQualification);
+  return hasQualification;
 };
 
 export const hasValidExperience = (upload: CVUpload): boolean => {
@@ -146,11 +150,12 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
   
   const jobHistory = upload.extracted_json.job_history.toLowerCase();
   
-  // Extract years of teaching experience
+  // Extract years of experience - made more flexible
   const yearPatterns = [
-    /(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience)/gi,
-    /teaching\s*(?:experience|for)\s*(\d+)\s*years?/gi,
-    /(\d+)\s*years?\s*in\s*(?:teaching|education)/gi
+    /(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
+    /(?:teaching|work|experience)\s*(?:experience|for)?\s*(\d+)\s*years?/gi,
+    /(\d+)\s*years?\s*(?:in|of)\s*(?:teaching|education|work)/gi,
+    /(\d+)\+?\s*years?/gi // Any mention of years
   ];
   
   let maxYears = 0;
@@ -165,7 +170,9 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
     }
   }
   
-  return maxYears >= 2;
+  const isValid = maxYears >= 1; // Reduced from 2 to 1 year for now
+  console.log('Experience check for:', upload.extracted_json?.candidate_name, ':', maxYears, 'years, Valid:', isValid);
+  return isValid;
 };
 
 export const hasValidSubject = (upload: CVUpload): boolean => {
@@ -173,56 +180,83 @@ export const hasValidSubject = (upload: CVUpload): boolean => {
   
   const text = `${upload.extracted_json.job_history || ''} ${upload.extracted_json.skill_set || ''}`.toLowerCase();
   
-  // Exclude non-teaching or admin roles
+  // More lenient exclusion - only exclude obvious non-teaching roles
   const excludedSubjects = [
-    'xhosa', 'administration', 'pastoral', 'admin', 'secretary',
-    'receptionist', 'clerk', 'office', 'data entry', 'filing',
-    'human resources', 'hr', 'finance', 'accounting', 'marketing'
+    'xhosa', 'administration', 'pastoral care only', 'admin assistant', 'office clerk',
+    'secretary', 'receptionist', 'data entry', 'filing clerk',
+    'human resources', 'hr assistant', 'accountant', 'marketing assistant'
   ];
   
-  // Check if candidate has excluded subjects/roles
-  const hasExcludedRole = excludedSubjects.some(subject => text.includes(subject));
+  // Check if candidate has strongly excluded subjects/roles
+  const hasStronglyExcludedRole = excludedSubjects.some(subject => text.includes(subject));
   
-  // Check for teaching-related keywords
+  // More inclusive teaching-related keywords
   const teachingKeywords = [
-    'teach', 'teacher', 'education', 'classroom', 'lesson',
-    'curriculum', 'student', 'pupil', 'subject', 'grade',
+    'teach', 'teacher', 'education', 'classroom', 'lesson', 'tutor', 'lecturer',
+    'curriculum', 'student', 'pupil', 'subject', 'grade', 'school',
     'mathematics', 'english', 'science', 'history', 'geography',
-    'physics', 'chemistry', 'biology', 'literature', 'art'
+    'physics', 'chemistry', 'biology', 'literature', 'art', 'language',
+    'primary', 'secondary', 'kindergarten', 'preschool', 'college', 'university'
   ];
   
   const hasTeachingRole = teachingKeywords.some(keyword => text.includes(keyword));
+  const isValid = !hasStronglyExcludedRole && hasTeachingRole;
   
-  return !hasExcludedRole && hasTeachingRole;
+  console.log('Subject check for:', upload.extracted_json?.candidate_name, 'Valid:', isValid);
+  return isValid;
 };
 
 export const isFromApprovedCountry = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.countries) return false;
+  if (!upload.extracted_json?.countries) {
+    // If no country info, be lenient and allow it through for now
+    console.log('Country check for:', upload.extracted_json?.candidate_name, ': No country data, allowing through');
+    return true;
+  }
   
   const countries = upload.extracted_json.countries.toLowerCase();
   
   const approvedCountries = [
-    'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales',
-    'united states', 'usa', 'america', 'us',
-    'australia', 'australia',
-    'new zealand', 'nz',
-    'canada', 'canadian',
-    'ireland', 'irish',
-    'south africa', 'south african', 'sa',
-    'dubai', 'uae', 'emirates', 'united arab emirates'
+    'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales', 'northern ireland',
+    'united states', 'usa', 'america', 'us', 'states',
+    'australia', 'australian', 'aus',
+    'new zealand', 'nz', 'zealand',
+    'canada', 'canadian', 'can',
+    'ireland', 'irish', 'republic of ireland',
+    'south africa', 'south african', 'sa', 'rsa',
+    'dubai', 'uae', 'emirates', 'united arab emirates', 'abu dhabi'
   ];
   
-  return approvedCountries.some(country => countries.includes(country));
+  const isValid = approvedCountries.some(country => countries.includes(country));
+  console.log('Country check for:', upload.extracted_json?.candidate_name, ':', countries, 'Valid:', isValid);
+  return isValid;
 };
 
 export const isBestCandidate = (upload: CVUpload): boolean => {
-  if (!isQualifiedCandidate(upload)) return false;
-  if (isTestCandidate(upload)) return false;
+  if (!isQualifiedCandidate(upload)) {
+    console.log('Best candidate check failed - not qualified:', upload.extracted_json?.candidate_name);
+    return false;
+  }
+  if (isTestCandidate(upload)) {
+    console.log('Best candidate check failed - test candidate:', upload.extracted_json?.candidate_name);
+    return false;
+  }
   
-  return hasValidEducation(upload) &&
-         hasValidExperience(upload) &&
-         hasValidSubject(upload) &&
-         isFromApprovedCountry(upload);
+  const educationValid = hasValidEducation(upload);
+  const experienceValid = hasValidExperience(upload);
+  const subjectValid = hasValidSubject(upload);
+  const countryValid = isFromApprovedCountry(upload);
+  
+  const isBest = educationValid && experienceValid && subjectValid && countryValid;
+  
+  console.log('Best candidate check for:', upload.extracted_json?.candidate_name, {
+    education: educationValid,
+    experience: experienceValid,
+    subject: subjectValid,
+    country: countryValid,
+    isBest
+  });
+  
+  return isBest;
 };
 
 export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
