@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Resume, CVUpload } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
@@ -18,32 +18,10 @@ import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
 
-// Helper function to convert Resume to CVUpload format for compatibility
-const resumeToUpload = (resume: Resume): CVUpload => ({
-  id: resume.id,
-  user_id: '', // Not needed for display
-  file_url: resume.file_url || '',
-  original_filename: resume.file_name,
-  uploaded_at: resume.created_at,
-  source_email: '',
-  file_size: resume.file_size || undefined,
-  processing_status: 'completed' as const,
-  extracted_json: {
-    candidate_name: resume.name,
-    email_address: resume.email || '',
-    contact_number: resume.phone || '',
-    educational_qualifications: typeof resume.education_details === 'string' ? resume.education_details : JSON.stringify(resume.education_details || ''),
-    job_history: `${resume.role_title || ''} at ${resume.current_company || ''} (${resume.experience_years || 0} years)`,
-    skill_set: (resume.skills || []).join(', '),
-    score: String(resume.fit_score || 0),
-    justification: resume.justification || '',
-    countries: resume.location || ''
-  }
-});
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
-  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [uploads, setUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -60,8 +38,8 @@ const Dashboard = () => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
     
     if (!authLoading && user) {
-      console.log('Dashboard: User authenticated, fetching resumes');
-      fetchResumes();
+      console.log('Dashboard: User authenticated, fetching uploads');
+      fetchUploads();
       setupRealtimeSubscription();
     } else if (!authLoading && !user) {
       console.log('Dashboard: No user found after auth loaded');
@@ -84,29 +62,29 @@ const Dashboard = () => {
       subscriptionRef.current = null;
     }
 
-    console.log('Dashboard: Setting up new realtime subscription for resumes');
+    console.log('Dashboard: Setting up new realtime subscription for cv_uploads');
     
     const channel = supabase
-      .channel('resumes_changes')
+      .channel('cv_uploads_changes')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'resumes'
+          table: 'cv_uploads'
         },
         (payload) => {
-          console.log('Dashboard: New resume received via realtime:', payload);
+          console.log('Dashboard: New upload received via realtime:', payload);
           
-          const newResume = payload.new as Resume;
+          const newUpload = payload.new as CVUpload;
           
-          // All resumes are visible since we're not filtering by email in resumes table
-          setResumes(prev => [newResume, ...prev]);
+          // All uploads are visible since we have public read access
+          setUploads(prev => [newUpload as unknown as CVUpload, ...prev]);
           
-          if (newResume.name) {
+          if ((newUpload.extracted_json as any)?.candidate_name) {
             toast({
               title: "New Candidate Added",
-              description: `${newResume.name} has been processed and added to your dashboard`,
+              description: `${(newUpload.extracted_json as any).candidate_name} has been processed and added to your dashboard`,
             });
           }
         }
@@ -116,37 +94,36 @@ const Dashboard = () => {
     subscriptionRef.current = channel;
   };
 
-  const fetchResumes = async () => {
+  const fetchUploads = async () => {
     if (!user) {
-      console.log('Dashboard: No user available for fetching resumes');
+      console.log('Dashboard: No user available for fetching uploads');
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Dashboard: Fetching resumes for user:', user.id);
+      console.log('Dashboard: Fetching uploads for user:', user.id);
       setError(null);
       
       const { data, error } = await supabase
-        .from('resumes')
+        .from('cv_uploads')
         .select('*')
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
+        .order('uploaded_at', { ascending: false });
 
       if (error) {
-        console.error('Dashboard: Error fetching resumes:', error);
+        console.error('Dashboard: Error fetching uploads:', error);
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'resumes');
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
       
-      setResumes(data || []);
+      setUploads((data as unknown as CVUpload[]) || []);
     } catch (error: any) {
-      console.error('Dashboard: Error in fetchResumes:', error);
+      console.error('Dashboard: Error in fetchUploads:', error);
       setError(error.message);
       toast({
         title: "Error",
-        description: "Failed to fetch resumes",
+        description: "Failed to fetch uploads",
         variant: "destructive",
       });
     } finally {
@@ -154,14 +131,23 @@ const Dashboard = () => {
     }
   };
 
-  const handleUploadComplete = (newResume: Resume) => {
-    console.log('Dashboard: New resume completed:', newResume.id);
-    setResumes(prev => [newResume, ...prev]);
+  const handleUploadComplete = (uploadOrResume: CVUpload | any) => {
+    // Handle both CVUpload and Resume types for compatibility
+    if ('uploaded_at' in uploadOrResume) {
+      // It's a CVUpload
+      console.log('Dashboard: New upload completed:', uploadOrResume.id);
+      setUploads(prev => [uploadOrResume as unknown as CVUpload, ...prev]);
+    } else {
+      // It might be a Resume, convert to CVUpload format
+      console.log('Dashboard: New resume completed, converting to upload format');
+      // For now, just refetch all uploads since we may have mixed data
+      fetchUploads();
+    }
   };
 
   const handleCandidateDelete = (deletedId: string) => {
-    console.log('Dashboard: Removing candidate from resumes:', deletedId);
-    setResumes(prev => prev.filter(resume => resume.id !== deletedId));
+    console.log('Dashboard: Removing candidate from uploads:', deletedId);
+    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
   const handleCalendarDateSelect = (date: Date) => {
@@ -169,54 +155,48 @@ const Dashboard = () => {
   };
 
   const handleBulkDelete = (deletedIds: string[]) => {
-    setResumes(prev => prev.filter(resume => !deletedIds.includes(resume.id)));
+    setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
   const handleExportAll = () => {
     exportToCSV(actualDisplayedCandidates, 'all_candidates');
   };
 
-  // Apply calendar date filter to filtered resumes
-  const displayResumes = useMemo(() => {
+  // Apply calendar date filter to uploads
+  const displayUploads = useMemo(() => {
     return selectedCalendarDate 
-      ? resumes // Pass all resumes and let CandidateGrid handle the filtering
-      : resumes; // Just use resumes directly since filtering is done in CandidateGrid
-  }, [selectedCalendarDate, resumes]);
+      ? uploads // Pass all uploads and let CandidateGrid handle the filtering
+      : uploads; // Just use uploads directly since filtering is done in CandidateGrid
+  }, [selectedCalendarDate, uploads]);
 
-  // Sort resumes
-  const sortedResumes = useMemo(() => {
-    return [...displayResumes].sort((a, b) => {
+  // Sort uploads
+  const sortedUploads = useMemo(() => {
+    return [...displayUploads].sort((a, b) => {
       switch (sortBy) {
         case 'score':
-          const scoreA = a.fit_score || 0;
-          const scoreB = b.fit_score || 0;
+          const scoreA = parseFloat((a.extracted_json as any)?.score || '0');
+          const scoreB = parseFloat((b.extracted_json as any)?.score || '0');
           return scoreB - scoreA;
         case 'name':
-          const nameA = a.name || '';
-          const nameB = b.name || '';
+          const nameA = (a.extracted_json as any)?.candidate_name || '';
+          const nameB = (b.extracted_json as any)?.candidate_name || '';
           return nameA.localeCompare(nameB);
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
       }
     });
-  }, [displayResumes, sortBy]);
-
-  // Convert resumes to uploads format for compatibility with existing components
-  const uploadsFromResumes = useMemo(() => 
-    resumes.map(resume => resumeToUpload(resume)), 
-    [resumes]
-  );
+  }, [displayUploads, sortBy]);
 
   // Get the actual filtered candidates that will be displayed based on candidate view
   const actualDisplayedCandidates = useMemo(() => {
     return selectedCalendarDate 
       ? (candidateView === 'qualified' 
-          ? filterQualifiedTeachersForDate(uploadsFromResumes, selectedCalendarDate)
-          : filterValidCandidatesForDate(uploadsFromResumes, selectedCalendarDate))
+          ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
+          : filterValidCandidatesForDate(uploads, selectedCalendarDate))
       : (candidateView === 'qualified' 
-          ? filterQualifiedTeachers(uploadsFromResumes)
-          : filterValidCandidates(uploadsFromResumes));
-  }, [uploadsFromResumes, selectedCalendarDate, candidateView]);
+          ? filterQualifiedTeachers(uploads)
+          : filterValidCandidates(uploads));
+  }, [uploads, selectedCalendarDate, candidateView]);
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -246,9 +226,9 @@ const Dashboard = () => {
           <div className="text-white text-sm">{error}</div>
           <button 
             onClick={() => {
-              setError(null);
-              setLoading(true);
-              fetchResumes();
+            setError(null);
+            setLoading(true);
+            fetchUploads();
             }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black rounded-lg hover:from-yellow-500 hover:to-yellow-700 font-semibold text-elegant tracking-wider"
           >
@@ -259,7 +239,7 @@ const Dashboard = () => {
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', resumes.length, 'resumes for user:', user?.id);
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for user:', user?.id);
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -320,7 +300,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6 }}
               >
                 <UploadHistoryCalendar 
-                  uploads={uploadsFromResumes} 
+                  uploads={uploads} 
                   onDateSelect={handleCalendarDateSelect}
                   selectedDate={selectedCalendarDate}
                 />
@@ -377,7 +357,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
                 <CandidateGrid 
-                  uploads={sortedResumes.map(r => resumeToUpload(r))} 
+                  uploads={sortedUploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   candidateView={candidateView}
@@ -392,7 +372,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <AnalyticsCharts uploads={uploadsFromResumes} />
+                <AnalyticsCharts uploads={uploads} />
               </motion.div>
             </TabsContent>
           </Tabs>

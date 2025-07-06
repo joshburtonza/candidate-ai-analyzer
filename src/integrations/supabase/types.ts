@@ -121,6 +121,42 @@ export type Database = {
           },
         ]
       }
+      cv_uploads: {
+        Row: {
+          extracted_json: Json | null
+          file_size: number | null
+          file_url: string
+          id: string
+          original_filename: string
+          processing_status: string | null
+          source_email: string | null
+          uploaded_at: string
+          user_id: string | null
+        }
+        Insert: {
+          extracted_json?: Json | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          original_filename: string
+          processing_status?: string | null
+          source_email?: string | null
+          uploaded_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          extracted_json?: Json | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          original_filename?: string
+          processing_status?: string | null
+          source_email?: string | null
+          uploaded_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       processed_emails: {
         Row: {
           email_id: string
