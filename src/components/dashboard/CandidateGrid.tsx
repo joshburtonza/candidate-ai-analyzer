@@ -5,17 +5,15 @@ import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
-  candidateView?: 'all' | 'qualified';
-  onCandidateDelete?: (id: string) => void;
 }
 
-export const CandidateGrid = ({ uploads, viewMode, selectedDate, candidateView = 'all', onCandidateDelete }: CandidateGridProps) => {
+export const CandidateGrid = ({ uploads, viewMode, selectedDate }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
   
   // Update local uploads when prop changes
@@ -24,25 +22,16 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, candidateView =
   }, [uploads]);
 
   const handleCandidateDelete = (deletedId: string) => {
-    console.log('CandidateGrid: Handling candidate delete:', deletedId);
     setLocalUploads(prev => prev.filter(upload => upload.id !== deletedId));
-    // Also notify parent component to update its state
-    if (onCandidateDelete) {
-      onCandidateDelete(deletedId);
-    }
   };
 
   // Memoize the filtering to prevent unnecessary recalculations
   const validUploads = useMemo(() => {
     if (selectedDate) {
-      return candidateView === 'qualified' 
-        ? filterQualifiedTeachersForDate(localUploads, selectedDate)
-        : filterValidCandidatesForDate(localUploads, selectedDate);
+      return filterValidCandidatesForDate(localUploads, selectedDate);
     }
-    return candidateView === 'qualified' 
-      ? filterQualifiedTeachers(localUploads)
-      : filterValidCandidates(localUploads);
-  }, [localUploads, selectedDate, candidateView]);
+    return filterValidCandidates(localUploads);
+  }, [localUploads, selectedDate]);
 
   if (validUploads.length === 0) {
     const dateText = selectedDate 
@@ -59,17 +48,15 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, candidateView =
           <Calendar className="w-10 h-10 gold-accent" />
         </div>
         <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">
-          NO {candidateView === 'qualified' ? 'QUALIFIED TEACHING' : ''} CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
+          NO CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
         </h3>
         <p className="text-white/70 text-lg">
           {selectedDate 
-            ? `No ${candidateView === 'qualified' ? 'qualified teaching ' : ''}candidates were uploaded on ${selectedDate.toLocaleDateString()}`
-            : `${candidateView === 'qualified' ? 'Qualified teaching ' : 'All '}candidates uploaded today (12 AM - 11 PM) will appear here`
+            ? `No candidates were uploaded on ${selectedDate.toLocaleDateString()} with email addresses`
+            : 'Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here'
           }
         </p>
-        {candidateView === 'qualified' && (
-          <p className="text-white/50 text-sm mt-2">Requires teaching qualifications, experience, and approved countries</p>
-        )}
+        <p className="text-white/50 text-sm mt-2">All duplicates are automatically merged into single profiles</p>
       </motion.div>
     );
   }

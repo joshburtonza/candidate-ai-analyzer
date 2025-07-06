@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -8,6 +9,7 @@ import { UploadSection } from '@/components/dashboard/UploadSection';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
 import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
 import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
+import { AdvancedFilters } from '@/components/dashboard/AdvancedFilters';
 import { BulkActions } from '@/components/dashboard/BulkActions';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,18 +17,18 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
   const [uploads, setUploads] = useState<CVUpload[]>([]);
+  const [filteredUploads, setFilteredUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
-  const [candidateView, setCandidateView] = useState<'all' | 'qualified'>('all');
   const [activeTab, setActiveTab] = useState('candidates');
   const { toast } = useToast();
   const { exportToCSV } = useExport();
@@ -36,7 +38,7 @@ const Dashboard = () => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
     
     if (!authLoading && user) {
-      console.log('Dashboard: User authenticated, fetching candidates');
+      console.log('Dashboard: User authenticated, fetching uploads with email filtering');
       fetchUploads();
       setupRealtimeSubscription();
     } else if (!authLoading && !user) {
@@ -60,7 +62,7 @@ const Dashboard = () => {
       subscriptionRef.current = null;
     }
 
-    console.log('Dashboard: Setting up new realtime subscription for cv_uploads');
+    console.log('Dashboard: Setting up new realtime subscription with email filtering');
     
     const channel = supabase
       .channel('cv_uploads_changes')
@@ -76,12 +78,24 @@ const Dashboard = () => {
           
           const newUpload = payload.new as CVUpload;
           
-          setUploads(prev => [newUpload, ...prev]);
+          const shouldShow = !newUpload.source_email || 
+                           newUpload.source_email === '' || 
+                           newUpload.source_email === profile?.email ||
+                           profile?.is_admin;
           
-          if ((newUpload.extracted_json as any)?.candidate_name) {
-            toast({
-              title: "New Candidate Added",
-              description: `${(newUpload.extracted_json as any).candidate_name} has been processed and added to your dashboard`,
+          if (shouldShow) {
+            setUploads(prev => [newUpload, ...prev]);
+            
+            if (newUpload.extracted_json?.candidate_name) {
+              toast({
+                title: "New Candidate Added",
+                description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
+              });
+            }
+          } else {
+            console.log('Dashboard: Upload filtered out due to email mismatch', {
+              sourceEmail: newUpload.source_email,
+              userEmail: profile?.email
             });
           }
         }
@@ -99,7 +113,7 @@ const Dashboard = () => {
     }
 
     try {
-      console.log('Dashboard: Fetching uploads for user:', user.id);
+      console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
       setError(null);
       
       const { data, error } = await supabase
@@ -112,9 +126,16 @@ const Dashboard = () => {
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
       
-      setUploads((data as unknown as CVUpload[]) || []);
+      const typedUploads: CVUpload[] = (data || []).map(upload => ({
+        ...upload,
+        extracted_json: upload.extracted_json as any,
+        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      }));
+      
+      setUploads(typedUploads);
+      setFilteredUploads(typedUploads);
     } catch (error: any) {
       console.error('Dashboard: Error in fetchUploads:', error);
       setError(error.message);
@@ -128,72 +149,53 @@ const Dashboard = () => {
     }
   };
 
-  const handleUploadComplete = (uploadOrResume: CVUpload | any) => {
-    // Handle both CVUpload and Resume types for compatibility
-    if ('uploaded_at' in uploadOrResume) {
-      // It's a CVUpload
-      console.log('Dashboard: New upload completed:', uploadOrResume.id);
-      setUploads(prev => [uploadOrResume as CVUpload, ...prev]);
-    } else {
-      // It might be a Resume, convert to CVUpload format
-      console.log('Dashboard: New resume completed, converting to upload format');
-      // For now, just refetch all uploads since we may have mixed data
-      fetchUploads();
-    }
-  };
-
-  const handleCandidateDelete = (deletedId: string) => {
-    console.log('Dashboard: Removing candidate from uploads:', deletedId);
-    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
+  const handleUploadComplete = (newUpload: CVUpload) => {
+    console.log('Dashboard: New upload completed:', newUpload.id);
+    setUploads(prev => [newUpload, ...prev]);
   };
 
   const handleCalendarDateSelect = (date: Date) => {
     setSelectedCalendarDate(date);
   };
 
+  const handleFilterChange = (filtered: CVUpload[]) => {
+    setFilteredUploads(filtered);
+  };
+
   const handleBulkDelete = (deletedIds: string[]) => {
     setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
+    setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
   const handleExportAll = () => {
-    exportToCSV(actualDisplayedCandidates, 'all_candidates');
+    exportToCSV(filteredUploads, 'all_candidates');
   };
 
-  // Apply calendar date filter to uploads
-  const displayUploads = useMemo(() => {
-    return selectedCalendarDate 
-      ? uploads // Pass all uploads and let CandidateGrid handle the filtering
-      : uploads; // Just use uploads directly since filtering is done in CandidateGrid
-  }, [selectedCalendarDate, uploads]);
+  // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
+  const displayUploads = selectedCalendarDate 
+    ? uploads // Pass all uploads and let CandidateGrid handle the filtering
+    : filteredUploads;
 
   // Sort uploads
-  const sortedUploads = useMemo(() => {
-    return [...displayUploads].sort((a, b) => {
-      switch (sortBy) {
-        case 'score':
-          const scoreA = parseFloat((a.extracted_json as any)?.score || '0');
-          const scoreB = parseFloat((b.extracted_json as any)?.score || '0');
-          return scoreB - scoreA;
-        case 'name':
-          const nameA = (a.extracted_json as any)?.candidate_name || '';
-          const nameB = (b.extracted_json as any)?.candidate_name || '';
-          return nameA.localeCompare(nameB);
-        default:
-          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
-      }
-    });
-  }, [displayUploads, sortBy]);
+  const sortedUploads = [...displayUploads].sort((a, b) => {
+    switch (sortBy) {
+      case 'score':
+        const scoreA = parseInt(a.extracted_json?.score || '0');
+        const scoreB = parseInt(b.extracted_json?.score || '0');
+        return scoreB - scoreA;
+      case 'name':
+        const nameA = a.extracted_json?.candidate_name || '';
+        const nameB = b.extracted_json?.candidate_name || '';
+        return nameA.localeCompare(nameB);
+      default:
+        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+    }
+  });
 
-  // Get the actual filtered candidates that will be displayed based on candidate view
-  const actualDisplayedCandidates = useMemo(() => {
-    return selectedCalendarDate 
-      ? (candidateView === 'qualified' 
-          ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
-          : filterValidCandidatesForDate(uploads, selectedCalendarDate))
-      : (candidateView === 'qualified' 
-          ? filterQualifiedTeachers(uploads)
-          : filterValidCandidates(uploads));
-  }, [uploads, selectedCalendarDate, candidateView]);
+  // Get the actual filtered candidates that will be displayed
+  const actualDisplayedCandidates = selectedCalendarDate 
+    ? filterValidCandidatesForDate(uploads, selectedCalendarDate)
+    : filterValidCandidates(uploads);
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -223,9 +225,9 @@ const Dashboard = () => {
           <div className="text-white text-sm">{error}</div>
           <button 
             onClick={() => {
-            setError(null);
-            setLoading(true);
-            fetchUploads();
+              setError(null);
+              setLoading(true);
+              fetchUploads();
             }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black rounded-lg hover:from-yellow-500 hover:to-yellow-700 font-semibold text-elegant tracking-wider"
           >
@@ -236,7 +238,7 @@ const Dashboard = () => {
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for user:', user?.id);
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email);
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -249,8 +251,6 @@ const Dashboard = () => {
           onViewModeChange={setViewMode}
           sortBy={sortBy}
           onSortChange={setSortBy}
-          candidateView={candidateView}
-          onCandidateViewChange={setCandidateView}
           onDateRangeChange={() => {}} // Legacy prop - functionality moved to AdvancedFilters
         />
 
@@ -265,7 +265,7 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-brand-gradient rounded-full"></div>
                 <p className="text-white/80 text-sm">
-                  Showing qualified teaching candidates sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
+                  Showing candidates with email addresses sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
                 </p>
               </div>
             </motion.div>
@@ -279,7 +279,7 @@ const Dashboard = () => {
                 className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
               >
                 <Users className="w-4 h-4 mr-2" />
-                Teaching Candidates
+                Candidates
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
@@ -296,6 +296,18 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
+                <UploadHistoryCalendar 
+                  uploads={uploads} 
+                  onDateSelect={handleCalendarDateSelect}
+                  selectedDate={selectedCalendarDate}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
                 <DashboardStats uploads={actualDisplayedCandidates} />
               </motion.div>
 
@@ -305,6 +317,19 @@ const Dashboard = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <UploadSection onUploadComplete={handleUploadComplete} />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <AdvancedFilters 
+                  uploads={uploads}
+                  onFilterChange={handleFilterChange}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                />
               </motion.div>
 
               {/* Export and Bulk Actions */}
@@ -321,7 +346,7 @@ const Dashboard = () => {
                     className="border-green-500/30 text-green-400 hover:bg-green-500/10"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export Teaching Candidates ({actualDisplayedCandidates.length})
+                    Export All ({actualDisplayedCandidates.length})
                   </Button>
                 </div>
               </motion.div>
@@ -343,8 +368,6 @@ const Dashboard = () => {
                   uploads={sortedUploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
-                  candidateView={candidateView}
-                  onCandidateDelete={handleCandidateDelete}
                 />
               </motion.div>
             </TabsContent>

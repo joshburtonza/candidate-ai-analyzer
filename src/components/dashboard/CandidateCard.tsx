@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, Eye, Trash2, Clipboard, FileText } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
@@ -13,39 +14,58 @@ interface CandidateCardProps {
   onDelete?: (id: string) => void;
 }
 
+// Helper function to safely handle array or string data
+const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).map(item => item.trim());
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+  return [];
+};
+
+const normalizeToString = (value: string | string[] | null | undefined): string => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).join(', ');
+  }
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return String(value).trim();
+};
+
 export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
   const { deleteCandidate, isDeleting } = useDeleteCandidate();
+  const data = upload.extracted_json!;
   
-  // Extract candidate data from the upload
-  const candidateData = upload.extracted_json as any || {};
-  const candidateName = candidateData.candidate_name || 'Unknown';
-  const email = candidateData.email_address || null;
-  const phone = candidateData.contact_number || null;
-  const score = parseFloat(candidateData.score || '0');
-  const justification = candidateData.justification || null;
+  // Convert score to be out of 10 instead of 100, handle missing scores
+  const rawScore = parseFloat(data.score || '0');
+  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+  const scorePercentage = (score / 10) * 100; // For progress bar
+
+  // Handle skills as both string and array
+  const skills = normalizeToArray(data.skill_set);
   
-  // Convert score to be out of 10 instead of 100
-  const displayScore = score > 10 ? Math.round(score / 10) : Math.round(score);
-  const scorePercentage = (displayScore / 10) * 100;
+  // Handle countries as both string and array
+  const countries = normalizeToString(data.countries);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Delete button clicked for candidate:', upload.id, candidateName);
+    console.log('Delete button clicked for candidate:', upload.id, data.candidate_name);
     
-    if (onDelete) {
+    const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
+    
+    if (success && onDelete) {
       console.log('Calling onDelete callback');
       onDelete(upload.id);
     }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'from-green-400 to-green-600';
-    if (score >= 6) return 'from-yellow-400 to-yellow-600';
-    return 'from-red-400 to-red-600';
   };
 
   return (
@@ -68,7 +88,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             variant="ghost"
             size="sm"
             className="absolute top-4 right-4 z-20 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 rounded-xl transition-all duration-200 hover:scale-110"
-            title={`Delete ${candidateName}`}
+            title={`Delete ${data.candidate_name || 'candidate'}`}
           >
             {isDeleting ? (
               <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
@@ -86,16 +106,16 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white group-hover:text-slate-400 transition-colors">
-                    {candidateName}
+                    {data.candidate_name || 'Unknown'}
                   </h3>
                 </div>
               </div>
               
-              {/* Score Circle */}
-              {score > 0 && (
+              {/* Score Circle - only show if score exists */}
+              {data.score && (
                 <div className="relative flex-shrink-0">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${getScoreColor(displayScore)} flex items-center justify-center shadow-lg`}>
-                    <span className="font-bold text-xl text-white">{displayScore}</span>
+                  <div className="w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+                    <span className="font-bold text-xl text-slate-800">{score}</span>
                   </div>
                   <div className="text-center mt-2">
                     <span className="text-xs text-gray-400 font-medium tracking-wider">SCORE</span>
@@ -106,39 +126,74 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
             {/* Contact Info */}
             <div className="space-y-3">
-              {email && (
+              {data.email_address && (
                 <div className="flex items-center gap-3 text-gray-300">
                   <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{email}</span>
+                  <span className="truncate">{data.email_address}</span>
                 </div>
               )}
-              {phone && (
+              {data.contact_number && (
                 <div className="flex items-center gap-3 text-gray-300">
                   <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{phone}</span>
+                  <span className="truncate">{data.contact_number}</span>
+                </div>
+              )}
+              {countries && (
+                <div className="flex items-center gap-3 text-gray-300">
+                  <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <span className="truncate">{countries}</span>
                 </div>
               )}
             </div>
 
-            {/* Justification */}
-            {justification && (
+            {/* Expertise Section - only show if skills exist */}
+            {skills.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">EXPERTISE</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {skills.slice(0, 6).map((skill, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                  {skills.length > 6 && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
+                    >
+                      +{skills.length - 6}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Professional Assessment - only show if justification exists */}
+            {data.justification && (
               <div className="space-y-3 flex-1">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">JUSTIFICATION</h4>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">ASSESSMENT</h4>
                 </div>
                 <p className="text-sm text-gray-400 line-clamp-4 leading-relaxed">
-                  {justification}
+                  {data.justification}
                 </p>
               </div>
             )}
 
-            {/* Score Progress */}
-            {score > 0 && (
+            {/* Score Progress - only show if score exists */}
+            {data.score && (
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">FIT SCORE</span>
-                  <span className="text-sm font-medium text-white">{displayScore}/10</span>
+                  <span className="text-sm font-medium text-white">{score}/10</span>
                 </div>
                 <Progress value={scorePercentage} className="h-2" />
               </div>

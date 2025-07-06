@@ -19,9 +19,9 @@ export const performBackendHealthCheck = async (): Promise<BackendHealthCheck> =
   };
 
   try {
-    // Test database connection using resumes table which has public read access
+    // Test database connection
     const { data: dbTest, error: dbError } = await supabase
-      .from('resumes')
+      .from('profiles')
       .select('id')
       .limit(1);
     

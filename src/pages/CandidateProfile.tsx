@@ -1,19 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Candidate } from '@/types/candidate';
+import { CVUpload, CandidateData } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, User, Mail, Phone, Clipboard, FileText } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 const CandidateProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [upload, setUpload] = useState<CVUpload | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -26,7 +28,7 @@ const CandidateProfile = () => {
   const fetchCandidate = async () => {
     try {
       const { data, error } = await supabase
-        .from('candidates')
+        .from('cv_uploads')
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -43,7 +45,14 @@ const CandidateProfile = () => {
         return;
       }
 
-      setCandidate(data as Candidate);
+      // Properly cast the data with type assertion through unknown
+      const typedUpload: CVUpload = {
+        ...data,
+        extracted_json: data.extracted_json as unknown as CandidateData | null,
+        processing_status: data.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      };
+
+      setUpload(typedUpload);
     } catch (error: any) {
       console.error('Error fetching candidate:', error);
       toast({
@@ -64,7 +73,7 @@ const CandidateProfile = () => {
     );
   }
 
-  if (!candidate) {
+  if (!upload || !upload.extracted_json) {
     return (
       <div className="min-h-screen elegant-gradient flex items-center justify-center">
         <div className="text-center text-white">
@@ -80,10 +89,13 @@ const CandidateProfile = () => {
       </div>
     );
   };
+
+  const data = upload.extracted_json;
   
   // Convert score to be out of 10 instead of 100
-  const rawScore = candidate.score || 0;
+  const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+  const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return 'from-slate-400 to-slate-600';
@@ -114,9 +126,9 @@ const CandidateProfile = () => {
             </Button>
 
             {/* Email Button */}
-            {candidate.email && (
+            {data.email_address && (
               <Button
-                onClick={() => window.open(`mailto:${candidate.email}`, '_blank')}
+                onClick={() => window.open(`mailto:${data.email_address}`, '_blank')}
                 className="bg-gradient-to-r from-slate-400 to-slate-600 hover:from-slate-500 hover:to-slate-700 text-white font-semibold text-elegant tracking-wider"
               >
                 <Mail className="w-4 h-4 mr-2" />
@@ -134,7 +146,7 @@ const CandidateProfile = () => {
                     <User className="w-12 h-12 text-slate-400" />
                   </div>
                   <h1 className="text-3xl font-bold text-white mb-4 text-elegant tracking-wider break-words">
-                    {candidate.full_name || 'UNKNOWN CANDIDATE'}
+                    {data.candidate_name || 'UNKNOWN CANDIDATE'}
                   </h1>
                   
                   {/* Score Circle */}
@@ -148,86 +160,150 @@ const CandidateProfile = () => {
 
                   {/* Contact Info */}
                   <div className="space-y-4 text-left">
-                    {candidate.email && (
+                    {data.email_address && (
                       <div className="flex items-center gap-4 text-white/90">
                         <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-all min-w-0">{candidate.email}</span>
+                        <span className="break-all min-w-0">{data.email_address}</span>
                       </div>
                     )}
-                    {candidate.contact_number && (
+                    {data.contact_number && (
                       <div className="flex items-center gap-4 text-white/90">
                         <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">{candidate.contact_number}</span>
+                        <span className="break-words min-w-0">{data.contact_number}</span>
+                      </div>
+                    )}
+                    {data.countries && (
+                      <div className="flex items-center gap-4 text-white/90">
+                        <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                        <span className="break-words min-w-0">{data.countries}</span>
                       </div>
                     )}
                   </div>
                 </div>
               </Card>
 
-              {/* Justification */}
-              {candidate.justification && (
+              {/* Skills */}
+              {skills.length > 0 && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <Clipboard className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">JUSTIFICATION</h3>
+                    <Star className="w-6 h-6 text-slate-400" />
+                    <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">EXPERTISE</h3>
                   </div>
-                  <div className="text-white/90 leading-relaxed">
-                    <p className="whitespace-pre-wrap break-words">
-                      {candidate.justification}
-                    </p>
+                  <div className="flex flex-wrap gap-3">
+                    {skills.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="bg-white/10 text-white border-white/20 px-3 py-1 hover:bg-white/20 transition-colors break-words"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
                   </div>
                 </Card>
               )}
             </div>
 
-            {/* Right Column - Professional Assessment */}
+            {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Professional Assessment */}
-              {candidate.professional_assessment && (
+              {/* Assessment */}
+              <Card className="glass-card elegant-border p-8">
+                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div className="text-white/90 leading-relaxed text-lg cursor-pointer">
+                      <p className="whitespace-pre-wrap break-words">
+                        {data.justification || 'Assessment pending analysis'}
+                      </p>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
+                    <div className="text-sm leading-relaxed">
+                      <p className="whitespace-pre-wrap break-words">
+                        {data.justification || 'Assessment pending analysis'}
+                      </p>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </Card>
+
+              {/* Education */}
+              {data.educational_qualifications && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <FileText className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
+                    <GraduationCap className="w-6 h-6 text-slate-400" />
+                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
                   </div>
-                  <div className="text-white/90 leading-relaxed">
-                    <p className="whitespace-pre-wrap break-words">
-                      {candidate.professional_assessment}
-                    </p>
-                  </div>
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div className="text-white/90 leading-relaxed cursor-pointer">
+                        <p className="whitespace-pre-wrap break-words">
+                          {data.educational_qualifications}
+                        </p>
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
+                      <div className="text-sm leading-relaxed">
+                        <p className="whitespace-pre-wrap break-words">
+                          {data.educational_qualifications}
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                 </Card>
               )}
 
-              {/* Candidate Details */}
+              {/* Work Experience */}
+              {data.job_history && (
+                <Card className="glass-card elegant-border p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Briefcase className="w-6 h-6 text-slate-400" />
+                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
+                  </div>
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div className="text-white/90 leading-relaxed cursor-pointer">
+                        <p className="whitespace-pre-wrap break-words">
+                          {data.job_history}
+                        </p>
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
+                      <div className="text-sm leading-relaxed">
+                        <p className="whitespace-pre-wrap break-words">
+                          {data.job_history}
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </Card>
+              )}
+
+              {/* File Info */}
               <Card className="glass-card elegant-border p-8">
-                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">CANDIDATE DETAILS</h3>
+                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">FULL NAME:</span>
-                    <p className="text-white font-medium break-words">{candidate.full_name}</p>
+                    <span className="text-white/60 text-sm tracking-wider">ORIGINAL FILENAME:</span>
+                    <p className="text-white font-medium break-all">{upload.original_filename}</p>
                   </div>
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">EMAIL:</span>
-                    <p className="text-white font-medium break-all">{candidate.email || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <span className="text-white/60 text-sm tracking-wider">CONTACT NUMBER:</span>
-                    <p className="text-white font-medium break-words">{candidate.contact_number || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <span className="text-white/60 text-sm tracking-wider">SCORE:</span>
-                    <p className="text-white font-medium">{candidate.score || 0}/10</p>
-                  </div>
-                  <div>
-                    <span className="text-white/60 text-sm tracking-wider">PROFILE CREATED:</span>
+                    <span className="text-white/60 text-sm tracking-wider">UPLOAD DATE:</span>
                     <p className="text-white font-medium break-words">
-                      {new Date(candidate.created_at).toLocaleDateString()}
+                      {new Date(upload.uploaded_at).toLocaleDateString()}
                     </p>
                   </div>
+                  {upload.file_size && (
+                    <div>
+                      <span className="text-white/60 text-sm tracking-wider">FILE SIZE:</span>
+                      <p className="text-white font-medium break-words">
+                        {(upload.file_size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  )}
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">LAST UPDATED:</span>
-                    <p className="text-white font-medium break-words">
-                      {new Date(candidate.updated_at).toLocaleDateString()}
-                    </p>
+                    <span className="text-white/60 text-sm tracking-wider">PROCESSING STATUS:</span>
+                    <p className="text-white font-medium capitalize break-words">{upload.processing_status}</p>
                   </div>
                 </div>
               </Card>

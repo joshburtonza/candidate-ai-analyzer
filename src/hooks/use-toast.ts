@@ -7,7 +7,6 @@ import type {
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
-const AUTO_DISMISS_DELAY = 4000 // 4 seconds
 
 type ToasterToast = ToastProps & {
   id: string
@@ -161,11 +160,6 @@ function toast({ ...props }: Toast) {
       },
     },
   })
-
-  // Auto-dismiss after 4 seconds
-  setTimeout(() => {
-    dismiss()
-  }, AUTO_DISMISS_DELAY)
 
   return {
     id: id,

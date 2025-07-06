@@ -17,8 +17,6 @@ interface DashboardHeaderProps {
   onViewModeChange: (mode: 'grid' | 'list') => void;
   sortBy: 'date' | 'score' | 'name';
   onSortChange: (sort: 'date' | 'score' | 'name') => void;
-  candidateView: 'all' | 'qualified';
-  onCandidateViewChange: (view: 'all' | 'qualified') => void;
   onDateRangeChange: (startDate: Date | null, endDate: Date | null) => void;
 }
 
@@ -29,9 +27,7 @@ export const DashboardHeader = ({
   viewMode,
   onViewModeChange,
   sortBy,
-  onSortChange,
-  candidateView,
-  onCandidateViewChange
+  onSortChange
 }: DashboardHeaderProps) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -57,34 +53,6 @@ export const DashboardHeader = ({
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Candidate View Toggle */}
-            <div className="flex bg-white/5 backdrop-blur-xl rounded-lg p-1 border border-slate-400/30">
-              <Button
-                variant={candidateView === 'all' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onCandidateViewChange('all')}
-                className={`text-white px-3 ${
-                  candidateView === 'all'
-                    ? 'bg-brand-gradient text-slate-800 shadow-lg shadow-slate-400/25'
-                    : 'hover:bg-white/10'
-                }`}
-              >
-                All Candidates
-              </Button>
-              <Button
-                variant={candidateView === 'qualified' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => onCandidateViewChange('qualified')}
-                className={`text-white px-3 ${
-                  candidateView === 'qualified'
-                    ? 'bg-brand-gradient text-slate-800 shadow-lg shadow-slate-400/25'
-                    : 'hover:bg-white/10'
-                }`}
-              >
-                Qualified Teachers
-              </Button>
-            </div>
-
             <Select value={sortBy} onValueChange={onSortChange}>
               <SelectTrigger className="w-32 bg-white/5 backdrop-blur-xl border border-slate-400/30 text-white">
                 <SelectValue />

@@ -1,7 +1,8 @@
+
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Phone, Eye, Trash2, FileText } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 
@@ -10,116 +11,138 @@ interface CandidateListItemProps {
   onDelete?: (id: string) => void;
 }
 
+// Helper function to safely handle array or string data
+const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).map(item => item.trim());
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }
+  return [];
+};
+
+const normalizeToString = (value: string | string[] | null | undefined): string => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    return value.filter(item => item && item.trim()).join(', ');
+  }
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return String(value).trim();
+};
+
 export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) => {
   const navigate = useNavigate();
   const { deleteCandidate, isDeleting } = useDeleteCandidate();
-
-  // Extract candidate data from the upload
-  const candidateData = upload.extracted_json as any || {};
-  const candidateName = candidateData.candidate_name || 'Unknown';
-  const email = candidateData.email_address || null;
-  const phone = candidateData.contact_number || null;
-  const score = parseFloat(candidateData.score || '0');
-  const justification = candidateData.justification || null;
-
+  const data = upload.extracted_json!;
+  
   // Convert score to be out of 10 instead of 100
-  const displayScore = score > 10 ? Math.round(score / 10) : Math.round(score);
+  const rawScore = parseFloat(data.score || '0');
+  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+
+  // Handle skills as both string and array
+  const skills = normalizeToArray(data.skill_set).slice(0, 4);
+  
+  // Handle countries as both string and array
+  const countries = normalizeToString(data.countries);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Delete button clicked for candidate:', upload.id, candidateName);
+    console.log('Delete button clicked for candidate:', upload.id, data.candidate_name);
     
-    if (onDelete) {
+    const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
+    
+    if (success && onDelete) {
       console.log('Calling onDelete callback');
       onDelete(upload.id);
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-400 bg-green-500/10 border-green-500/20';
-    if (score >= 6) return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
-    return 'text-red-400 bg-red-500/10 border-red-500/20';
-  };
-
   return (
-    <div className="glass-card elegant-border rounded-xl p-6 hover:border-slate-400/40 transition-colors group">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6 flex-1 min-w-0">
-          {/* Avatar */}
-          <div className="p-3 bg-slate-500/10 rounded-xl border border-slate-500/20 flex-shrink-0">
-            <User className="w-8 h-8 text-slate-400" />
+    <div className="glass hover-lift p-6 relative">
+      {/* Delete Button */}
+      <Button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        variant="ghost"
+        size="sm"
+        className="absolute top-2 right-2 z-10 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-all duration-200 hover:scale-110"
+        title={`Delete ${data.candidate_name || 'candidate'}`}
+      >
+        {isDeleting ? (
+          <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Trash2 className="w-4 h-4" />
+        )}
+      </Button>
+
+      <div className="flex items-center gap-6 pr-12">
+        {/* Avatar & Basic Info */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="p-3 bg-slate-500/20 rounded-lgx w-14 h-14 flex items-center justify-center border border-slate-400/30">
+            <User className="w-7 h-7 text-slate-400" />
           </div>
-          
-          {/* Main Info */}
-          <div className="flex-1 min-w-0 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white group-hover:text-slate-400 transition-colors truncate">
-                {candidateName}
-              </h3>
-              
-              {/* Score Badge */}
-              {score > 0 && (
-                <div className={`px-3 py-1 rounded-lg border ${getScoreColor(displayScore)} font-bold text-sm`}>
-                  {displayScore}/10
-                </div>
-              )}
-            </div>
-            
-            {/* Contact Info */}
-            <div className="flex items-center gap-6 text-sm text-gray-300">
-              {email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  <span className="truncate">{email}</span>
-                </div>
-              )}
-              {phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-slate-400" />
-                  <span className="truncate">{phone}</span>
-                </div>
-              )}
-            </div>
-            
-            {/* Justification Preview */}
-            {justification && (
-              <div className="text-sm text-gray-400 line-clamp-2">
-                <span className="text-slate-300 font-medium">Justification: </span>
-                {justification}
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-white truncate">
+              {data.candidate_name || 'Unknown'}
+            </h3>
+            <div className="flex items-center gap-4 mt-1 text-sm text-gray-400">
+              <div className="flex items-center gap-1">
+                <Mail className="w-3 h-3 text-slate-400" />
+                <span className="truncate">{data.email_address}</span>
               </div>
-            )}
+              {data.contact_number && (
+                <div className="flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-slate-400" />
+                  <span>{data.contact_number}</span>
+                </div>
+              )}
+              {countries && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-slate-400" />
+                  <span>{countries}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 ml-4">
-          <Button
-            onClick={() => navigate(`/candidate/${upload.id}`)}
-            variant="ghost"
-            size="sm"
-            className="bg-brand-gradient/20 hover:bg-brand-gradient/30 text-slate-300 hover:text-white border border-slate-500/30 hover:border-slate-400/50"
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            VIEW
-          </Button>
-          
-          <Button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            variant="ghost"
-            size="sm"
-            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50"
-            title={`Delete ${candidateName}`}
-          >
-            {isDeleting ? (
-              <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-          </Button>
+
+        {/* Skills */}
+        <div className="hidden md:flex items-center gap-2 flex-1">
+          {skills.map((skill, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              className="glass text-white border-border text-xs hover:bg-white/20 transition-colors backdrop-blur-sm"
+            >
+              {skill}
+            </Badge>
+          ))}
         </div>
+
+        {/* Score */}
+        <div className="text-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+            <span className="font-bold text-lg text-slate-800">{score}</span>
+          </div>
+          <div className="text-xs text-gray-400 mt-1">ASSESSMENT</div>
+        </div>
+
+        {/* Action */}
+        <Button
+          onClick={() => navigate(`/candidate/${upload.id}`)}
+          variant="outline"
+          size="sm"
+          className="border-slate-400/30 text-slate-400 hover:bg-slate-400/10 backdrop-blur-sm hover-lift flex-shrink-0"
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          VIEW
+        </Button>
       </div>
     </div>
   );
