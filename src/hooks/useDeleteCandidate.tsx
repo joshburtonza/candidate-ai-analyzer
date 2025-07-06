@@ -12,23 +12,23 @@ export const useDeleteCandidate = () => {
     setIsDeleting(true);
     
     try {
-      // First, get the CV upload record to get the file URL
-      const { data: cvUpload, error: fetchError } = await supabase
-        .from('cv_uploads')
+      // First, get the resume record to get the file URL
+      const { data: resume, error: fetchError } = await supabase
+        .from('resumes')
         .select('file_url')
         .eq('id', candidateId)
         .single();
 
       if (fetchError) {
-        console.error('Error fetching CV upload for deletion:', fetchError);
+        console.error('Error fetching resume for deletion:', fetchError);
         throw fetchError;
       }
 
       // Delete the file from storage if it exists
-      if (cvUpload?.file_url) {
+      if (resume?.file_url) {
         try {
           // Extract file path from URL (assuming format: .../cv-uploads/path)
-          const urlParts = cvUpload.file_url.split('/cv-uploads/');
+          const urlParts = resume.file_url.split('/cv-uploads/');
           if (urlParts.length > 1) {
             const filePath = urlParts[1];
             console.log('Deleting file from storage:', filePath);
@@ -54,7 +54,7 @@ export const useDeleteCandidate = () => {
       const { error: notesError } = await supabase
         .from('candidate_notes')
         .delete()
-        .eq('cv_upload_id', candidateId);
+        .eq('resume_id', candidateId);
 
       if (notesError) {
         console.error('Error deleting candidate notes (continuing anyway):', notesError);
@@ -63,15 +63,15 @@ export const useDeleteCandidate = () => {
         console.log('Successfully deleted candidate notes');
       }
 
-      // Finally, delete the main CV upload record
-      const { error: deleteError } = await supabase
-        .from('cv_uploads')
-        .delete()
+      // Finally, archive the resume instead of deleting it
+      const { error: archiveError } = await supabase
+        .from('resumes')
+        .update({ is_archived: true })
         .eq('id', candidateId);
 
-      if (deleteError) {
-        console.error('Supabase CV upload delete error:', deleteError);
-        throw deleteError;
+      if (archiveError) {
+        console.error('Supabase resume archive error:', archiveError);
+        throw archiveError;
       }
 
       console.log('Successfully completed full deletion of candidate:', candidateId);

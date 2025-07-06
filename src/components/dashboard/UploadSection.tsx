@@ -6,13 +6,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { CVUpload, CandidateData } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { GoogleDocUpload } from './GoogleDocUpload';
 
 interface UploadSectionProps {
-  onUploadComplete: (upload: CVUpload) => void;
+  onUploadComplete: (resume: Resume) => void;
 }
 
 interface UploadFile {
@@ -97,19 +97,19 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         .from('cv-uploads')
         .getPublicUrl(fileName);
 
-      // Create database record
-      const cvUploadData = {
-        user_id: user.id,
-        original_filename: uploadFile.file.name,
+      // Create database record in resumes table
+      const resumeData = {
+        name: 'Processing...', // Will be updated by processing
+        file_name: uploadFile.file.name,
         file_url: publicUrl,
         file_size: uploadFile.file.size,
-        processing_status: 'pending' as const,
-        uploaded_at: new Date().toISOString()
+        status: 'pending' as const,
+        source: 'manual_upload' as const
       };
 
-      const { data: cvUpload, error: dbError } = await supabase
-        .from('cv_uploads')
-        .insert(cvUploadData)
+      const { data: resume, error: dbError } = await supabase
+        .from('resumes')
+        .insert(resumeData)
         .select()
         .single();
 
@@ -118,20 +118,13 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         throw new Error(`Database error: ${dbError.message}`);
       }
 
-      console.log('Database record created:', cvUpload.id);
-
-      // Convert the database response to match our CVUpload interface
-      const typedCvUpload: CVUpload = {
-        ...cvUpload,
-        extracted_json: cvUpload.extracted_json as unknown as CandidateData | null,
-        processing_status: cvUpload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
-      };
+      console.log('Database record created:', resume.id);
 
       // Update with upload ID and processing status
       setUploadFiles(prev => prev.map(f => 
         f.file === uploadFile.file ? { 
           ...f, 
-          uploadId: typedCvUpload.id, 
+          uploadId: resume.id, 
           progress: 70, 
           status: 'processing' 
         } : f
@@ -149,8 +142,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Notify parent component with properly typed upload
-      onUploadComplete(typedCvUpload);
+      // Notify parent component with resume
+      onUploadComplete(resume);
 
       // Remove completed file after delay
       setTimeout(() => {

@@ -6,10 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, HardDrive, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleApiService } from '@/services/GoogleApiService';
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 
 interface GoogleDocUploadProps {
-  onUploadComplete: (upload: CVUpload) => void;
+  onUploadComplete: (resume: Resume) => void;
 }
 
 export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
@@ -62,8 +62,8 @@ export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
           description: "No CV attachments found in your Gmail",
         });
       } else {
-        // For now, we'll create mock CVUpload objects since file processing happens elsewhere
-        // In a real implementation, this would process the files and create actual CVUpload records
+        // For now, we'll create mock Resume objects since file processing happens elsewhere
+        // In a real implementation, this would process the files and create actual Resume records
         toast({
           title: "Gmail import successful",
           description: `Found ${files.length} CV file(s) - processing will happen in background`,
@@ -99,8 +99,8 @@ export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
           description: "No files were selected from Google Drive",
         });
       } else {
-        // For now, we'll create mock CVUpload objects since file processing happens elsewhere
-        // In a real implementation, this would process the files and create actual CVUpload records
+        // For now, we'll create mock Resume objects since file processing happens elsewhere
+        // In a real implementation, this would process the files and create actual Resume records
         toast({
           title: "Drive import successful",
           description: `Selected ${files.length} file(s) - processing will happen in background`,
