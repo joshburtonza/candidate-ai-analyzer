@@ -1,8 +1,8 @@
-import { Candidate } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
 
 interface DashboardStatsProps {
-  uploads: Candidate[];
+  uploads: CVUpload[];
 }
 
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {

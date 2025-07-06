@@ -1,4 +1,4 @@
-import { Candidate } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, Eye, Trash2, FileText } from 'lucide-react';
@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 
 interface CandidateListItemProps {
-  upload: Candidate;
+  upload: CVUpload;
   onDelete?: (id: string) => void;
 }
 

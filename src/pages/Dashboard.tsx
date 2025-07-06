@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Candidate } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { UploadSection } from '@/components/dashboard/UploadSection';
@@ -15,10 +15,11 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
+import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [uploads, setUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -36,7 +37,7 @@ const Dashboard = () => {
     
     if (!authLoading && user) {
       console.log('Dashboard: User authenticated, fetching candidates');
-      fetchCandidates();
+      fetchUploads();
       setupRealtimeSubscription();
     } else if (!authLoading && !user) {
       console.log('Dashboard: No user found after auth loaded');
@@ -59,28 +60,28 @@ const Dashboard = () => {
       subscriptionRef.current = null;
     }
 
-    console.log('Dashboard: Setting up new realtime subscription for candidates');
+    console.log('Dashboard: Setting up new realtime subscription for cv_uploads');
     
     const channel = supabase
-      .channel('candidates_changes')
+      .channel('cv_uploads_changes')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'candidates'
+          table: 'cv_uploads'
         },
         (payload) => {
-          console.log('Dashboard: New candidate received via realtime:', payload);
+          console.log('Dashboard: New upload received via realtime:', payload);
           
-          const newCandidate = payload.new as Candidate;
+          const newUpload = payload.new as CVUpload;
           
-          setCandidates(prev => [newCandidate, ...prev]);
+          setUploads(prev => [newUpload, ...prev]);
           
-          if (newCandidate.full_name) {
+          if ((newUpload.extracted_json as any)?.candidate_name) {
             toast({
               title: "New Candidate Added",
-              description: `${newCandidate.full_name} has been processed and added to your dashboard`,
+              description: `${(newUpload.extracted_json as any).candidate_name} has been processed and added to your dashboard`,
             });
           }
         }
@@ -90,36 +91,36 @@ const Dashboard = () => {
     subscriptionRef.current = channel;
   };
 
-  const fetchCandidates = async () => {
+  const fetchUploads = async () => {
     if (!user) {
-      console.log('Dashboard: No user available for fetching candidates');
+      console.log('Dashboard: No user available for fetching uploads');
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Dashboard: Fetching candidates for user:', user.id);
+      console.log('Dashboard: Fetching uploads for user:', user.id);
       setError(null);
       
       const { data, error } = await supabase
-        .from('candidates')
+        .from('cv_uploads')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('uploaded_at', { ascending: false });
 
       if (error) {
-        console.error('Dashboard: Error fetching candidates:', error);
+        console.error('Dashboard: Error fetching uploads:', error);
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'candidates');
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
       
-      setCandidates((data as Candidate[]) || []);
+      setUploads((data as unknown as CVUpload[]) || []);
     } catch (error: any) {
-      console.error('Dashboard: Error in fetchCandidates:', error);
+      console.error('Dashboard: Error in fetchUploads:', error);
       setError(error.message);
       toast({
         title: "Error",
-        description: "Failed to fetch candidates",
+        description: "Failed to fetch uploads",
         variant: "destructive",
       });
     } finally {
@@ -127,15 +128,23 @@ const Dashboard = () => {
     }
   };
 
-  const handleUploadComplete = (candidate: any) => {
-    console.log('Dashboard: New candidate completed:', candidate);
-    // Refetch candidates to get the latest data
-    fetchCandidates();
+  const handleUploadComplete = (uploadOrResume: CVUpload | any) => {
+    // Handle both CVUpload and Resume types for compatibility
+    if ('uploaded_at' in uploadOrResume) {
+      // It's a CVUpload
+      console.log('Dashboard: New upload completed:', uploadOrResume.id);
+      setUploads(prev => [uploadOrResume as CVUpload, ...prev]);
+    } else {
+      // It might be a Resume, convert to CVUpload format
+      console.log('Dashboard: New resume completed, converting to upload format');
+      // For now, just refetch all uploads since we may have mixed data
+      fetchUploads();
+    }
   };
 
   const handleCandidateDelete = (deletedId: string) => {
-    console.log('Dashboard: Removing candidate:', deletedId);
-    setCandidates(prev => prev.filter(candidate => candidate.id !== deletedId));
+    console.log('Dashboard: Removing candidate from uploads:', deletedId);
+    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
   const handleCalendarDateSelect = (date: Date) => {
@@ -143,66 +152,48 @@ const Dashboard = () => {
   };
 
   const handleBulkDelete = (deletedIds: string[]) => {
-    setCandidates(prev => prev.filter(candidate => !deletedIds.includes(candidate.id)));
+    setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
   const handleExportAll = () => {
-    // For now, create a simple CSV export without using the useExport hook
-    const csvData = displayedCandidates.map(candidate => ({
-      name: candidate.full_name,
-      email: candidate.email,
-      contact: candidate.contact_number,
-      score: candidate.score,
-      justification: candidate.justification,
-      assessment: candidate.professional_assessment
-    }));
-    
-    console.log('Exporting all candidates:', csvData);
+    exportToCSV(actualDisplayedCandidates, 'all_candidates');
   };
 
-  // Apply calendar date filter to candidates
-  const displayedCandidates = useMemo(() => {
-    let filtered = [...candidates];
-    
-    // Apply date filter if selected
-    if (selectedCalendarDate) {
-      const selectedDateStr = selectedCalendarDate.toISOString().split('T')[0];
-      filtered = filtered.filter(candidate => {
-        const candidateDate = new Date(candidate.created_at).toISOString().split('T')[0];
-        return candidateDate === selectedDateStr;
-      });
-    }
-    
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(candidate => 
-        candidate.full_name?.toLowerCase().includes(query) ||
-        candidate.email?.toLowerCase().includes(query) ||
-        candidate.contact_number?.toLowerCase().includes(query)
-      );
-    }
-    
-    return filtered;
-  }, [candidates, selectedCalendarDate, searchQuery]);
+  // Apply calendar date filter to uploads
+  const displayUploads = useMemo(() => {
+    return selectedCalendarDate 
+      ? uploads // Pass all uploads and let CandidateGrid handle the filtering
+      : uploads; // Just use uploads directly since filtering is done in CandidateGrid
+  }, [selectedCalendarDate, uploads]);
 
-  // Sort candidates
-  const sortedCandidates = useMemo(() => {
-    return [...displayedCandidates].sort((a, b) => {
+  // Sort uploads
+  const sortedUploads = useMemo(() => {
+    return [...displayUploads].sort((a, b) => {
       switch (sortBy) {
         case 'score':
-          const scoreA = a.score || 0;
-          const scoreB = b.score || 0;
+          const scoreA = parseFloat((a.extracted_json as any)?.score || '0');
+          const scoreB = parseFloat((b.extracted_json as any)?.score || '0');
           return scoreB - scoreA;
         case 'name':
-          const nameA = a.full_name || '';
-          const nameB = b.full_name || '';
+          const nameA = (a.extracted_json as any)?.candidate_name || '';
+          const nameB = (b.extracted_json as any)?.candidate_name || '';
           return nameA.localeCompare(nameB);
         default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
       }
     });
-  }, [displayedCandidates, sortBy]);
+  }, [displayUploads, sortBy]);
+
+  // Get the actual filtered candidates that will be displayed based on candidate view
+  const actualDisplayedCandidates = useMemo(() => {
+    return selectedCalendarDate 
+      ? (candidateView === 'qualified' 
+          ? filterQualifiedTeachersForDate(uploads, selectedCalendarDate)
+          : filterValidCandidatesForDate(uploads, selectedCalendarDate))
+      : (candidateView === 'qualified' 
+          ? filterQualifiedTeachers(uploads)
+          : filterValidCandidates(uploads));
+  }, [uploads, selectedCalendarDate, candidateView]);
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -234,7 +225,7 @@ const Dashboard = () => {
             onClick={() => {
             setError(null);
             setLoading(true);
-            fetchCandidates();
+            fetchUploads();
             }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black rounded-lg hover:from-yellow-500 hover:to-yellow-700 font-semibold text-elegant tracking-wider"
           >
@@ -245,7 +236,7 @@ const Dashboard = () => {
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', candidates.length, 'candidates for user:', user?.id);
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for user:', user?.id);
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -305,7 +296,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <DashboardStats uploads={displayedCandidates} />
+                <DashboardStats uploads={actualDisplayedCandidates} />
               </motion.div>
 
               <motion.div
@@ -330,7 +321,7 @@ const Dashboard = () => {
                     className="border-green-500/30 text-green-400 hover:bg-green-500/10"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export Teaching Candidates ({displayedCandidates.length})
+                    Export Teaching Candidates ({actualDisplayedCandidates.length})
                   </Button>
                 </div>
               </motion.div>
@@ -340,7 +331,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
-                <BulkActions uploads={displayedCandidates} onBulkDelete={handleBulkDelete} />
+                <BulkActions uploads={actualDisplayedCandidates} onBulkDelete={handleBulkDelete} />
               </motion.div>
 
               <motion.div
@@ -349,7 +340,7 @@ const Dashboard = () => {
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
                 <CandidateGrid 
-                  uploads={sortedCandidates} 
+                  uploads={sortedUploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   candidateView={candidateView}
@@ -364,12 +355,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                {/* Temporarily disable analytics until we update it for new structure */}
-                {/* <AnalyticsCharts uploads={candidates} /> */}
-                <div className="glass-card elegant-border p-8 rounded-xl text-center">
-                  <h3 className="text-2xl font-semibold text-white mb-4">Analytics Coming Soon</h3>
-                  <p className="text-white/70">Analytics will be updated to work with the new simplified candidate structure.</p>
-                </div>
+                <AnalyticsCharts uploads={uploads} />
               </motion.div>
             </TabsContent>
           </Tabs>

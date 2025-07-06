@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Candidate } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
@@ -8,7 +8,7 @@ import { FileText, Calendar } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterQualifiedTeachers, filterQualifiedTeachersForDate } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
-  uploads: Candidate[];
+  uploads: CVUpload[];
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
   candidateView?: 'all' | 'qualified';
@@ -32,22 +32,17 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, candidateView =
     }
   };
 
-  // For now, just display all candidates without complex filtering
-  // since we're using the simplified structure
+  // Memoize the filtering to prevent unnecessary recalculations
   const validUploads = useMemo(() => {
-    let filtered = [...localUploads];
-    
-    // Apply date filter if selected
     if (selectedDate) {
-      const selectedDateStr = selectedDate.toISOString().split('T')[0];
-      filtered = filtered.filter(candidate => {
-        const candidateDate = new Date(candidate.created_at).toISOString().split('T')[0];
-        return candidateDate === selectedDateStr;
-      });
+      return candidateView === 'qualified' 
+        ? filterQualifiedTeachersForDate(localUploads, selectedDate)
+        : filterValidCandidatesForDate(localUploads, selectedDate);
     }
-    
-    return filtered;
-  }, [localUploads, selectedDate]);
+    return candidateView === 'qualified' 
+      ? filterQualifiedTeachers(localUploads)
+      : filterValidCandidates(localUploads);
+  }, [localUploads, selectedDate, candidateView]);
 
   if (validUploads.length === 0) {
     const dateText = selectedDate 
@@ -69,9 +64,12 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, candidateView =
         <p className="text-white/70 text-lg">
           {selectedDate 
             ? `No ${candidateView === 'qualified' ? 'qualified teaching ' : ''}candidates were uploaded on ${selectedDate.toLocaleDateString()}`
-            : `${candidateView === 'qualified' ? 'Qualified teaching ' : 'All '}candidates uploaded today will appear here`
+            : `${candidateView === 'qualified' ? 'Qualified teaching ' : 'All '}candidates uploaded today (12 AM - 11 PM) will appear here`
           }
         </p>
+        {candidateView === 'qualified' && (
+          <p className="text-white/50 text-sm mt-2">Requires teaching qualifications, experience, and approved countries</p>
+        )}
       </motion.div>
     );
   }
