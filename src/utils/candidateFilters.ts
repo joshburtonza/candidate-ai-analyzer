@@ -150,11 +150,14 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
   
   const jobHistory = upload.extracted_json.job_history.toLowerCase();
   
-  // Extract years of experience - made more flexible
+  // Extract years of experience - improved patterns
   const yearPatterns = [
-    /(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
-    /(?:teaching|work|experience)\s*(?:experience|for)?\s*(\d+)\s*years?/gi,
+    /(?:over|more than|above)\s*(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
+    /(\d+)\+?\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
+    /(?:teaching|work|experience)\s*(?:experience|for)?\s*(?:over|more than|above)?\s*(\d+)\s*years?/gi,
     /(\d+)\s*years?\s*(?:in|of)\s*(?:teaching|education|work)/gi,
+    /with\s*(?:over|more than|above)?\s*(\d+)\s*years?\s*(?:of\s*)?(?:diverse|international|teaching|experience)/gi,
+    /(\d+)\s*years?\s*(?:diverse|international|teaching|experience)/gi,
     /(\d+)\+?\s*years?/gi // Any mention of years
   ];
   
@@ -170,7 +173,21 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
     }
   }
   
-  const isValid = maxYears >= 1; // Reduced from 2 to 1 year for now
+  // If no years found in job_history, also check the justification field
+  if (maxYears === 0 && upload.extracted_json?.justification) {
+    const justification = upload.extracted_json.justification.toLowerCase();
+    for (const pattern of yearPatterns) {
+      const matches = justification.matchAll(pattern);
+      for (const match of matches) {
+        const years = parseInt(match[1]);
+        if (!isNaN(years) && years > maxYears) {
+          maxYears = years;
+        }
+      }
+    }
+  }
+  
+  const isValid = maxYears >= 2; // Back to 2 years minimum
   console.log('Experience check for:', upload.extracted_json?.candidate_name, ':', maxYears, 'years, Valid:', isValid);
   return isValid;
 };
