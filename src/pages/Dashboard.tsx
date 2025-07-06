@@ -127,14 +127,6 @@ const Dashboard = () => {
       console.log('Dashboard: Fetching resumes for user:', user.id);
       setError(null);
       
-      // Test connection first
-      const { data: testData, error: testError } = await supabase
-        .from('resumes')
-        .select('COUNT(*)', { count: 'exact' })
-        .limit(1);
-      
-      console.log('Dashboard: Test query result:', testData, testError);
-      
       const { data, error } = await supabase
         .from('resumes')
         .select('*')
