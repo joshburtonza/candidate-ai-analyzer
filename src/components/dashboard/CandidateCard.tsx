@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { CVUpload } from '@/types/candidate';
+import { Candidate } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -11,8 +11,9 @@ import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { getTeachingSubjects, hasTeachingQualifications } from '@/utils/candidateFilters';
 
 interface CandidateCardProps {
-  upload: CVUpload;
+  upload: Candidate;
   onDelete?: (id: string) => void;
+}
 }
 
 // Helper function to safely handle array or string data

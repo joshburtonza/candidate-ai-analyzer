@@ -121,6 +121,42 @@ export type Database = {
           },
         ]
       }
+      candidates: {
+        Row: {
+          contact_number: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          justification: string | null
+          professional_assessment: string | null
+          score: number | null
+          updated_at: string
+        }
+        Insert: {
+          contact_number?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          justification?: string | null
+          professional_assessment?: string | null
+          score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          contact_number?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          justification?: string | null
+          professional_assessment?: string | null
+          score?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cv_uploads: {
         Row: {
           extracted_json: Json | null

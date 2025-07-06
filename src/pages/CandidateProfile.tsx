@@ -1,21 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Resume } from '@/types/candidate';
+import { Candidate } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star, Clipboard } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Clipboard, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 const CandidateProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [resume, setResume] = useState<Resume | null>(null);
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -28,7 +26,7 @@ const CandidateProfile = () => {
   const fetchCandidate = async () => {
     try {
       const { data, error } = await supabase
-        .from('resumes')
+        .from('candidates')
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -45,7 +43,7 @@ const CandidateProfile = () => {
         return;
       }
 
-      setResume(data as Resume);
+      setCandidate(data as Candidate);
     } catch (error: any) {
       console.error('Error fetching candidate:', error);
       toast({
@@ -66,7 +64,7 @@ const CandidateProfile = () => {
     );
   }
 
-  if (!resume) {
+  if (!candidate) {
     return (
       <div className="min-h-screen elegant-gradient flex items-center justify-center">
         <div className="text-center text-white">
@@ -84,9 +82,8 @@ const CandidateProfile = () => {
   };
   
   // Convert score to be out of 10 instead of 100
-  const rawScore = resume.fit_score || 0;
+  const rawScore = candidate.score || 0;
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-  const skills = resume.skills || [];
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return 'from-slate-400 to-slate-600';
@@ -117,9 +114,9 @@ const CandidateProfile = () => {
             </Button>
 
             {/* Email Button */}
-            {resume.email && (
+            {candidate.email && (
               <Button
-                onClick={() => window.open(`mailto:${resume.email}`, '_blank')}
+                onClick={() => window.open(`mailto:${candidate.email}`, '_blank')}
                 className="bg-gradient-to-r from-slate-400 to-slate-600 hover:from-slate-500 hover:to-slate-700 text-white font-semibold text-elegant tracking-wider"
               >
                 <Mail className="w-4 h-4 mr-2" />
@@ -137,7 +134,7 @@ const CandidateProfile = () => {
                     <User className="w-12 h-12 text-slate-400" />
                   </div>
                   <h1 className="text-3xl font-bold text-white mb-4 text-elegant tracking-wider break-words">
-                    {resume.name || 'UNKNOWN CANDIDATE'}
+                    {candidate.full_name || 'UNKNOWN CANDIDATE'}
                   </h1>
                   
                   {/* Score Circle */}
@@ -151,22 +148,16 @@ const CandidateProfile = () => {
 
                   {/* Contact Info */}
                   <div className="space-y-4 text-left">
-                    {resume.email && (
+                    {candidate.email && (
                       <div className="flex items-center gap-4 text-white/90">
                         <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-all min-w-0">{resume.email}</span>
+                        <span className="break-all min-w-0">{candidate.email}</span>
                       </div>
                     )}
-                    {resume.phone && (
+                    {candidate.contact_number && (
                       <div className="flex items-center gap-4 text-white/90">
                         <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">{resume.phone}</span>
-                      </div>
-                    )}
-                    {resume.location && (
-                      <div className="flex items-center gap-4 text-white/90">
-                        <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">{resume.location}</span>
+                        <span className="break-words min-w-0">{candidate.contact_number}</span>
                       </div>
                     )}
                   </div>
@@ -174,7 +165,7 @@ const CandidateProfile = () => {
               </Card>
 
               {/* Justification */}
-              {resume.justification && (
+              {candidate.justification && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <Clipboard className="w-6 h-6 text-slate-400" />
@@ -182,118 +173,61 @@ const CandidateProfile = () => {
                   </div>
                   <div className="text-white/90 leading-relaxed">
                     <p className="whitespace-pre-wrap break-words">
-                      {resume.justification}
+                      {candidate.justification}
                     </p>
                   </div>
                 </Card>
               )}
             </div>
 
-            {/* Right Column - Detailed Info */}
+            {/* Right Column - Professional Assessment */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Education */}
-              {resume.education_details && (
+              {/* Professional Assessment */}
+              {candidate.professional_assessment && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
-                    <GraduationCap className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
-                  </div>
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <div className="text-white/90 leading-relaxed cursor-pointer">
-                        <p className="whitespace-pre-wrap break-words">
-                          {typeof resume.education_details === 'string' 
-                            ? resume.education_details 
-                            : JSON.stringify(resume.education_details, null, 2)}
-                        </p>
-                      </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
-                      <div className="text-sm leading-relaxed">
-                        <p className="whitespace-pre-wrap break-words">
-                          {typeof resume.education_details === 'string' 
-                            ? resume.education_details 
-                            : JSON.stringify(resume.education_details, null, 2)}
-                        </p>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                </Card>
-              )}
-
-              {/* Work Experience */}
-              {(resume.experience_years || resume.current_company) && (
-                <Card className="glass-card elegant-border p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Briefcase className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
+                    <FileText className="w-6 h-6 text-slate-400" />
+                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL ASSESSMENT</h3>
                   </div>
                   <div className="text-white/90 leading-relaxed">
-                    {resume.experience_years && (
-                      <p className="mb-4">
-                        <strong>Experience:</strong> {resume.experience_years} years
-                      </p>
-                    )}
-                    {resume.current_company && (
-                      <p className="mb-4">
-                        <strong>Current Company:</strong> {resume.current_company}
-                      </p>
-                    )}
-                    {resume.role_title && (
-                      <p>
-                        <strong>Role:</strong> {resume.role_title}
-                      </p>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              {/* Skills */}
-              {skills && skills.length > 0 && (
-                <Card className="glass-card elegant-border p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Star className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">SKILLS & EXPERTISE</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {skills.map((skill, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="bg-white/5 text-white border-white/10 px-3 py-1 text-sm rounded-xl"
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {/* File Info */}
-              <Card className="glass-card elegant-border p-8">
-                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <span className="text-white/60 text-sm tracking-wider">ORIGINAL FILENAME:</span>
-                    <p className="text-white font-medium break-all">{resume.file_name}</p>
-                  </div>
-                  <div>
-                    <span className="text-white/60 text-sm tracking-wider">UPLOAD DATE:</span>
-                    <p className="text-white font-medium break-words">
-                      {new Date(resume.created_at).toLocaleDateString()}
+                    <p className="whitespace-pre-wrap break-words">
+                      {candidate.professional_assessment}
                     </p>
                   </div>
-                  {resume.file_size && (
-                    <div>
-                      <span className="text-white/60 text-sm tracking-wider">FILE SIZE:</span>
-                      <p className="text-white font-medium break-words">
-                        {(resume.file_size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  )}
+                </Card>
+              )}
+
+              {/* Candidate Details */}
+              <Card className="glass-card elegant-border p-8">
+                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">CANDIDATE DETAILS</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">PROCESSING STATUS:</span>
-                    <p className="text-white font-medium capitalize break-words">{resume.status || 'processed'}</p>
+                    <span className="text-white/60 text-sm tracking-wider">FULL NAME:</span>
+                    <p className="text-white font-medium break-words">{candidate.full_name}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm tracking-wider">EMAIL:</span>
+                    <p className="text-white font-medium break-all">{candidate.email || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm tracking-wider">CONTACT NUMBER:</span>
+                    <p className="text-white font-medium break-words">{candidate.contact_number || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm tracking-wider">SCORE:</span>
+                    <p className="text-white font-medium">{candidate.score || 0}/10</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm tracking-wider">PROFILE CREATED:</span>
+                    <p className="text-white font-medium break-words">
+                      {new Date(candidate.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-sm tracking-wider">LAST UPDATED:</span>
+                    <p className="text-white font-medium break-words">
+                      {new Date(candidate.updated_at).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               </Card>

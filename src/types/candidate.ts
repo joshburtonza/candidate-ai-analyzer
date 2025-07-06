@@ -1,5 +1,18 @@
 
-// Updated interface to match the resumes table structure
+// Main interface for candidates
+export interface Candidate {
+  id: string;
+  full_name: string;
+  email: string | null;
+  contact_number: string | null;
+  score: number | null;
+  justification: string | null;
+  professional_assessment: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Legacy interface for backward compatibility (will be removed after migration)
 export interface Resume {
   id: string;
   name: string;

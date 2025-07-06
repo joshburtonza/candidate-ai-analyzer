@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Download, Users } from 'lucide-react';
-import { CVUpload } from '@/types/candidate';
+import { Candidate } from '@/types/candidate';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { useExport } from '@/hooks/useExport';
 import { useToast } from '@/hooks/use-toast';
 
 interface BulkActionsProps {
-  uploads: CVUpload[];
+  uploads: Candidate[];
   onBulkDelete: (deletedIds: string[]) => void;
 }
 

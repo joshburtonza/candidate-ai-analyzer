@@ -1,5 +1,5 @@
 
-import { CVUpload } from '@/types/candidate';
+import { Candidate } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, MapPin, Eye, Trash2, GraduationCap, BookOpen } from 'lucide-react';
@@ -8,7 +8,7 @@ import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { getTeachingSubjects, hasTeachingQualifications } from '@/utils/candidateFilters';
 
 interface CandidateListItemProps {
-  upload: CVUpload;
+  upload: Candidate;
   onDelete?: (id: string) => void;
 }
 
