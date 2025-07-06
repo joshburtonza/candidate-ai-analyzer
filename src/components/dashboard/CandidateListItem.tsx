@@ -14,17 +14,23 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const navigate = useNavigate();
   const { deleteCandidate, isDeleting } = useDeleteCandidate();
 
+  // Extract candidate data from the upload
+  const candidateData = upload.extracted_json as any || {};
+  const candidateName = candidateData.candidate_name || 'Unknown';
+  const email = candidateData.email_address || null;
+  const phone = candidateData.contact_number || null;
+  const score = parseFloat(candidateData.score || '0');
+  const justification = candidateData.justification || null;
+
   // Convert score to be out of 10 instead of 100
-  const rawScore = upload.score || 0;
-  const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+  const displayScore = score > 10 ? Math.round(score / 10) : Math.round(score);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Delete button clicked for candidate:', upload.id, upload.full_name);
+    console.log('Delete button clicked for candidate:', upload.id, candidateName);
     
-    // For now, just call the onDelete callback
     if (onDelete) {
       console.log('Calling onDelete callback');
       onDelete(upload.id);
@@ -50,38 +56,38 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
           <div className="flex-1 min-w-0 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-white group-hover:text-slate-400 transition-colors truncate">
-                {upload.full_name || 'Unknown'}
+                {candidateName}
               </h3>
               
               {/* Score Badge */}
-              {upload.score && (
-                <div className={`px-3 py-1 rounded-lg border ${getScoreColor(score)} font-bold text-sm`}>
-                  {score}/10
+              {score > 0 && (
+                <div className={`px-3 py-1 rounded-lg border ${getScoreColor(displayScore)} font-bold text-sm`}>
+                  {displayScore}/10
                 </div>
               )}
             </div>
             
             {/* Contact Info */}
             <div className="flex items-center gap-6 text-sm text-gray-300">
-              {upload.email && (
+              {email && (
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-slate-400" />
-                  <span className="truncate">{upload.email}</span>
+                  <span className="truncate">{email}</span>
                 </div>
               )}
-              {upload.contact_number && (
+              {phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-slate-400" />
-                  <span className="truncate">{upload.contact_number}</span>
+                  <span className="truncate">{phone}</span>
                 </div>
               )}
             </div>
             
             {/* Justification Preview */}
-            {upload.justification && (
+            {justification && (
               <div className="text-sm text-gray-400 line-clamp-2">
                 <span className="text-slate-300 font-medium">Justification: </span>
-                {upload.justification}
+                {justification}
               </div>
             )}
           </div>
@@ -105,7 +111,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
             variant="ghost"
             size="sm"
             className="bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50"
-            title={`Delete ${upload.full_name || 'candidate'}`}
+            title={`Delete ${candidateName}`}
           >
             {isDeleting ? (
               <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />

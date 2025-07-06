@@ -1,28 +1,43 @@
 import { CVUpload } from '@/types/candidate';
 import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
 }
 
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
-  const validCandidates = uploads || [];
+  // Use the centralized filtering logic
+  const validCandidates = filterValidCandidates(uploads);
   const totalCandidates = validCandidates.length;
   
-  // Calculate average score
-  const scoresWithValues = validCandidates.filter(candidate => candidate.score && candidate.score > 0);
+  // Calculate average score by extracting from extracted_json
+  const scoresWithValues = validCandidates.filter(upload => {
+    const candidateData = upload.extracted_json as any;
+    return candidateData && candidateData.score && parseFloat(candidateData.score) > 0;
+  });
+  
   const averageScore = scoresWithValues.length > 0 
-    ? Math.round(scoresWithValues.reduce((sum, candidate) => sum + (candidate.score || 0), 0) / scoresWithValues.length)
+    ? Math.round(scoresWithValues.reduce((sum, upload) => {
+        const candidateData = upload.extracted_json as any;
+        return sum + parseFloat(candidateData.score || '0');
+      }, 0) / scoresWithValues.length)
     : 0;
   
   // Convert average score to be out of 10 if it's over 10
   const displayAverageScore = averageScore > 10 ? Math.round(averageScore / 10) : averageScore;
   
   // Count candidates with email addresses
-  const candidatesWithEmail = validCandidates.filter(candidate => candidate.email).length;
+  const candidatesWithEmail = validCandidates.filter(upload => {
+    const candidateData = upload.extracted_json as any;
+    return candidateData && candidateData.email_address;
+  }).length;
   
   // Count candidates with contact numbers
-  const candidatesWithContact = validCandidates.filter(candidate => candidate.contact_number).length;
+  const candidatesWithContact = validCandidates.filter(upload => {
+    const candidateData = upload.extracted_json as any;
+    return candidateData && candidateData.contact_number;
+  }).length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

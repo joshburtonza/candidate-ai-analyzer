@@ -42,7 +42,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
 
     setIsDeleting(true);
     try {
-      // For now, just call the callback function since we're working with simplified structure
+      // For now, just call the callback function since we're working with original structure
       onBulkDelete(selectedIds);
       
       toast({
@@ -77,22 +77,20 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
       return;
     }
 
-    // For now, create a simple CSV export without using the useExport hook
-    // since it expects the old CVUpload structure
-    const csvData = selectedCandidates.map(candidate => ({
-      name: candidate.full_name,
-      email: candidate.email,
-      contact: candidate.contact_number,
-      score: candidate.score,
-      justification: candidate.justification,
-      assessment: candidate.professional_assessment
-    }));
-    
-    console.log('Exporting candidates:', csvData);
+    // Convert to the format expected by exportToCSV
+    const convertedCandidates = selectedCandidates.map(upload => {
+      const candidateData = upload.extracted_json as any || {};
+      return {
+        ...upload,
+        extracted_json: candidateData
+      };
+    });
+
+    exportToCSV(convertedCandidates, 'selected_candidates');
     
     toast({
-      title: "Export Ready",
-      description: `${selectedCandidates.length} candidate(s) prepared for export`,
+      title: "Export Started",
+      description: `Exporting ${selectedCandidates.length} candidate(s)`,
     });
   };
 
@@ -153,28 +151,36 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
 
       {/* Individual Selection */}
       <div className="space-y-2 max-h-48 overflow-y-auto">
-        {validCandidates.map((candidate) => (
-          <div key={candidate.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/30">
-            <Checkbox
-              checked={selectedIds.includes(candidate.id)}
-              onCheckedChange={(checked) => handleSelectCandidate(candidate.id, checked as boolean)}
-              className="border-slate-400"
-            />
-            <div className="flex-1 min-w-0">
-              <span className="text-white font-medium truncate block">
-                {candidate.full_name || 'Unknown'}
-              </span>
-              <span className="text-sm text-gray-400 truncate block">
-                {candidate.email || 'No email'}
-              </span>
+        {validCandidates.map((candidate) => {
+          const candidateData = candidate.extracted_json as any || {};
+          const candidateName = candidateData.candidate_name || 'Unknown';
+          const email = candidateData.email_address || 'No email';
+          const score = parseFloat(candidateData.score || '0');
+          const displayScore = score > 10 ? Math.round(score / 10) : Math.round(score);
+
+          return (
+            <div key={candidate.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/30">
+              <Checkbox
+                checked={selectedIds.includes(candidate.id)}
+                onCheckedChange={(checked) => handleSelectCandidate(candidate.id, checked as boolean)}
+                className="border-slate-400"
+              />
+              <div className="flex-1 min-w-0">
+                <span className="text-white font-medium truncate block">
+                  {candidateName}
+                </span>
+                <span className="text-sm text-gray-400 truncate block">
+                  {email}
+                </span>
+              </div>
+              {score > 0 && (
+                <Badge variant="secondary" className="bg-slate-700 text-slate-300">
+                  {displayScore}/10
+                </Badge>
+              )}
             </div>
-            {candidate.score && (
-              <Badge variant="secondary" className="bg-slate-700 text-slate-300">
-                {candidate.score > 10 ? Math.round(candidate.score / 10) : Math.round(candidate.score || 0)}/10
-              </Badge>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
