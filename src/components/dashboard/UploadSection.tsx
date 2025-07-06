@@ -137,10 +137,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Simulate processing (in real app, this would trigger edge function)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Update progress to completion
+      // File uploaded - processing will be handled by n8n workflow
       setUploadFiles(prev => prev.map(f => 
         f.file === uploadFile.file ? { 
           ...f, 
@@ -159,7 +156,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
       toast({
         title: "Upload Successful",
-        description: `${uploadFile.file.name} has been uploaded successfully`,
+        description: `${uploadFile.file.name} uploaded - processing will be handled by your n8n workflow`,
       });
 
     } catch (error: any) {
@@ -236,7 +233,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 tracking-wider">UPLOAD CV FILES</h2>
-          <p className="text-gray-400">Add candidate CVs for elite AI analysis and scoring</p>
+          <p className="text-gray-400">Upload files for processing via your n8n workflow</p>
           {!user && (
             <p className="text-red-400 text-sm mt-2">Please log in to upload files</p>
           )}

@@ -182,23 +182,17 @@ const CandidateProfile = () => {
                 </div>
               </Card>
 
-              {/* Skills */}
-              {skills.length > 0 && (
+              {/* Justification */}
+              {data.justification && (
                 <Card className="glass-card elegant-border p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <Star className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">EXPERTISE</h3>
+                    <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">SYSTEM ANALYSIS</h3>
                   </div>
-                  <div className="flex flex-wrap gap-3">
-                    {skills.map((skill, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="bg-white/10 text-white border-white/20 px-3 py-1 hover:bg-white/20 transition-colors break-words"
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
+                  <div className="text-white/90 leading-relaxed">
+                    <p className="whitespace-pre-wrap break-words">
+                      {data.justification}
+                    </p>
                   </div>
                 </Card>
               )}
