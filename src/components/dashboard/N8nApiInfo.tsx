@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 export const N8nApiInfo = () => {
   const { toast } = useToast();
   
-  const apiEndpoint = 'https://rlimpmsifpllmjglhpbl.supabase.co/functions/v1/create-candidate-tile';
+  const apiEndpoint = 'https://ofifrgkzgixakxkrsgku.supabase.co/functions/v1/create-candidate-tile';
   
   const sampleData = {
     candidate_name: "John Doe",
@@ -150,6 +150,20 @@ export const N8nApiInfo = () => {
   user_id: "user-uuid-here"
 }, null, 2)}
             </pre>
+          </div>
+
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+            <h4 className="text-blue-400 font-medium mb-2">Updated Backend Architecture:</h4>
+            <p className="text-sm text-gray-300 mb-2">
+              The system now uses a single <code>resumes</code> table that directly stores all candidate information:
+            </p>
+            <ul className="text-sm text-gray-300 space-y-1">
+              <li>• All n8n data is mapped to structured resume fields</li>
+              <li>• Skills are stored as arrays for better filtering</li>
+              <li>• Educational and job history data stored in <code>parsed_data</code> field</li>
+              <li>• Automatic duplicate detection and merging by name/email</li>
+              <li>• Full integration with dashboard filtering and search</li>
+            </ul>
           </div>
         </div>
       </div>

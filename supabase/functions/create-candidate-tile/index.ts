@@ -45,101 +45,79 @@ function safeSplit(value: string | string[] | null | undefined): string[] {
   return [];
 }
 
-// Helper function to merge candidate data intelligently
-function mergeCandidateData(existing: any, incoming: CandidateData): any {
+// Helper function to map n8n data to Resume table structure
+function mapToResumeData(candidateData: CandidateData): any {
+  return {
+    name: candidateData.candidate_name,
+    email: candidateData.email_address || null,
+    phone: candidateData.contact_number || null,
+    location: normalizeToString(candidateData.countries) || null,
+    justification: candidateData.justification || null,
+    fit_score: parseFloat(String(candidateData.score || '0')),
+    skills: safeSplit(candidateData.skill_set),
+    file_name: candidateData.original_filename || `${candidateData.candidate_name}_n8n.json`,
+    file_type: 'application/json',
+    file_size: 0,
+    status: 'processed',
+    source: 'api',
+    parsed_data: {
+      educational_qualifications: candidateData.educational_qualifications || '',
+      job_history: candidateData.job_history || '',
+      source_integration: 'n8n'
+    }
+  };
+}
+
+// Helper function to merge resume data intelligently
+function mergeResumeData(existing: any, incoming: CandidateData): any {
+  const incomingMapped = mapToResumeData(incoming);
   const merged = { ...existing };
   
-  // Merge each field, prioritizing non-empty values and combining complementary information
-  
   // Name: prefer the more complete name
-  if (incoming.candidate_name && incoming.candidate_name.length > (merged.candidate_name || '').length) {
-    merged.candidate_name = incoming.candidate_name;
+  if (incomingMapped.name && incomingMapped.name.length > (merged.name || '').length) {
+    merged.name = incomingMapped.name;
   }
   
   // Contact info: prefer non-empty values
-  if (incoming.email_address && !merged.email_address) {
-    merged.email_address = incoming.email_address;
+  if (incomingMapped.email && !merged.email) {
+    merged.email = incomingMapped.email;
   }
-  if (incoming.contact_number && !merged.contact_number) {
-    merged.contact_number = incoming.contact_number;
+  if (incomingMapped.phone && !merged.phone) {
+    merged.phone = incomingMapped.phone;
   }
-  
-  // Education: combine if different, prefer longer/more detailed
-  if (incoming.educational_qualifications) {
-    if (!merged.educational_qualifications) {
-      merged.educational_qualifications = incoming.educational_qualifications;
-    } else if (incoming.educational_qualifications.length > merged.educational_qualifications.length) {
-      // Check if they're different before replacing
-      if (!merged.educational_qualifications.includes(incoming.educational_qualifications.substring(0, 50))) {
-        merged.educational_qualifications = incoming.educational_qualifications;
-      }
-    }
+  if (incomingMapped.location && !merged.location) {
+    merged.location = incomingMapped.location;
   }
   
-  // Job history: combine if different, prefer longer/more detailed
-  if (incoming.job_history) {
-    if (!merged.job_history) {
-      merged.job_history = incoming.job_history;
-    } else if (incoming.job_history.length > merged.job_history.length) {
-      // Check if they're different before replacing
-      if (!merged.job_history.includes(incoming.job_history.substring(0, 50))) {
-        merged.job_history = incoming.job_history;
-      }
-    }
-  }
-  
-  // Skills: merge unique skills - using safe handling
-  if (incoming.skill_set) {
-    const normalizedIncomingSkills = normalizeToString(incoming.skill_set);
-    if (!merged.skill_set) {
-      merged.skill_set = normalizedIncomingSkills;
-    } else {
-      const existingSkills = safeSplit(merged.skill_set).map(s => s.toLowerCase());
-      const incomingSkills = safeSplit(normalizedIncomingSkills);
-      const newSkills = incomingSkills.filter(skill => 
-        !existingSkills.includes(skill.toLowerCase()) && skill.length > 0
-      );
-      if (newSkills.length > 0) {
-        merged.skill_set = normalizeToString(merged.skill_set) + ', ' + newSkills.join(', ');
-      }
+  // Skills: merge unique skills
+  if (incomingMapped.skills && incomingMapped.skills.length > 0) {
+    const existingSkills = (merged.skills || []).map((s: string) => s.toLowerCase());
+    const newSkills = incomingMapped.skills.filter((skill: string) => 
+      !existingSkills.includes(skill.toLowerCase()) && skill.length > 0
+    );
+    if (newSkills.length > 0) {
+      merged.skills = [...(merged.skills || []), ...newSkills];
     }
   }
   
   // Score: prefer higher score
-  const incomingScore = parseFloat(String(incoming.score) || '0');
-  const existingScore = parseFloat(String(merged.score) || '0');
+  const incomingScore = incomingMapped.fit_score || 0;
+  const existingScore = merged.fit_score || 0;
   if (incomingScore > existingScore) {
-    merged.score = String(incoming.score);
-    // Also update justification if score is better
-    if (incoming.justification && incoming.justification.length > (merged.justification || '').length) {
-      merged.justification = incoming.justification;
-    }
+    merged.fit_score = incomingScore;
+    merged.justification = incomingMapped.justification;
   }
   
-  // Justification: prefer longer/more detailed if score is similar
-  if (incoming.justification && incoming.justification.length > (merged.justification || '').length) {
-    const scoreDiff = Math.abs(incomingScore - existingScore);
-    if (scoreDiff <= 1) { // If scores are similar, prefer better justification
-      merged.justification = incoming.justification;
-    }
-  }
+  // Parsed data: merge educational and job history
+  const existingParsedData = merged.parsed_data || {};
+  const incomingParsedData = incomingMapped.parsed_data || {};
   
-  // Countries: merge unique countries - using safe handling for both arrays and strings
-  if (incoming.countries) {
-    const normalizedIncomingCountries = normalizeToString(incoming.countries);
-    if (!merged.countries) {
-      merged.countries = normalizedIncomingCountries;
-    } else {
-      const existingCountries = safeSplit(merged.countries).map(c => c.toLowerCase());
-      const incomingCountries = safeSplit(normalizedIncomingCountries);
-      const newCountries = incomingCountries.filter(country => 
-        !existingCountries.includes(country.toLowerCase()) && country.length > 0
-      );
-      if (newCountries.length > 0) {
-        merged.countries = normalizeToString(merged.countries) + ', ' + newCountries.join(', ');
-      }
-    }
-  }
+  merged.parsed_data = {
+    ...existingParsedData,
+    ...incomingParsedData,
+    educational_qualifications: incomingParsedData.educational_qualifications || existingParsedData.educational_qualifications || '',
+    job_history: incomingParsedData.job_history || existingParsedData.job_history || ''
+  };
   
   return merged;
 }
@@ -234,12 +212,11 @@ serve(async (req) => {
     console.log('Checking for existing candidate with name:', candidateData.candidate_name, 'or email:', candidateData.email_address);
     
     try {
-      const { data: existingCandidates, error: duplicateCheckError } = await supabase
-        .from('cv_uploads')
-        .select('id, extracted_json, source_email')
-        .eq('processing_status', 'completed')
-        .eq('user_id', profile.id) // Only check within the same user's candidates
-        .not('extracted_json', 'is', null);
+      const { data: existingResumes, error: duplicateCheckError } = await supabase
+        .from('resumes')
+        .select('id, name, email, phone, location, fit_score, justification, skills, parsed_data')
+        .eq('status', 'processed')
+        .not('is_archived', 'eq', true);
 
       if (duplicateCheckError) {
         console.error('Error checking for duplicates:', duplicateCheckError);
@@ -256,19 +233,16 @@ serve(async (req) => {
       }
 
       // Check if any existing candidate matches by name or email
-      const duplicateCandidate = existingCandidates?.find(candidate => {
-        const existingData = candidate.extracted_json;
-        if (!existingData) return false;
-        
+      const duplicateCandidate = existingResumes?.find(resume => {
         // Match by email (if both have email)
-        if (candidateData.email_address && existingData.email_address) {
-          if (existingData.email_address.toLowerCase() === candidateData.email_address.toLowerCase()) {
+        if (candidateData.email_address && resume.email) {
+          if (resume.email.toLowerCase() === candidateData.email_address.toLowerCase()) {
             return true;
           }
         }
         
         // Match by name (normalized comparison)
-        const existingName = existingData.candidate_name?.toLowerCase().trim();
+        const existingName = resume.name?.toLowerCase().trim();
         const incomingName = candidateData.candidate_name?.toLowerCase().trim();
         if (existingName && incomingName && existingName === incomingName) {
           return true;
@@ -281,17 +255,14 @@ serve(async (req) => {
         console.log('Found existing candidate, merging data for:', candidateData.candidate_name);
         
         // Merge the candidate data with safe handling
-        const mergedData = mergeCandidateData(duplicateCandidate.extracted_json, candidateData);
+        const mergedData = mergeResumeData(duplicateCandidate, candidateData);
         
         console.log('Merged candidate data:', mergedData);
         
         // Update the existing candidate with merged data
-        const { data: updatedCandidate, error: updateError } = await supabase
-          .from('cv_uploads')
-          .update({
-            extracted_json: mergedData,
-            source_email: candidateData.source_email // Update source email to latest
-          })
+        const { data: updatedResume, error: updateError } = await supabase
+          .from('resumes')
+          .update(mergedData)
           .eq('id', duplicateCandidate.id)
           .select()
           .single();
@@ -310,7 +281,7 @@ serve(async (req) => {
           );
         }
 
-        console.log('Successfully merged candidate data:', updatedCandidate);
+        console.log('Successfully merged candidate data:', updatedResume);
         
         return new Response(
           JSON.stringify({ 
@@ -318,7 +289,7 @@ serve(async (req) => {
             message: 'Candidate information merged successfully',
             action: 'merged',
             id: duplicateCandidate.id,
-            candidate_name: mergedData.candidate_name,
+            candidate_name: mergedData.name,
             assigned_to_user: profile.email,
             user_id: profile.id
           }),
@@ -344,32 +315,14 @@ serve(async (req) => {
       );
     }
 
-    // Create the CV upload record with the mapped user ID - normalize data before storing
-    const cvUploadData = {
-      user_id: profile.id, // Use the actual user ID from profile lookup
-      file_url: '', // No actual file for n8n uploads
-      original_filename: candidateData.original_filename || `${candidateData.candidate_name}_processed.json`,
-      extracted_json: {
-        candidate_name: candidateData.candidate_name,
-        email_address: candidateData.email_address || '',
-        contact_number: candidateData.contact_number || '',
-        educational_qualifications: candidateData.educational_qualifications || '',
-        job_history: candidateData.job_history || '',
-        skill_set: normalizeToString(candidateData.skill_set),
-        score: String(candidateData.score || '0'),
-        justification: candidateData.justification || '',
-        countries: normalizeToString(candidateData.countries) // Normalize to string format
-      },
-      processing_status: 'completed',
-      source_email: candidateData.source_email, // Use the actual source email from request
-      file_size: 0
-    };
-
-    console.log('Inserting CV upload data:', cvUploadData);
+    // Create the resume record with the mapped data
+    const resumeData = mapToResumeData(candidateData);
+    
+    console.log('Inserting resume data:', resumeData);
 
     const { data, error } = await supabase
-      .from('cv_uploads')
-      .insert(cvUploadData)
+      .from('resumes')
+      .insert(resumeData)
       .select()
       .single();
 
@@ -395,7 +348,7 @@ serve(async (req) => {
         message: 'Candidate tile created successfully',
         action: 'created',
         id: data.id,
-        candidate_name: candidateData.candidate_name,
+        candidate_name: data.name,
         assigned_to_user: profile.email,
         user_id: profile.id
       }),
