@@ -12,9 +12,10 @@ interface CandidateGridProps {
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
   filterType?: 'all' | 'best';
+  onCandidateDelete?: (deletedId: string) => void;
 }
 
-export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'all' }: CandidateGridProps) => {
+export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'all', onCandidateDelete }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
   
   // Update local uploads when prop changes
@@ -29,6 +30,12 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
       console.log('CandidateGrid: Candidates remaining after deletion:', filtered.length);
       return filtered;
     });
+    
+    // Also notify parent component
+    if (onCandidateDelete) {
+      console.log('CandidateGrid: Notifying parent component of deletion');
+      onCandidateDelete(deletedId);
+    }
   };
 
   // Memoize the filtering to prevent unnecessary recalculations

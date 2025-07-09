@@ -230,7 +230,18 @@ export const isFromApprovedCountry = (upload: CVUpload): boolean => {
     return true;
   }
   
-  const countries = upload.extracted_json.countries.toLowerCase();
+  // Handle countries as string or array safely
+  let countries = '';
+  const countriesData = upload.extracted_json.countries;
+  
+  if (typeof countriesData === 'string') {
+    countries = countriesData.toLowerCase();
+  } else if (Array.isArray(countriesData)) {
+    countries = (countriesData as string[]).join(' ').toLowerCase();
+  } else {
+    console.log('Country check: No valid countries data for:', upload.extracted_json?.candidate_name);
+    return false;
+  }
   
   const approvedCountries = [
     'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales', 'northern ireland',

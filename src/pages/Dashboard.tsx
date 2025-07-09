@@ -158,7 +158,14 @@ const Dashboard = () => {
     setFilteredUploads(filtered);
   };
 
+  const handleCandidateDelete = (deletedId: string) => {
+    console.log('Dashboard: Removing candidate from state:', deletedId);
+    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
+    setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
+  };
+
   const handleBulkDelete = (deletedIds: string[]) => {
+    console.log('Dashboard: Bulk removing candidates from state:', deletedIds);
     setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
     setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
@@ -388,6 +395,7 @@ const Dashboard = () => {
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="all"
+                      onCandidateDelete={handleCandidateDelete}
                     />
                   </TabsContent>
 
@@ -397,6 +405,7 @@ const Dashboard = () => {
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="best"
+                      onCandidateDelete={handleCandidateDelete}
                     />
                   </TabsContent>
                 </Tabs>
