@@ -23,7 +23,12 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
   }, [uploads]);
 
   const handleCandidateDelete = (deletedId: string) => {
-    setLocalUploads(prev => prev.filter(upload => upload.id !== deletedId));
+    console.log('CandidateGrid: Removing candidate from local state:', deletedId);
+    setLocalUploads(prev => {
+      const filtered = prev.filter(upload => upload.id !== deletedId);
+      console.log('CandidateGrid: Candidates remaining after deletion:', filtered.length);
+      return filtered;
+    });
   };
 
   // Memoize the filtering to prevent unnecessary recalculations

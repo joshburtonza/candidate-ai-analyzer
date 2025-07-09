@@ -58,13 +58,19 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Delete button clicked for candidate:', upload.id, data.candidate_name);
+    console.log('CandidateCard: Delete button clicked for candidate:', upload.id, data.candidate_name);
     
     const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
     
+    console.log('CandidateCard: Delete operation result:', success);
+    
     if (success && onDelete) {
-      console.log('Calling onDelete callback');
+      console.log('CandidateCard: Calling onDelete callback');
       onDelete(upload.id);
+    } else if (!success) {
+      console.error('CandidateCard: Delete operation failed');
+    } else if (!onDelete) {
+      console.warn('CandidateCard: No onDelete callback provided');
     }
   };
 

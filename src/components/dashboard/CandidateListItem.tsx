@@ -53,13 +53,19 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Delete button clicked for candidate:', upload.id, data.candidate_name);
+    console.log('CandidateListItem: Delete button clicked for candidate:', upload.id, data.candidate_name);
     
     const success = await deleteCandidate(upload.id, data.candidate_name || 'Unknown');
     
+    console.log('CandidateListItem: Delete operation result:', success);
+    
     if (success && onDelete) {
-      console.log('Calling onDelete callback');
+      console.log('CandidateListItem: Calling onDelete callback');
       onDelete(upload.id);
+    } else if (!success) {
+      console.error('CandidateListItem: Delete operation failed');
+    } else if (!onDelete) {
+      console.warn('CandidateListItem: No onDelete callback provided');
     }
   };
 
