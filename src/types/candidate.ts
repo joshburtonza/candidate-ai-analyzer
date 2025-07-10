@@ -1,4 +1,3 @@
-
 export interface CandidateData {
   candidate_name: string;
   email_address: string;
@@ -9,6 +8,7 @@ export interface CandidateData {
   score: string;
   justification: string;
   countries: string; // Keep as string for consistency in UI
+  current_role?: string; // Add current role field
 }
 
 export interface CVUpload {
