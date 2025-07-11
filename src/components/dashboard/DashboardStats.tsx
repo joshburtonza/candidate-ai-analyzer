@@ -24,10 +24,17 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   const uniqueCountries = new Set<string>();
   validCandidates.forEach(upload => {
     if (upload.extracted_json?.countries) {
-      const countries = upload.extracted_json.countries.split(',').map(c => c.trim());
-      countries.forEach(country => {
-        if (country) uniqueCountries.add(country);
-      });
+      const countriesData = upload.extracted_json.countries;
+      if (typeof countriesData === 'string') {
+        const countries = countriesData.split(',').map(c => c.trim());
+        countries.forEach(country => {
+          if (country) uniqueCountries.add(country);
+        });
+      } else if (Array.isArray(countriesData)) {
+        (countriesData as string[]).forEach(country => {
+          if (country && typeof country === 'string') uniqueCountries.add(country.trim());
+        });
+      }
     }
   });
 
