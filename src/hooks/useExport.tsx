@@ -1,25 +1,19 @@
 
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 
 export const useExport = () => {
   const { toast } = useToast();
 
-  const exportToCSV = (uploads: CVUpload[], filename: string = 'candidates') => {
+  const exportToCSV = (uploads: Resume[], filename: string = 'candidates') => {
     try {
       // Filter for valid candidates
       const validUploads = uploads.filter(upload => 
-        upload.processing_status === 'completed' && 
-        upload.extracted_json &&
-        upload.extracted_json.candidate_name &&
-        upload.extracted_json.contact_number &&
-        upload.extracted_json.email_address &&
-        upload.extracted_json.countries &&
-        upload.extracted_json.skill_set &&
-        upload.extracted_json.educational_qualifications &&
-        upload.extracted_json.job_history &&
-        upload.extracted_json.justification &&
-        parseFloat(upload.extracted_json.score || '0') >= 5
+        upload.status === 'processed' && 
+        !upload.is_archived &&
+        upload.name &&
+        upload.email &&
+        (upload.fit_score || 0) >= 5
       );
 
       if (validUploads.length === 0) {
@@ -47,18 +41,17 @@ export const useExport = () => {
       const csvContent = [
         headers.join(','),
         ...validUploads.map(upload => {
-          const data = upload.extracted_json!;
           return [
-            `"${data.candidate_name || ''}"`,
-            `"${data.email_address || ''}"`,
-            `"${data.contact_number || ''}"`,
-            `"${data.countries || ''}"`,
-            `"${data.skill_set || ''}"`,
-            `"${data.educational_qualifications || ''}"`,
-            `"${data.job_history || ''}"`,
-            data.score || '0',
-            new Date(upload.uploaded_at).toLocaleDateString(),
-            `"${data.justification || ''}"`
+            `"${upload.name || ''}"`,
+            `"${upload.email || ''}"`,
+            `"${upload.phone || ''}"`,
+            `"${upload.location || ''} | ${upload.nationality || ''}"`,
+            `"${(upload.skills || []).join(', ')}"`,
+            `"${upload.education_level || ''}"`,
+            `"${upload.experience_years || 0} years"`,
+            upload.fit_score || '0',
+            new Date(upload.created_at).toLocaleDateString(),
+            `"${upload.justification || ''}"`
           ].join(',');
         })
       ].join('\n');
