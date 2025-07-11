@@ -20,20 +20,12 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
 
   // Update local uploads when prop changes
   useEffect(() => {
-    console.log('UploadHistoryCalendar: Received uploads:', uploads.length);
-    console.log('Upload dates:', uploads.map(u => ({ name: u.extracted_json?.candidate_name, date: u.uploaded_at })));
     setRealtimeUploads(uploads);
   }, [uploads]);
 
   // Memoized function to get qualified count for a specific date
   const getQualifiedCountForDate = useCallback((date: Date) => {
     const validCandidates = filterValidCandidatesForDate(realtimeUploads, date);
-    console.log(`UploadHistoryCalendar: Date ${date.toDateString()} has ${validCandidates.length} qualified candidates`);
-    console.log('Valid candidates for date:', validCandidates.map(c => ({
-      name: c.extracted_json?.candidate_name,
-      uploaded: c.uploaded_at,
-      email: c.extracted_json?.email_address
-    })));
     return validCandidates.length;
   }, [realtimeUploads]);
 

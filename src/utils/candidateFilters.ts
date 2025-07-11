@@ -139,7 +139,6 @@ export const hasValidEducation = (upload: CVUpload): boolean => {
   ];
   
   const hasQualification = validQualifications.some(qual => education.includes(qual));
-  console.log('Education check for:', upload.extracted_json?.candidate_name, ':', education, 'Valid:', hasQualification);
   return hasQualification;
 };
 
@@ -186,7 +185,6 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
   }
   
   const isValid = maxYears >= 2; // Back to 2 years minimum
-  console.log('Experience check for:', upload.extracted_json?.candidate_name, ':', maxYears, 'years, Valid:', isValid);
   return isValid;
 };
 
@@ -216,15 +214,12 @@ export const hasValidSubject = (upload: CVUpload): boolean => {
   
   const hasTeachingRole = teachingKeywords.some(keyword => text.includes(keyword));
   const isValid = !hasStronglyExcludedRole && hasTeachingRole;
-  
-  console.log('Subject check for:', upload.extracted_json?.candidate_name, 'Valid:', isValid);
   return isValid;
 };
 
 export const isFromApprovedCountry = (upload: CVUpload): boolean => {
   if (!upload.extracted_json?.countries) {
     // If no country info, be lenient and allow it through for now
-    console.log('Country check for:', upload.extracted_json?.candidate_name, ': No country data, allowing through');
     return true;
   }
   
@@ -237,7 +232,6 @@ export const isFromApprovedCountry = (upload: CVUpload): boolean => {
   } else if (Array.isArray(countriesData)) {
     countries = (countriesData as string[]).join(' ').toLowerCase();
   } else {
-    console.log('Country check: No valid countries data for:', upload.extracted_json?.candidate_name);
     return false;
   }
   
@@ -253,17 +247,14 @@ export const isFromApprovedCountry = (upload: CVUpload): boolean => {
   ];
   
   const isValid = approvedCountries.some(country => countries.includes(country));
-  console.log('Country check for:', upload.extracted_json?.candidate_name, ':', countries, 'Valid:', isValid);
   return isValid;
 };
 
 export const isBestCandidate = (upload: CVUpload): boolean => {
   if (!isQualifiedCandidate(upload)) {
-    console.log('Best candidate check failed - not qualified:', upload.extracted_json?.candidate_name);
     return false;
   }
   if (isTestCandidate(upload)) {
-    console.log('Best candidate check failed - test candidate:', upload.extracted_json?.candidate_name);
     return false;
   }
   
@@ -273,14 +264,6 @@ export const isBestCandidate = (upload: CVUpload): boolean => {
   const countryValid = isFromApprovedCountry(upload);
   
   const isBest = educationValid && experienceValid && subjectValid && countryValid;
-  
-  console.log('Best candidate check for:', upload.extracted_json?.candidate_name, {
-    education: educationValid,
-    experience: experienceValid,
-    subject: subjectValid,
-    country: countryValid,
-    isBest
-  });
   
   return isBest;
 };
