@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
-import { UploadSection } from '@/components/dashboard/UploadSection';
+
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -302,13 +302,6 @@ const Dashboard = () => {
             </TabsList>
 
             <TabsContent value="candidates" className="space-y-8 mt-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <UploadSection onUploadComplete={handleUploadComplete} />
-              </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
