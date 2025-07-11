@@ -3,20 +3,20 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
+import { filterValidResumesForDate } from '@/utils/resumeFilters';
 
 interface UploadHistoryCalendarProps {
-  uploads: CVUpload[];
+  uploads: Resume[];
   onDateSelect: (date: Date) => void;
   selectedDate: Date | null;
 }
 
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
-  const [realtimeUploads, setRealtimeUploads] = useState<CVUpload[]>(uploads);
+  const [realtimeUploads, setRealtimeUploads] = useState<Resume[]>(uploads);
 
   // Update local uploads when prop changes
   useEffect(() => {

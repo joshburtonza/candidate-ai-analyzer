@@ -1,22 +1,21 @@
 
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
-import { filterValidCandidates } from '@/utils/candidateFilters';
+import { filterValidResumes } from '@/utils/resumeFilters';
 
 interface DashboardStatsProps {
-  uploads: CVUpload[];
+  uploads: Resume[];
 }
 
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   // Use the centralized filtering logic
-  const validCandidates = filterValidCandidates(uploads);
+  const validCandidates = filterValidResumes(uploads);
   const totalCandidates = validCandidates.length;
   
   // Calculate average score
   const averageScore = validCandidates.length > 0 
     ? validCandidates.reduce((sum, upload) => {
-        const rawScore = parseFloat(upload.extracted_json?.score || '0');
-        const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+        const score = upload.fit_score || 0;
         return sum + score;
       }, 0) / validCandidates.length
     : 0;

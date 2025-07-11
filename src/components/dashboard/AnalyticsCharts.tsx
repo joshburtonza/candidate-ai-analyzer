@@ -1,19 +1,19 @@
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 
 interface AnalyticsChartsProps {
-  uploads: CVUpload[];
+  uploads: Resume[];
 }
 
 const COLORS = ['#8399A2', '#A8B5BA', '#BCC7CB', '#D1DADC', '#E6ECED', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
+const filterValidCandidates = (uploads: Resume[]): Resume[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
+    if (!upload.name || !upload.email) return false;
     
     const data = upload.extracted_json;
     if (!(data.candidate_name && data.contact_number && data.email_address && 
