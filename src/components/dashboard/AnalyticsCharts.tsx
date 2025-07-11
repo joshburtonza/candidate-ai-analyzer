@@ -1,38 +1,18 @@
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 
 interface AnalyticsChartsProps {
-  uploads: CVUpload[];
+  uploads: Resume[];
 }
 
 const COLORS = ['#8399A2', '#A8B5BA', '#BCC7CB', '#D1DADC', '#E6ECED', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
-  
-  return uploads.filter(upload => {
-    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
-    
-    const data = upload.extracted_json;
-    if (!(data.candidate_name && data.contact_number && data.email_address && 
-          data.countries && data.skill_set && data.educational_qualifications && 
-          data.job_history && data.justification)) return false;
-    
-    const rawScore = parseFloat(data.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-    if (score < 5) return false;
-    
-    const candidateEmail = data.email_address;
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) return false;
-      seenEmails.add(normalizedEmail);
-    }
-    
-    return true;
-  });
+import { filterValidResumes } from '@/utils/resumeFilters';
+
+const filterValidCandidates = (uploads: Resume[]): Resume[] => {
+  return filterValidResumes(uploads);
 };
 
 const normalizeCountryName = (country: string): string => {
@@ -160,12 +140,11 @@ const extractSkills = (skillsData: any): string[] => {
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   const validUploads = filterValidCandidates(uploads);
   console.log('Valid uploads for analytics:', validUploads.length);
-  console.log('Sample upload data:', validUploads[0]?.extracted_json);
+  console.log('Sample resume data:', validUploads[0]);
 
   // Score distribution data
-  const scoreDistribution = validUploads.reduce((acc, upload) => {
-    const rawScore = parseFloat(upload.extracted_json?.score || '0');
-    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+  const scoreDistribution = validUploads.reduce((acc, resume) => {
+    const score = resume.fit_score || 0;
     const range = `${score}/10`;
     acc[range] = (acc[range] || 0) + 1;
     return acc;
@@ -176,11 +155,12 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .sort((a, b) => parseInt(a.score) - parseInt(b.score));
 
   // Country distribution data with improved extraction and normalization
-  const countryDistribution = validUploads.reduce((acc, upload) => {
-    const countries = extractCountries(upload.extracted_json?.countries);
+  const countryDistribution = validUploads.reduce((acc, resume) => {
+    const countries = [resume.nationality, resume.location].filter(Boolean);
     countries.forEach(country => {
       if (country) {
-        acc[country] = (acc[country] || 0) + 1;
+        const normalized = normalizeCountryName(country);
+        acc[normalized] = (acc[normalized] || 0) + 1;
       }
     });
     return acc;
@@ -201,9 +181,9 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   }).reverse();
 
   const trendData = last7Days.map(date => {
-    const dayUploads = validUploads.filter(upload => {
-      const uploadDate = new Date(upload.uploaded_at);
-      return uploadDate.toDateString() === date.toDateString();
+    const dayUploads = validUploads.filter(resume => {
+      const createdDate = new Date(resume.created_at);
+      return createdDate.toDateString() === date.toDateString();
     });
     
     return {
@@ -213,11 +193,12 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   });
 
   // Top skills with improved extraction and normalization
-  const skillsDistribution = validUploads.reduce((acc, upload) => {
-    const skills = extractSkills(upload.extracted_json?.skill_set);
+  const skillsDistribution = validUploads.reduce((acc, resume) => {
+    const skills = resume.skills || [];
     skills.forEach(skill => {
       if (skill && skill.length > 1) { // Filter out single character skills
-        acc[skill] = (acc[skill] || 0) + 1;
+        const normalized = normalizeSkillName(skill);
+        acc[normalized] = (acc[normalized] || 0) + 1;
       }
     });
     return acc;
