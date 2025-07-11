@@ -20,8 +20,6 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
 
   // Update local uploads when prop changes
   useEffect(() => {
-    console.log('UploadHistoryCalendar: Received uploads:', uploads.length);
-    console.log('Upload dates:', uploads.map(u => ({ name: (u.extracted_json as any)?.candidate_name, date: u.uploaded_at })));
     setRealtimeUploads(uploads);
   }, [uploads]);
 
