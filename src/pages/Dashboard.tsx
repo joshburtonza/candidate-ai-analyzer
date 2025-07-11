@@ -127,7 +127,8 @@ const Dashboard = () => {
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
+      console.log('Dashboard: Fetched', data?.length || 0, 'total uploads from database');
+      console.log('Dashboard: Sample upload dates:', data?.slice(0, 5).map(u => ({ name: (u.extracted_json as any)?.candidate_name, date: u.uploaded_at })));
       
       const typedUploads: CVUpload[] = (data || []).map(upload => ({
         ...upload,
@@ -135,6 +136,7 @@ const Dashboard = () => {
         processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       }));
       
+      console.log('Dashboard: Setting uploads state with', typedUploads.length, 'uploads');
       setUploads(typedUploads);
       setFilteredUploads(typedUploads);
     } catch (error: any) {
