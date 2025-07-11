@@ -81,11 +81,9 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   const filtered = uploads.filter(upload => {
-    // Filter out uploads not from today for the main dashboard view
-    if (!isUploadedToday(upload)) {
-      return false;
-    }
-
+    // Remove the date filter to show all candidates by default
+    // Date filtering will be handled by the calendar selection in the dashboard
+    
     // Filter out incomplete uploads (only requires email now)
     if (!isQualifiedCandidate(upload)) {
       return false;
@@ -345,11 +343,9 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    // Filter out uploads not from today for the main dashboard view
-    if (!isUploadedToday(upload)) {
-      return false;
-    }
-
+    // Remove the date filter to show all best candidates by default
+    // Date filtering will be handled by the calendar selection in the dashboard
+    
     // Apply best candidate filters
     if (!isBestCandidate(upload)) {
       return false;
