@@ -44,10 +44,17 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     const countrySet = new Set<string>();
     validUploads.forEach(upload => {
       if (upload.extracted_json?.countries) {
-        const countries = upload.extracted_json.countries.split(',').map(c => c.trim());
-        countries.forEach(country => {
-          if (country) countrySet.add(country);
-        });
+        const countriesData = upload.extracted_json.countries;
+        if (typeof countriesData === 'string') {
+          const countries = countriesData.split(',').map(c => c.trim());
+          countries.forEach(country => {
+            if (country) countrySet.add(country);
+          });
+        } else if (Array.isArray(countriesData)) {
+          (countriesData as string[]).forEach(country => {
+            if (country && typeof country === 'string') countrySet.add(country.trim());
+          });
+        }
       }
     });
     return Array.from(countrySet).sort();
@@ -80,7 +87,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
           data?.candidate_name?.toLowerCase().includes(query) ||
           data?.email_address?.toLowerCase().includes(query) ||
           data?.skill_set?.toLowerCase().includes(query) ||
-          data?.countries?.toLowerCase().includes(query)
+          (typeof data?.countries === 'string' ? data.countries.toLowerCase().includes(query) : false)
         );
       });
     }
@@ -88,9 +95,10 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Country filter
     if (selectedCountries.length > 0) {
       filtered = filtered.filter(upload => {
-        const countries = upload.extracted_json?.countries || '';
+        const countriesData = upload.extracted_json?.countries || '';
+        const countriesString = typeof countriesData === 'string' ? countriesData : '';
         return selectedCountries.some(selectedCountry =>
-          countries.toLowerCase().includes(selectedCountry.toLowerCase())
+          countriesString.toLowerCase().includes(selectedCountry.toLowerCase())
         );
       });
     }
