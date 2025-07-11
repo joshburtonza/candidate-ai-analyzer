@@ -25,7 +25,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
 
   // Memoized function to get qualified count for a specific date
   const getQualifiedCountForDate = useCallback((date: Date) => {
-    const validCandidates = filterValidCandidatesForDate(realtimeUploads, date);
+    const validCandidates = filterValidResumesForDate(realtimeUploads, date);
     return validCandidates.length;
   }, [realtimeUploads]);
 
@@ -39,18 +39,18 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
       console.log('UploadHistoryCalendar: Setting up realtime subscription');
       
       const channel = supabase
-        .channel(`calendar_cv_uploads_${Date.now()}`)
+        .channel(`calendar_resumes_${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'cv_uploads'
+            table: 'resumes'
           },
           (payload) => {
             if (!mounted) return;
             console.log('UploadHistoryCalendar: New upload received via realtime:', payload);
-            const newUpload = payload.new as CVUpload;
+            const newUpload = payload.new as Resume;
             
             setRealtimeUploads(prev => {
               // Prevent duplicates
@@ -65,12 +65,12 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           {
             event: 'UPDATE',
             schema: 'public',
-            table: 'cv_uploads'
+            table: 'resumes'
           },
           (payload) => {
             if (!mounted) return;
             console.log('UploadHistoryCalendar: Upload updated via realtime:', payload);
-            const updatedUpload = payload.new as CVUpload;
+            const updatedUpload = payload.new as Resume;
             
             setRealtimeUploads(prev => 
               prev.map(upload => 

@@ -20,25 +20,14 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
       }, 0) / validCandidates.length
     : 0;
 
-  // Get unique countries with proper type checking
+  // Get unique countries from location and nationality
   const uniqueCountries = new Set<string>();
   validCandidates.forEach(upload => {
-    const countries = upload.extracted_json?.countries;
-    if (countries) {
-      // Handle different data types for countries
-      if (typeof countries === 'string') {
-        countries.split(',').forEach(country => {
-          uniqueCountries.add(country.trim());
-        });
-      } else if (Array.isArray(countries)) {
-        // Type assert the array as string array and filter for strings
-        const countryArray = countries as unknown[];
-        countryArray.forEach((country) => {
-          if (typeof country === 'string') {
-            uniqueCountries.add(country.trim());
-          }
-        });
-      }
+    if (upload.location) {
+      uniqueCountries.add(upload.location.trim());
+    }
+    if (upload.nationality) {
+      uniqueCountries.add(upload.nationality.trim());
     }
   });
 

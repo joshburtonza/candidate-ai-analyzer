@@ -6,10 +6,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, HardDrive, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GoogleApiService } from '@/services/GoogleApiService';
-import { CVUpload } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 
 interface GoogleDocUploadProps {
-  onUploadComplete: (upload: CVUpload) => void;
+  onUploadComplete: (resume: Resume) => void;
 }
 
 export const GoogleDocUpload = ({ onUploadComplete }: GoogleDocUploadProps) => {
