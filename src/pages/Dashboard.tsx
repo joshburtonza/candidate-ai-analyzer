@@ -406,7 +406,7 @@ const Dashboard = () => {
 
                   <TabsContent value="all">
                     <CandidateGrid 
-                      uploads={sortedUploads} 
+                      uploads={uploads} 
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="all"
@@ -416,7 +416,7 @@ const Dashboard = () => {
 
                   <TabsContent value="best">
                     <CandidateGrid 
-                      uploads={sortedUploads} 
+                      uploads={uploads} 
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="best"
