@@ -1,14 +1,16 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { CVUpload } from '@/types/candidate';
+import { CVUpload, Resume } from '@/types/candidate';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
+import { ResumeCard } from './ResumeCard';
+import { ResumeListItem } from './ResumeListItem';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
+import { filterValidResumes, filterValidResumesForDate, filterBestResumes, filterBestResumesForDate } from '@/utils/resumeFilters';
 
 interface CandidateGridProps {
-  uploads: CVUpload[];
+  uploads: Resume[];
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
   filterType?: 'all' | 'best';
@@ -17,6 +19,9 @@ interface CandidateGridProps {
 
 export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'all', onCandidateDelete }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
+  
+  // Determine if uploads are Resume type (new) or CVUpload type (legacy)
+  const isResumeType = uploads.length > 0 && 'name' in uploads[0];
   
   // Update local uploads when prop changes
   useEffect(() => {
@@ -42,14 +47,14 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
   const validUploads = useMemo(() => {
     if (filterType === 'best') {
       if (selectedDate) {
-        return filterBestCandidatesForDate(localUploads, selectedDate);
+        return filterBestResumesForDate(localUploads, selectedDate);
       }
-      return filterBestCandidates(localUploads);
+      return filterBestResumes(localUploads);
     } else {
       if (selectedDate) {
-        return filterValidCandidatesForDate(localUploads, selectedDate);
+        return filterValidResumesForDate(localUploads, selectedDate);
       }
-      return filterValidCandidates(localUploads);
+      return filterValidResumes(localUploads);
     }
   }, [localUploads, selectedDate, filterType]);
 
@@ -96,7 +101,7 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
           >
-            <CandidateListItem upload={upload} onDelete={handleCandidateDelete} />
+            <ResumeListItem upload={upload} onDelete={handleCandidateDelete} />
           </motion.div>
         ))}
       </div>
@@ -111,9 +116,9 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: index * 0.05 }}
-        >
-          <CandidateCard upload={upload} onDelete={handleCandidateDelete} />
-        </motion.div>
+          >
+            <ResumeCard upload={upload} onDelete={handleCandidateDelete} />
+          </motion.div>
       ))}
     </div>
   );

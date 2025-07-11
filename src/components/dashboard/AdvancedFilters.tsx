@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, X, MapPin, Award, Briefcase } from 'lucide-react';
-import { CVUpload } from '@/types/candidate';
-import { filterValidCandidates } from '@/utils/candidateFilters';
+import { Resume } from '@/types/candidate';
+import { filterValidResumes } from '@/utils/resumeFilters';
 
 interface AdvancedFiltersProps {
-  uploads: CVUpload[];
-  onFilterChange: (filtered: CVUpload[]) => void;
+  uploads: Resume[];
+  onFilterChange: (filtered: Resume[]) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
@@ -36,18 +36,15 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
 
   // Memoize the valid uploads to prevent recalculation
   const validUploads = useMemo(() => {
-    return filterValidCandidates(uploads);
+    return filterValidResumes(uploads);
   }, [uploads]);
 
   // Extract unique countries with proper handling of both arrays and strings - memoized
   const availableCountries = useMemo(() => {
     const countrySet = new Set<string>();
     validUploads.forEach(upload => {
-      const countries = upload.extracted_json?.countries;
-      const countryArray = normalizeToArray(countries);
-      countryArray.forEach(country => {
-        if (country) countrySet.add(country);
-      });
+      if (upload.nationality) countrySet.add(upload.nationality);
+      if (upload.location) countrySet.add(upload.location);
     });
     return Array.from(countrySet).sort();
   }, [validUploads]);
@@ -56,9 +53,8 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
     validUploads.forEach(upload => {
-      const skills = upload.extracted_json?.skill_set;
-      const skillArray = normalizeToArray(skills);
-      skillArray.forEach(skill => {
+      const skills = upload.skills || [];
+      skills.forEach(skill => {
         if (skill) skillSet.add(skill);
       });
     });
@@ -73,12 +69,12 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(upload => {
-        const data = upload.extracted_json!;
         return (
-          data.candidate_name?.toLowerCase().includes(query) ||
-          data.email_address?.toLowerCase().includes(query) ||
-          normalizeToArray(data.skill_set).some(skill => skill.toLowerCase().includes(query)) ||
-          normalizeToArray(data.countries).some(country => country.toLowerCase().includes(query))
+          upload.name?.toLowerCase().includes(query) ||
+          upload.email?.toLowerCase().includes(query) ||
+          upload.skills?.some(skill => skill.toLowerCase().includes(query)) ||
+          upload.nationality?.toLowerCase().includes(query) ||
+          upload.location?.toLowerCase().includes(query)
         );
       });
     }
@@ -86,9 +82,11 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Country filter
     if (selectedCountries.length > 0) {
       filtered = filtered.filter(upload => {
-        const countries = normalizeToArray(upload.extracted_json?.countries);
+        const location = upload.location || '';
+        const nationality = upload.nationality || '';
         return selectedCountries.some(selectedCountry =>
-          countries.some(country => country.toLowerCase().includes(selectedCountry.toLowerCase()))
+          location.toLowerCase().includes(selectedCountry.toLowerCase()) ||
+          nationality.toLowerCase().includes(selectedCountry.toLowerCase())
         );
       });
     }
@@ -96,7 +94,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Skills filter
     if (selectedSkills.length > 0) {
       filtered = filtered.filter(upload => {
-        const skills = normalizeToArray(upload.extracted_json?.skill_set);
+        const skills = upload.skills || [];
         return selectedSkills.some(selectedSkill =>
           skills.some(skill => skill.toLowerCase().includes(selectedSkill.toLowerCase()))
         );
@@ -105,8 +103,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
 
     // Score filter
     filtered = filtered.filter(upload => {
-      const rawScore = parseFloat(upload.extracted_json?.score || '0');
-      const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+      const score = upload.fit_score || 0;
       return score >= scoreRange[0] && score <= scoreRange[1];
     });
 

@@ -1,17 +1,14 @@
-
-import { CVUpload, Resume } from '@/types/candidate';
+import { Resume } from '@/types/candidate';
 import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
-export const isQualifiedCandidate = (upload: CVUpload): boolean => {
-  // Filter out incomplete uploads
-  if (upload.processing_status !== 'completed' || !upload.extracted_json) {
+export const isQualifiedResume = (resume: Resume): boolean => {
+  // Filter out archived resumes
+  if (resume.is_archived || resume.status === 'archived') {
     return false;
   }
 
-  const data = upload.extracted_json;
-  
   // Only require email address - be very permissive with other fields
-  const hasEmail = !!(data.email_address && data.email_address.trim());
+  const hasEmail = !!(resume.email && resume.email.trim());
 
   if (!hasEmail) {
     return false;
@@ -21,10 +18,10 @@ export const isQualifiedCandidate = (upload: CVUpload): boolean => {
   return true;
 };
 
-export const isTestCandidate = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.candidate_name) return false;
+export const isTestResume = (resume: Resume): boolean => {
+  if (!resume.name) return false;
   
-  const name = upload.extracted_json.candidate_name.toLowerCase().trim();
+  const name = resume.name.toLowerCase().trim();
   
   // Filter out test candidates like John Doe, Jane Doe, Test User, etc.
   const testPatterns = [
@@ -46,31 +43,31 @@ export const isTestCandidate = (upload: CVUpload): boolean => {
   return testPatterns.some(pattern => name.includes(pattern));
 };
 
-export const isUploadedOnDate = (upload: CVUpload, targetDate: Date): boolean => {
-  const uploadDate = new Date(upload.uploaded_at);
+export const isCreatedOnDate = (resume: Resume, targetDate: Date): boolean => {
+  const createdDate = new Date(resume.created_at);
   
   // Create time range from 12:00 AM to 11:59 PM of target day
   const startOfTargetDay = startOfDay(targetDate);
   const endOfTargetDay = endOfDay(targetDate);
   
-  return isWithinInterval(uploadDate, {
+  return isWithinInterval(createdDate, {
     start: startOfTargetDay,
     end: endOfTargetDay
   });
 };
 
-export const isUploadedToday = (upload: CVUpload): boolean => {
-  return isUploadedOnDate(upload, new Date());
+export const isCreatedToday = (resume: Resume): boolean => {
+  return isCreatedOnDate(resume, new Date());
 };
 
 // Optimized filtering function with better memoization
-const filterCache = new Map<string, { result: CVUpload[], timestamp: number }>();
+const filterCache = new Map<string, { result: Resume[], timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 seconds
 
-export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  // Create cache key based on uploads length and today's date
+export const filterValidResumes = (resumes: Resume[]): Resume[] => {
+  // Create cache key based on resumes length and today's date
   const today = new Date();
-  const cacheKey = `today-${uploads.length}-${today.toDateString()}`;
+  const cacheKey = `today-${resumes.length}-${today.toDateString()}`;
   
   // Check if we have a valid cached result
   const cached = filterCache.get(cacheKey);
@@ -80,21 +77,18 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
   const seenEmails = new Set<string>();
   
-  const filtered = uploads.filter(upload => {
-    // Remove the date filter to show all candidates by default
-    // Date filtering will be handled by the calendar selection in the dashboard
-    
-    // Filter out incomplete uploads (only requires email now)
-    if (!isQualifiedCandidate(upload)) {
+  const filtered = resumes.filter(resume => {
+    // Filter out incomplete resumes (only requires email now)
+    if (!isQualifiedResume(resume)) {
       return false;
     }
 
     // Filter out test candidates
-    if (isTestCandidate(upload)) {
+    if (isTestResume(resume)) {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateEmail = resume.email;
 
     // Filter out duplicates based on email (case-insensitive)
     if (candidateEmail) {
@@ -120,12 +114,25 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   return filtered;
 };
 
-// Optimized function for date-specific filtering
 // Helper functions for Best Candidates filtering
-export const hasValidEducation = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.educational_qualifications) return false;
+export const hasValidEducationResume = (resume: Resume): boolean => {
+  if (!resume.education_details && !resume.education_level) return false;
   
-  const education = upload.extracted_json.educational_qualifications.toLowerCase();
+  let educationText = '';
+  
+  // Check education_level
+  if (resume.education_level) {
+    educationText += resume.education_level.toLowerCase() + ' ';
+  }
+  
+  // Check education_details if it's a string or has text
+  if (resume.education_details) {
+    if (typeof resume.education_details === 'string') {
+      educationText += resume.education_details.toLowerCase();
+    } else if (typeof resume.education_details === 'object' && resume.education_details.text) {
+      educationText += resume.education_details.text.toLowerCase();
+    }
+  }
   
   // Check for teaching qualifications - made more flexible
   const validQualifications = [
@@ -138,43 +145,41 @@ export const hasValidEducation = (upload: CVUpload): boolean => {
     'bachelor', 'degree', 'diploma', 'certificate' // More lenient
   ];
   
-  const hasQualification = validQualifications.some(qual => education.includes(qual));
+  const hasQualification = validQualifications.some(qual => educationText.includes(qual));
   return hasQualification;
 };
 
-export const hasValidExperience = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.job_history) return false;
+export const hasValidExperienceResume = (resume: Resume): boolean => {
+  // Check experience_years field first
+  if (resume.experience_years && resume.experience_years >= 2) {
+    return true;
+  }
   
-  const jobHistory = upload.extracted_json.job_history.toLowerCase();
-  
-  // Extract years of experience - improved patterns
-  const yearPatterns = [
-    /(?:over|more than|above)\s*(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
-    /(\d+)\+?\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
-    /(?:teaching|work|experience)\s*(?:experience|for)?\s*(?:over|more than|above)?\s*(\d+)\s*years?/gi,
-    /(\d+)\s*years?\s*(?:in|of)\s*(?:teaching|education|work)/gi,
-    /with\s*(?:over|more than|above)?\s*(\d+)\s*years?\s*(?:of\s*)?(?:diverse|international|teaching|experience)/gi,
-    /(\d+)\s*years?\s*(?:diverse|international|teaching|experience)/gi,
-    /(\d+)\+?\s*years?/gi // Any mention of years
-  ];
-  
-  let maxYears = 0;
-  
-  for (const pattern of yearPatterns) {
-    const matches = jobHistory.matchAll(pattern);
-    for (const match of matches) {
-      const years = parseInt(match[1]);
-      if (!isNaN(years) && years > maxYears) {
-        maxYears = years;
-      }
+  // If no direct experience years, check parsed data or AI insights
+  if (resume.ai_insights || resume.parsed_data) {
+    const insights = resume.ai_insights || resume.parsed_data;
+    if (typeof insights === 'object' && insights.experience_years) {
+      return insights.experience_years >= 2;
     }
   }
   
-  // If no years found in job_history, also check the justification field
-  if (maxYears === 0 && upload.extracted_json?.justification) {
-    const justification = upload.extracted_json.justification.toLowerCase();
+  // If still no experience found, check if justification mentions years
+  if (resume.justification) {
+    const justificationText = resume.justification.toLowerCase();
+    const yearPatterns = [
+      /(?:over|more than|above)\s*(\d+)\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
+      /(\d+)\+?\s*years?\s*(?:of\s*)?(?:teaching|education|experience|work)/gi,
+      /(?:teaching|work|experience)\s*(?:experience|for)?\s*(?:over|more than|above)?\s*(\d+)\s*years?/gi,
+      /(\d+)\s*years?\s*(?:in|of)\s*(?:teaching|education|work)/gi,
+      /with\s*(?:over|more than|above)?\s*(\d+)\s*years?\s*(?:of\s*)?(?:diverse|international|teaching|experience)/gi,
+      /(\d+)\s*years?\s*(?:diverse|international|teaching|experience)/gi,
+      /(\d+)\+?\s*years?/gi // Any mention of years
+    ];
+    
+    let maxYears = 0;
+    
     for (const pattern of yearPatterns) {
-      const matches = justification.matchAll(pattern);
+      const matches = justificationText.matchAll(pattern);
       for (const match of matches) {
         const years = parseInt(match[1]);
         if (!isNaN(years) && years > maxYears) {
@@ -182,16 +187,17 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
         }
       }
     }
+    
+    return maxYears >= 2;
   }
   
-  const isValid = maxYears >= 2; // Back to 2 years minimum
-  return isValid;
+  return false;
 };
 
-export const hasValidSubject = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.job_history && !upload.extracted_json?.skill_set) return false;
+export const hasValidSubjectResume = (resume: Resume): boolean => {
+  if (!resume.skills && !resume.role_title && !resume.justification) return false;
   
-  const text = `${upload.extracted_json.job_history || ''} ${upload.extracted_json.skill_set || ''}`.toLowerCase();
+  const text = `${resume.skills?.join(' ') || ''} ${resume.role_title || ''} ${resume.justification || ''}`.toLowerCase();
   
   // More lenient exclusion - only exclude obvious non-teaching roles
   const excludedSubjects = [
@@ -217,23 +223,13 @@ export const hasValidSubject = (upload: CVUpload): boolean => {
   return isValid;
 };
 
-export const isFromApprovedCountry = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.countries) {
+export const isFromApprovedCountryResume = (resume: Resume): boolean => {
+  if (!resume.nationality && !resume.location) {
     // If no country info, be lenient and allow it through for now
     return true;
   }
   
-  // Handle countries as string or array safely
-  let countries = '';
-  const countriesData = upload.extracted_json.countries;
-  
-  if (typeof countriesData === 'string') {
-    countries = countriesData.toLowerCase();
-  } else if (Array.isArray(countriesData)) {
-    countries = (countriesData as string[]).join(' ').toLowerCase();
-  } else {
-    return false;
-  }
+  const countryText = `${resume.nationality || ''} ${resume.location || ''}`.toLowerCase();
   
   const approvedCountries = [
     'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales', 'northern ireland',
@@ -246,30 +242,30 @@ export const isFromApprovedCountry = (upload: CVUpload): boolean => {
     'dubai', 'uae', 'emirates', 'united arab emirates', 'abu dhabi'
   ];
   
-  const isValid = approvedCountries.some(country => countries.includes(country));
+  const isValid = approvedCountries.some(country => countryText.includes(country));
   return isValid;
 };
 
-export const isBestCandidate = (upload: CVUpload): boolean => {
-  if (!isQualifiedCandidate(upload)) {
+export const isBestResume = (resume: Resume): boolean => {
+  if (!isQualifiedResume(resume)) {
     return false;
   }
-  if (isTestCandidate(upload)) {
+  if (isTestResume(resume)) {
     return false;
   }
   
-  const educationValid = hasValidEducation(upload);
-  const experienceValid = hasValidExperience(upload);
-  const subjectValid = hasValidSubject(upload);
-  const countryValid = isFromApprovedCountry(upload);
+  const educationValid = hasValidEducationResume(resume);
+  const experienceValid = hasValidExperienceResume(resume);
+  const subjectValid = hasValidSubjectResume(resume);
+  const countryValid = isFromApprovedCountryResume(resume);
   
   const isBest = educationValid && experienceValid && subjectValid && countryValid;
   
   return isBest;
 };
 
-export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
-  const cacheKey = `date-${uploads.length}-${targetDate.toDateString()}`;
+export const filterValidResumesForDate = (resumes: Resume[], targetDate: Date): Resume[] => {
+  const cacheKey = `date-${resumes.length}-${targetDate.toDateString()}`;
   
   // Check if we have a valid cached result
   const cached = filterCache.get(cacheKey);
@@ -279,23 +275,23 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
   const seenEmails = new Set<string>();
   
-  const filtered = uploads.filter(upload => {
+  const filtered = resumes.filter(resume => {
     // Filter for specific date instead of just today
-    if (!isUploadedOnDate(upload, targetDate)) {
+    if (!isCreatedOnDate(resume, targetDate)) {
       return false;
     }
 
-    // Filter out incomplete uploads (only requires email now)
-    if (!isQualifiedCandidate(upload)) {
+    // Filter out incomplete resumes (only requires email now)
+    if (!isQualifiedResume(resume)) {
       return false;
     }
 
     // Filter out test candidates
-    if (isTestCandidate(upload)) {
+    if (isTestResume(resume)) {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateEmail = resume.email;
 
     // Filter out duplicates based on email (case-insensitive)
     if (candidateEmail) {
@@ -322,19 +318,16 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 };
 
 // Filter functions for Best Candidates
-export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
+export const filterBestResumes = (resumes: Resume[]): Resume[] => {
   const seenEmails = new Set<string>();
   
-  return uploads.filter(upload => {
-    // Remove the date filter to show all best candidates by default
-    // Date filtering will be handled by the calendar selection in the dashboard
-    
+  return resumes.filter(resume => {
     // Apply best candidate filters
-    if (!isBestCandidate(upload)) {
+    if (!isBestResume(resume)) {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateEmail = resume.email;
 
     // Filter out duplicates based on email (case-insensitive)
     if (candidateEmail) {
@@ -349,21 +342,21 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
   });
 };
 
-export const filterBestCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
+export const filterBestResumesForDate = (resumes: Resume[], targetDate: Date): Resume[] => {
   const seenEmails = new Set<string>();
   
-  return uploads.filter(upload => {
+  return resumes.filter(resume => {
     // Filter for specific date instead of just today
-    if (!isUploadedOnDate(upload, targetDate)) {
+    if (!isCreatedOnDate(resume, targetDate)) {
       return false;
     }
 
     // Apply best candidate filters
-    if (!isBestCandidate(upload)) {
+    if (!isBestResume(resume)) {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateEmail = resume.email;
 
     // Filter out duplicates based on email (case-insensitive)
     if (candidateEmail) {
