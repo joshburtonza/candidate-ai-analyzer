@@ -1,5 +1,5 @@
 
-import { CVUpload, Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
 export const isQualifiedCandidate = (upload: CVUpload): boolean => {
@@ -81,9 +81,11 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   const filtered = uploads.filter(upload => {
-    // Remove the date filter to show all candidates by default
-    // Date filtering will be handled by the calendar selection in the dashboard
-    
+    // Filter out uploads not from today for the main dashboard view
+    if (!isUploadedToday(upload)) {
+      return false;
+    }
+
     // Filter out incomplete uploads (only requires email now)
     if (!isQualifiedCandidate(upload)) {
       return false;
@@ -139,6 +141,7 @@ export const hasValidEducation = (upload: CVUpload): boolean => {
   ];
   
   const hasQualification = validQualifications.some(qual => education.includes(qual));
+  console.log('Education check for:', upload.extracted_json?.candidate_name, ':', education, 'Valid:', hasQualification);
   return hasQualification;
 };
 
@@ -185,6 +188,7 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
   }
   
   const isValid = maxYears >= 2; // Back to 2 years minimum
+  console.log('Experience check for:', upload.extracted_json?.candidate_name, ':', maxYears, 'years, Valid:', isValid);
   return isValid;
 };
 
@@ -214,12 +218,15 @@ export const hasValidSubject = (upload: CVUpload): boolean => {
   
   const hasTeachingRole = teachingKeywords.some(keyword => text.includes(keyword));
   const isValid = !hasStronglyExcludedRole && hasTeachingRole;
+  
+  console.log('Subject check for:', upload.extracted_json?.candidate_name, 'Valid:', isValid);
   return isValid;
 };
 
 export const isFromApprovedCountry = (upload: CVUpload): boolean => {
   if (!upload.extracted_json?.countries) {
     // If no country info, be lenient and allow it through for now
+    console.log('Country check for:', upload.extracted_json?.candidate_name, ': No country data, allowing through');
     return true;
   }
   
@@ -232,6 +239,7 @@ export const isFromApprovedCountry = (upload: CVUpload): boolean => {
   } else if (Array.isArray(countriesData)) {
     countries = (countriesData as string[]).join(' ').toLowerCase();
   } else {
+    console.log('Country check: No valid countries data for:', upload.extracted_json?.candidate_name);
     return false;
   }
   
@@ -247,14 +255,17 @@ export const isFromApprovedCountry = (upload: CVUpload): boolean => {
   ];
   
   const isValid = approvedCountries.some(country => countries.includes(country));
+  console.log('Country check for:', upload.extracted_json?.candidate_name, ':', countries, 'Valid:', isValid);
   return isValid;
 };
 
 export const isBestCandidate = (upload: CVUpload): boolean => {
   if (!isQualifiedCandidate(upload)) {
+    console.log('Best candidate check failed - not qualified:', upload.extracted_json?.candidate_name);
     return false;
   }
   if (isTestCandidate(upload)) {
+    console.log('Best candidate check failed - test candidate:', upload.extracted_json?.candidate_name);
     return false;
   }
   
@@ -264,6 +275,14 @@ export const isBestCandidate = (upload: CVUpload): boolean => {
   const countryValid = isFromApprovedCountry(upload);
   
   const isBest = educationValid && experienceValid && subjectValid && countryValid;
+  
+  console.log('Best candidate check for:', upload.extracted_json?.candidate_name, {
+    education: educationValid,
+    experience: experienceValid,
+    subject: subjectValid,
+    country: countryValid,
+    isBest
+  });
   
   return isBest;
 };
@@ -326,9 +345,11 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    // Remove the date filter to show all best candidates by default
-    // Date filtering will be handled by the calendar selection in the dashboard
-    
+    // Filter out uploads not from today for the main dashboard view
+    if (!isUploadedToday(upload)) {
+      return false;
+    }
+
     // Apply best candidate filters
     if (!isBestCandidate(upload)) {
       return false;

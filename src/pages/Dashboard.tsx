@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { CVUpload, Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
@@ -16,13 +16,13 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidResumes, filterValidResumesForDate, filterBestResumes, filterBestResumesForDate } from '@/utils/resumeFilters';
+import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
 import { UploadSection } from '@/components/dashboard/UploadSection';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
-  const [uploads, setUploads] = useState<Resume[]>([]);
-  const [filteredUploads, setFilteredUploads] = useState<Resume[]>([]);
+  const [uploads, setUploads] = useState<CVUpload[]>([]);
+  const [filteredUploads, setFilteredUploads] = useState<CVUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -66,28 +66,38 @@ const Dashboard = () => {
     console.log('Dashboard: Setting up new realtime subscription with email filtering');
     
     const channel = supabase
-      .channel('resumes_changes')
+      .channel('cv_uploads_changes')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'resumes'
+          table: 'cv_uploads'
         },
         (payload) => {
-          console.log('Dashboard: New resume received via realtime:', payload);
+          console.log('Dashboard: New upload received via realtime:', payload);
           
-          const newResume = payload.new as Resume;
+          const newUpload = payload.new as CVUpload;
           
-          if (!newResume.is_archived) {
-            setUploads(prev => [newResume, ...prev]);
+          const shouldShow = !newUpload.source_email || 
+                           newUpload.source_email === '' || 
+                           newUpload.source_email === profile?.email ||
+                           profile?.is_admin;
+          
+          if (shouldShow) {
+            setUploads(prev => [newUpload, ...prev]);
             
-            if (newResume.name) {
+            if (newUpload.extracted_json?.candidate_name) {
               toast({
                 title: "New Candidate Added",
-                description: `${newResume.name} has been processed and added to your dashboard`,
+                description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
               });
             }
+          } else {
+            console.log('Dashboard: Upload filtered out due to email mismatch', {
+              sourceEmail: newUpload.source_email,
+              userEmail: profile?.email
+            });
           }
         }
       )
@@ -108,24 +118,25 @@ const Dashboard = () => {
       setError(null);
       
       const { data, error } = await supabase
-        .from('resumes')
+        .from('cv_uploads')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('uploaded_at', { ascending: false });
 
       if (error) {
         console.error('Dashboard: Error fetching uploads:', error);
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'resumes');
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
       
-      const typedResumes: Resume[] = (data || []).map(resume => ({
-        ...resume,
-        is_archived: resume.is_archived || false
+      const typedUploads: CVUpload[] = (data || []).map(upload => ({
+        ...upload,
+        extracted_json: upload.extracted_json as any,
+        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       }));
       
-      setUploads(typedResumes);
-      setFilteredUploads(typedResumes);
+      setUploads(typedUploads);
+      setFilteredUploads(typedUploads);
     } catch (error: any) {
       console.error('Dashboard: Error in fetchUploads:', error);
       setError(error.message);
@@ -144,7 +155,7 @@ const Dashboard = () => {
     setSelectedCalendarDate(date);
   };
 
-  const handleFilterChange = (filtered: Resume[]) => {
+  const handleFilterChange = (filtered: CVUpload[]) => {
     setFilteredUploads(filtered);
   };
 
@@ -154,10 +165,10 @@ const Dashboard = () => {
     setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
-  const handleUploadComplete = (upload: any) => {
+  const handleUploadComplete = (upload: CVUpload) => {
     console.log('Dashboard: New upload completed:', upload);
-    // For now, just refresh the data
-    fetchUploads();
+    setUploads(prev => [upload, ...prev]);
+    setFilteredUploads(prev => [upload, ...prev]);
   };
 
   const handleBulkDelete = (deletedIds: string[]) => {
@@ -180,15 +191,15 @@ const Dashboard = () => {
   const sortedUploads = [...displayUploads].sort((a, b) => {
     switch (sortBy) {
       case 'score':
-        const scoreA = a.fit_score || 0;
-        const scoreB = b.fit_score || 0;
+        const scoreA = parseInt(a.extracted_json?.score || '0');
+        const scoreB = parseInt(b.extracted_json?.score || '0');
         return scoreB - scoreA;
       case 'name':
-        const nameA = a.name || '';
-        const nameB = b.name || '';
+        const nameA = a.extracted_json?.candidate_name || '';
+        const nameB = b.extracted_json?.candidate_name || '';
         return nameA.localeCompare(nameB);
       default:
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
     }
   });
 
@@ -196,12 +207,12 @@ const Dashboard = () => {
   const getFilteredCandidates = (filterType: 'all' | 'best') => {
     if (selectedCalendarDate) {
       return filterType === 'best' 
-        ? filterBestResumesForDate(uploads, selectedCalendarDate)
-        : filterValidResumesForDate(uploads, selectedCalendarDate);
+        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
+        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
     }
     return filterType === 'best' 
-      ? filterBestResumes(uploads)
-      : filterValidResumes(uploads);
+      ? filterBestCandidates(uploads)
+      : filterValidCandidates(uploads);
   };
 
   const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType);
@@ -395,7 +406,7 @@ const Dashboard = () => {
 
                   <TabsContent value="all">
                     <CandidateGrid 
-                      uploads={uploads} 
+                      uploads={sortedUploads} 
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="all"
@@ -405,7 +416,7 @@ const Dashboard = () => {
 
                   <TabsContent value="best">
                     <CandidateGrid 
-                      uploads={uploads} 
+                      uploads={sortedUploads} 
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="best"
