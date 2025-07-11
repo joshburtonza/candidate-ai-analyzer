@@ -48,7 +48,7 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
                                skills.includes('teaching');
 
     // Check location for preferred countries
-    const countries = data.countries?.toLowerCase() || '';
+    const countries = typeof data.countries === 'string' ? data.countries.toLowerCase() : '';
     const preferredCountries = ['uk', 'usa', 'australia', 'new zealand', 'canada', 'ireland', 'south africa', 'dubai'];
     const isFromPreferredCountry = preferredCountries.some(country => 
       countries.includes(country)
