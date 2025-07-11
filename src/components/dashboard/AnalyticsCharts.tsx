@@ -1,24 +1,24 @@
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 
 interface AnalyticsChartsProps {
-  uploads: Resume[];
+  uploads: CVUpload[];
 }
 
 const COLORS = ['#8399A2', '#A8B5BA', '#BCC7CB', '#D1DADC', '#E6ECED', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-const filterValidCandidates = (uploads: Resume[]): Resume[] => {
+const filterValidCandidatesForAnalytics = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    if (!upload.name || !upload.email || upload.is_archived) return false;
+    if (!upload.extracted_json?.candidate_name || !upload.extracted_json?.email_address) return false;
     
-    const score = upload.fit_score || 0;
+    const score = parseFloat(upload.extracted_json?.score || '0') || 0;
     if (score < 5) return false;
     
-    const candidateEmail = upload.email;
+    const candidateEmail = upload.extracted_json.email_address;
     if (candidateEmail) {
       const normalizedEmail = candidateEmail.toLowerCase().trim();
       if (seenEmails.has(normalizedEmail)) return false;
@@ -152,12 +152,12 @@ const extractSkills = (skillsData: any): string[] => {
 };
 
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
-  const validUploads = filterValidCandidates(uploads);
+  const validUploads = filterValidCandidatesForAnalytics(uploads);
   console.log('Valid uploads for analytics:', validUploads.length);
 
   // Score distribution data
   const scoreDistribution = validUploads.reduce((acc, upload) => {
-    const score = upload.fit_score || 0;
+    const score = parseFloat(upload.extracted_json?.score || '0') || 0;
     const range = `${Math.round(score)}/10`;
     acc[range] = (acc[range] || 0) + 1;
     return acc;
@@ -169,13 +169,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
 
   // Country distribution data
   const countryDistribution = validUploads.reduce((acc, upload) => {
-    if (upload.location) {
-      const country = normalizeCountryName(upload.location);
-      acc[country] = (acc[country] || 0) + 1;
-    }
-    if (upload.nationality) {
-      const country = normalizeCountryName(upload.nationality);
-      acc[country] = (acc[country] || 0) + 1;
+    if (upload.extracted_json?.countries) {
+      const countries = upload.extracted_json.countries.split(',').map(c => c.trim());
+      countries.forEach(country => {
+        if (country) {
+          const normalizedCountry = normalizeCountryName(country);
+          acc[normalizedCountry] = (acc[normalizedCountry] || 0) + 1;
+        }
+      });
     }
     return acc;
   }, {} as Record<string, number>);
@@ -196,7 +197,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
 
   const trendData = last7Days.map(date => {
     const dayUploads = validUploads.filter(upload => {
-      const uploadDate = new Date(upload.created_at);
+      const uploadDate = new Date(upload.uploaded_at);
       return uploadDate.toDateString() === date.toDateString();
     });
     
@@ -208,13 +209,15 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
 
   // Top skills
   const skillsDistribution = validUploads.reduce((acc, upload) => {
-    const skills = upload.skills || [];
-    skills.forEach(skill => {
-      if (skill && skill.length > 1) {
-        const normalizedSkill = normalizeSkillName(skill);
-        acc[normalizedSkill] = (acc[normalizedSkill] || 0) + 1;
-      }
-    });
+    if (upload.extracted_json?.skill_set) {
+      const skills = upload.extracted_json.skill_set.split(',').map(s => s.trim());
+      skills.forEach(skill => {
+        if (skill && skill.length > 1) {
+          const normalizedSkill = normalizeSkillName(skill);
+          acc[normalizedSkill] = (acc[normalizedSkill] || 0) + 1;
+        }
+      });
+    }
     return acc;
   }, {} as Record<string, number>);
 

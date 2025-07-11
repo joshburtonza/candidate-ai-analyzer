@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, X, MapPin, Award, Briefcase } from 'lucide-react';
-import { Resume } from '@/types/candidate';
-import { filterValidResumes } from '@/utils/resumeFilters';
+import { CVUpload } from '@/types/candidate';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface AdvancedFiltersProps {
-  uploads: Resume[];
-  onFilterChange: (filtered: Resume[]) => void;
+  uploads: CVUpload[];
+  onFilterChange: (filtered: CVUpload[]) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
@@ -36,15 +36,19 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
 
   // Memoize the valid uploads to prevent recalculation
   const validUploads = useMemo(() => {
-    return filterValidResumes(uploads);
+    return filterValidCandidates(uploads);
   }, [uploads]);
 
   // Extract unique countries with proper handling of both arrays and strings - memoized
   const availableCountries = useMemo(() => {
     const countrySet = new Set<string>();
     validUploads.forEach(upload => {
-      const nationality = upload.nationality;
-      if (nationality) countrySet.add(nationality);
+      if (upload.extracted_json?.countries) {
+        const countries = upload.extracted_json.countries.split(',').map(c => c.trim());
+        countries.forEach(country => {
+          if (country) countrySet.add(country);
+        });
+      }
     });
     return Array.from(countrySet).sort();
   }, [validUploads]);
@@ -53,10 +57,12 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
     validUploads.forEach(upload => {
-      const skills = upload.skills || [];
-      skills.forEach(skill => {
-        if (skill) skillSet.add(skill);
-      });
+      if (upload.extracted_json?.skill_set) {
+        const skills = upload.extracted_json.skill_set.split(',').map(s => s.trim());
+        skills.forEach(skill => {
+          if (skill) skillSet.add(skill);
+        });
+      }
     });
     return Array.from(skillSet).sort();
   }, [validUploads]);
@@ -69,11 +75,12 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(upload => {
+        const data = upload.extracted_json;
         return (
-          upload.name?.toLowerCase().includes(query) ||
-          upload.email?.toLowerCase().includes(query) ||
-          upload.skills?.some(skill => skill.toLowerCase().includes(query)) ||
-          upload.nationality?.toLowerCase().includes(query)
+          data?.candidate_name?.toLowerCase().includes(query) ||
+          data?.email_address?.toLowerCase().includes(query) ||
+          data?.skill_set?.toLowerCase().includes(query) ||
+          data?.countries?.toLowerCase().includes(query)
         );
       });
     }
@@ -81,9 +88,9 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Country filter
     if (selectedCountries.length > 0) {
       filtered = filtered.filter(upload => {
-        const nationality = upload.nationality || '';
+        const countries = upload.extracted_json?.countries || '';
         return selectedCountries.some(selectedCountry =>
-          nationality.toLowerCase().includes(selectedCountry.toLowerCase())
+          countries.toLowerCase().includes(selectedCountry.toLowerCase())
         );
       });
     }
@@ -91,16 +98,16 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Skills filter
     if (selectedSkills.length > 0) {
       filtered = filtered.filter(upload => {
-        const skills = upload.skills || [];
+        const skillSet = upload.extracted_json?.skill_set || '';
         return selectedSkills.some(selectedSkill =>
-          skills.some(skill => skill.toLowerCase().includes(selectedSkill.toLowerCase()))
+          skillSet.toLowerCase().includes(selectedSkill.toLowerCase())
         );
       });
     }
 
     // Score filter
     filtered = filtered.filter(upload => {
-      const score = upload.fit_score || 0;
+      const score = parseFloat(upload.extracted_json?.score || '0') || 0;
       return score >= scoreRange[0] && score <= scoreRange[1];
     });
 

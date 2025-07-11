@@ -1,14 +1,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Resume } from '@/types/candidate';
-import { ResumeCard } from './ResumeCard';
-import { ResumeListItem } from './ResumeListItem';
+import { CVUpload } from '@/types/candidate';
+import { CandidateCard } from './CandidateCard';
+import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
-import { filterValidResumes, filterValidResumesForDate, filterBestResumes, filterBestResumesForDate } from '@/utils/resumeFilters';
+import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
-  uploads: Resume[];
+  uploads: CVUpload[];
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
   filterType?: 'all' | 'best';
@@ -42,14 +42,14 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
   const validUploads = useMemo(() => {
     if (filterType === 'best') {
       if (selectedDate) {
-        return filterBestResumesForDate(localUploads, selectedDate);
+        return filterBestCandidatesForDate(localUploads, selectedDate);
       }
-      return filterBestResumes(localUploads);
+      return filterBestCandidates(localUploads);
     } else {
       if (selectedDate) {
-        return filterValidResumesForDate(localUploads, selectedDate);
+        return filterValidCandidatesForDate(localUploads, selectedDate);
       }
-      return filterValidResumes(localUploads);
+      return filterValidCandidates(localUploads);
     }
   }, [localUploads, selectedDate, filterType]);
 
@@ -96,7 +96,7 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
           >
-            <ResumeListItem upload={upload} onDelete={handleCandidateDelete} />
+            <CandidateListItem upload={upload} onDelete={handleCandidateDelete} />
           </motion.div>
         ))}
       </div>
@@ -112,7 +112,7 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: index * 0.05 }}
         >
-          <ResumeCard upload={upload} onDelete={handleCandidateDelete} />
+          <CandidateCard upload={upload} onDelete={handleCandidateDelete} />
         </motion.div>
       ))}
     </div>

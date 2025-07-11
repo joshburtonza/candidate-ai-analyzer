@@ -6,13 +6,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { GoogleDocUpload } from './GoogleDocUpload';
 
 interface UploadSectionProps {
-  onUploadComplete: (resume: Resume) => void;
+  onUploadComplete: (upload: CVUpload) => void;
 }
 
 interface UploadFile {
@@ -139,31 +139,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Create a placeholder Resume object for notification
-      const placeholderResume: Resume = {
-        id: cvUpload.id,
-        name: 'Processing...',
-        email: null,
-        phone: null,
-        location: null,
-        nationality: null,
-        role_title: null,
-        current_company: null,
-        experience_years: null,
-        education_level: null,
-        skills: null,
-        fit_score: null,
-        justification: null,
-        created_at: cvUpload.uploaded_at,
-        updated_at: cvUpload.uploaded_at,
-        file_name: cvUpload.original_filename,
-        file_url: cvUpload.file_url,
-        is_archived: false,
-        status: 'pending'
-      };
-
-      // Notify parent component
-      onUploadComplete(placeholderResume);
+      // Notify parent component with the actual CVUpload (cast the type)
+      onUploadComplete(cvUpload as unknown as CVUpload);
 
       // Remove completed file after delay
       setTimeout(() => {
@@ -302,7 +279,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
           {/* Google Integration */}
           <div className="space-y-4">
-            <GoogleDocUpload onUploadComplete={onUploadComplete} />
+            <GoogleDocUpload onUploadComplete={(upload) => onUploadComplete(upload)} />
           </div>
         </div>
 

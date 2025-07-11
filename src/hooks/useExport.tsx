@@ -1,19 +1,19 @@
 
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 
 export const useExport = () => {
   const { toast } = useToast();
 
-  const exportToCSV = (uploads: Resume[], filename: string = 'candidates') => {
+  const exportToCSV = (uploads: CVUpload[], filename: string = 'candidates') => {
     try {
       // Filter for valid candidates
       const validUploads = uploads.filter(upload => 
-        upload.status === 'processed' && 
-        !upload.is_archived &&
-        upload.name &&
-        upload.email &&
-        (upload.fit_score || 0) >= 5
+        upload.processing_status === 'completed' && 
+        upload.extracted_json &&
+        upload.extracted_json.candidate_name &&
+        upload.extracted_json.email_address &&
+        (parseFloat(upload.extracted_json.score || '0') || 0) >= 5
       );
 
       if (validUploads.length === 0) {
@@ -41,17 +41,18 @@ export const useExport = () => {
       const csvContent = [
         headers.join(','),
         ...validUploads.map(upload => {
+          const data = upload.extracted_json;
           return [
-            `"${upload.name || ''}"`,
-            `"${upload.email || ''}"`,
-            `"${upload.phone || ''}"`,
-            `"${upload.location || ''} | ${upload.nationality || ''}"`,
-            `"${(upload.skills || []).join(', ')}"`,
-            `"${upload.education_level || ''}"`,
-            `"${upload.experience_years || 0} years"`,
-            upload.fit_score || '0',
-            new Date(upload.created_at).toLocaleDateString(),
-            `"${upload.justification || ''}"`
+            `"${data?.candidate_name || ''}"`,
+            `"${data?.email_address || ''}"`,
+            `"${data?.contact_number || ''}"`,
+            `"${data?.countries || ''}"`,
+            `"${data?.skill_set || ''}"`,
+            `"${data?.educational_qualifications || ''}"`,
+            `"${data?.job_history || ''}"`,
+            data?.score || '0',
+            new Date(upload.uploaded_at).toLocaleDateString(),
+            `"${data?.justification || ''}"`
           ].join(',');
         })
       ].join('\n');

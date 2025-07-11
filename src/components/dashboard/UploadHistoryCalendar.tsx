@@ -3,20 +3,20 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { filterValidResumesForDate } from '@/utils/resumeFilters';
+import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface UploadHistoryCalendarProps {
-  uploads: Resume[];
+  uploads: CVUpload[];
   onDateSelect: (date: Date) => void;
   selectedDate: Date | null;
 }
 
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
-  const [realtimeUploads, setRealtimeUploads] = useState<Resume[]>(uploads);
+  const [realtimeUploads, setRealtimeUploads] = useState<CVUpload[]>(uploads);
 
   // Update local uploads when prop changes
   useEffect(() => {
@@ -25,7 +25,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
 
   // Memoized function to get qualified count for a specific date
   const getQualifiedCountForDate = useCallback((date: Date) => {
-    const validCandidates = filterValidResumesForDate(realtimeUploads, date);
+    const validCandidates = filterValidCandidatesForDate(realtimeUploads, date);
     return validCandidates.length;
   }, [realtimeUploads]);
 
@@ -38,19 +38,19 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
       
       console.log('UploadHistoryCalendar: Setting up realtime subscription');
       
-      const channel = supabase
-        .channel(`calendar_resumes_${Date.now()}`)
+        const channel = supabase
+        .channel(`calendar_uploads_${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'resumes'
+            table: 'cv_uploads'
           },
           (payload) => {
             if (!mounted) return;
             console.log('UploadHistoryCalendar: New upload received via realtime:', payload);
-            const newUpload = payload.new as Resume;
+            const newUpload = payload.new as CVUpload;
             
             setRealtimeUploads(prev => {
               // Prevent duplicates
@@ -65,12 +65,12 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           {
             event: 'UPDATE',
             schema: 'public',
-            table: 'resumes'
+            table: 'cv_uploads'
           },
           (payload) => {
             if (!mounted) return;
             console.log('UploadHistoryCalendar: Upload updated via realtime:', payload);
-            const updatedUpload = payload.new as Resume;
+            const updatedUpload = payload.new as CVUpload;
             
             setRealtimeUploads(prev => 
               prev.map(upload => 
