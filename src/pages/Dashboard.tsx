@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
+import { UploadSection } from '@/components/dashboard/UploadSection';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -162,6 +163,12 @@ const Dashboard = () => {
     console.log('Dashboard: Removing candidate from state:', deletedId);
     setUploads(prev => prev.filter(upload => upload.id !== deletedId));
     setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
+  };
+
+  const handleUploadComplete = (upload: CVUpload) => {
+    console.log('Dashboard: New upload completed:', upload);
+    setUploads(prev => [upload, ...prev]);
+    setFilteredUploads(prev => [upload, ...prev]);
   };
 
   const handleBulkDelete = (deletedIds: string[]) => {
@@ -310,6 +317,14 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
+              >
+                <UploadSection onUploadComplete={handleUploadComplete} />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
               >
                 <UploadHistoryCalendar 
                   uploads={uploads} 
