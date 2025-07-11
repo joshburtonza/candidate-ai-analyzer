@@ -6,13 +6,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Resume } from '@/types/candidate';
+import { CVUpload, CandidateData } from '@/types/candidate';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { GoogleDocUpload } from './GoogleDocUpload';
 
 interface UploadSectionProps {
-  onUploadComplete: (resume: Resume) => void;
+  onUploadComplete: (upload: CVUpload) => void;
 }
 
 interface UploadFile {
@@ -120,11 +120,18 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
 
       console.log('Database record created:', cvUpload.id);
 
-      // For upload tracking, just update the local state
+      // Convert the database response to match our CVUpload interface
+      const typedCvUpload: CVUpload = {
+        ...cvUpload,
+        extracted_json: cvUpload.extracted_json as unknown as CandidateData | null,
+        processing_status: cvUpload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      };
+
+      // Update with upload ID and processing status
       setUploadFiles(prev => prev.map(f => 
         f.file === uploadFile.file ? { 
           ...f, 
-          uploadId: cvUpload.id, 
+          uploadId: typedCvUpload.id, 
           progress: 70, 
           status: 'processing' 
         } : f
@@ -139,31 +146,8 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Create a placeholder Resume object for notification
-      const placeholderResume: Resume = {
-        id: cvUpload.id,
-        name: 'Processing...',
-        email: null,
-        phone: null,
-        location: null,
-        nationality: null,
-        role_title: null,
-        current_company: null,
-        experience_years: null,
-        education_level: null,
-        skills: null,
-        fit_score: null,
-        justification: null,
-        created_at: cvUpload.uploaded_at,
-        updated_at: cvUpload.uploaded_at,
-        file_name: cvUpload.original_filename,
-        file_url: cvUpload.file_url,
-        is_archived: false,
-        status: 'pending'
-      };
-
-      // Notify parent component
-      onUploadComplete(placeholderResume);
+      // Notify parent component with properly typed upload
+      onUploadComplete(typedCvUpload);
 
       // Remove completed file after delay
       setTimeout(() => {

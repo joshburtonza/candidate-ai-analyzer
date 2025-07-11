@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Download, Users } from 'lucide-react';
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { useExport } from '@/hooks/useExport';
 import { useToast } from '@/hooks/use-toast';
 
 interface BulkActionsProps {
-  uploads: Resume[];
+  uploads: CVUpload[];
   onBulkDelete: (deletedIds: string[]) => void;
 }
 
@@ -47,7 +47,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
     for (const id of idsToDelete) {
       const upload = uploads.find(u => u.id === id);
       if (upload) {
-        const success = await deleteCandidate(id, upload.name || 'Unknown');
+        const success = await deleteCandidate(id, upload.extracted_json?.candidate_name || 'Unknown');
         if (success) successCount++;
       }
     }
@@ -131,7 +131,7 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
               className="border-brand/50 data-[state=checked]:bg-brand-gradient"
             />
             <span className="text-white/80 text-sm truncate">
-              {upload.name || 'Unknown Candidate'}
+              {upload.extracted_json?.candidate_name || 'Unknown Candidate'}
             </span>
           </div>
         ))}

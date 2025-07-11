@@ -1,33 +1,45 @@
 
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
-import { filterValidResumes } from '@/utils/resumeFilters';
+import { filterValidCandidates } from '@/utils/candidateFilters';
 
 interface DashboardStatsProps {
-  uploads: Resume[];
+  uploads: CVUpload[];
 }
 
 export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   // Use the centralized filtering logic
-  const validCandidates = filterValidResumes(uploads);
+  const validCandidates = filterValidCandidates(uploads);
   const totalCandidates = validCandidates.length;
   
   // Calculate average score
   const averageScore = validCandidates.length > 0 
     ? validCandidates.reduce((sum, upload) => {
-        const score = upload.fit_score || 0;
+        const rawScore = parseFloat(upload.extracted_json?.score || '0');
+        const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
         return sum + score;
       }, 0) / validCandidates.length
     : 0;
 
-  // Get unique countries from location and nationality
+  // Get unique countries with proper type checking
   const uniqueCountries = new Set<string>();
   validCandidates.forEach(upload => {
-    if (upload.location) {
-      uniqueCountries.add(upload.location.trim());
-    }
-    if (upload.nationality) {
-      uniqueCountries.add(upload.nationality.trim());
+    const countries = upload.extracted_json?.countries;
+    if (countries) {
+      // Handle different data types for countries
+      if (typeof countries === 'string') {
+        countries.split(',').forEach(country => {
+          uniqueCountries.add(country.trim());
+        });
+      } else if (Array.isArray(countries)) {
+        // Type assert the array as string array and filter for strings
+        const countryArray = countries as unknown[];
+        countryArray.forEach((country) => {
+          if (typeof country === 'string') {
+            uniqueCountries.add(country.trim());
+          }
+        });
+      }
     }
   });
 

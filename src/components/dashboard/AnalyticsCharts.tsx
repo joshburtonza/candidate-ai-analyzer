@@ -1,24 +1,30 @@
-import { Resume } from '@/types/candidate';
+import { CVUpload } from '@/types/candidate';
 import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 
 interface AnalyticsChartsProps {
-  uploads: Resume[];
+  uploads: CVUpload[];
 }
 
 const COLORS = ['#8399A2', '#A8B5BA', '#BCC7CB', '#D1DADC', '#E6ECED', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-const filterValidCandidates = (uploads: Resume[]): Resume[] => {
+const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    if (!upload.name || !upload.email || upload.is_archived) return false;
+    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
     
-    const score = upload.fit_score || 0;
+    const data = upload.extracted_json;
+    if (!(data.candidate_name && data.contact_number && data.email_address && 
+          data.countries && data.skill_set && data.educational_qualifications && 
+          data.job_history && data.justification)) return false;
+    
+    const rawScore = parseFloat(data.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
     if (score < 5) return false;
     
-    const candidateEmail = upload.email;
+    const candidateEmail = data.email_address;
     if (candidateEmail) {
       const normalizedEmail = candidateEmail.toLowerCase().trim();
       if (seenEmails.has(normalizedEmail)) return false;
@@ -154,11 +160,13 @@ const extractSkills = (skillsData: any): string[] => {
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
   const validUploads = filterValidCandidates(uploads);
   console.log('Valid uploads for analytics:', validUploads.length);
+  console.log('Sample upload data:', validUploads[0]?.extracted_json);
 
   // Score distribution data
   const scoreDistribution = validUploads.reduce((acc, upload) => {
-    const score = upload.fit_score || 0;
-    const range = `${Math.round(score)}/10`;
+    const rawScore = parseFloat(upload.extracted_json?.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    const range = `${score}/10`;
     acc[range] = (acc[range] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -167,16 +175,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([score, count]) => ({ score, count }))
     .sort((a, b) => parseInt(a.score) - parseInt(b.score));
 
-  // Country distribution data
+  // Country distribution data with improved extraction and normalization
   const countryDistribution = validUploads.reduce((acc, upload) => {
-    if (upload.location) {
-      const country = normalizeCountryName(upload.location);
-      acc[country] = (acc[country] || 0) + 1;
-    }
-    if (upload.nationality) {
-      const country = normalizeCountryName(upload.nationality);
-      acc[country] = (acc[country] || 0) + 1;
-    }
+    const countries = extractCountries(upload.extracted_json?.countries);
+    countries.forEach(country => {
+      if (country) {
+        acc[country] = (acc[country] || 0) + 1;
+      }
+    });
     return acc;
   }, {} as Record<string, number>);
 
@@ -196,7 +202,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
 
   const trendData = last7Days.map(date => {
     const dayUploads = validUploads.filter(upload => {
-      const uploadDate = new Date(upload.created_at);
+      const uploadDate = new Date(upload.uploaded_at);
       return uploadDate.toDateString() === date.toDateString();
     });
     
@@ -206,13 +212,12 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     };
   });
 
-  // Top skills
+  // Top skills with improved extraction and normalization
   const skillsDistribution = validUploads.reduce((acc, upload) => {
-    const skills = upload.skills || [];
+    const skills = extractSkills(upload.extracted_json?.skill_set);
     skills.forEach(skill => {
-      if (skill && skill.length > 1) {
-        const normalizedSkill = normalizeSkillName(skill);
-        acc[normalizedSkill] = (acc[normalizedSkill] || 0) + 1;
+      if (skill && skill.length > 1) { // Filter out single character skills
+        acc[skill] = (acc[skill] || 0) + 1;
       }
     });
     return acc;
