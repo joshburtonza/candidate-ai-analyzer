@@ -107,6 +107,10 @@ const Dashboard = () => {
       console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
       setError(null);
       
+      // Clear existing data first to prevent stale state
+      setUploads([]);
+      setFilteredUploads([]);
+      
       const { data, error } = await supabase
         .from('cv_uploads')
         .select('*')
@@ -117,7 +121,8 @@ const Dashboard = () => {
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads from cv_uploads table');
+      console.log('Dashboard: Raw data:', data);
       
       const typedUploads = (data || []).map(upload => ({
         ...upload,
