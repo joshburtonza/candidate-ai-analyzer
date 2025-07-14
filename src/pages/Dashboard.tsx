@@ -108,9 +108,9 @@ const Dashboard = () => {
       setError(null);
       
       const { data, error } = await supabase
-        .from('cv_uploads')
+        .from('resumes')
         .select('*')
-        .order('uploaded_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Dashboard: Error fetching uploads:', error);
@@ -119,10 +119,29 @@ const Dashboard = () => {
       
       console.log('Dashboard: Fetched', data?.length || 0, 'uploads');
       
-      const typedUploads = (data || []).map(upload => ({
-        ...upload,
-        extracted_json: upload.extracted_json as any, // Type assertion for JSON field
-      })) as CVUpload[];
+      // Transform resume data to CVUpload format
+      const typedUploads: CVUpload[] = (data || []).map(resume => ({
+        id: resume.id,
+        user_id: resume.id, // Use resume id as user_id for now
+        file_url: resume.file_url || '',
+        original_filename: resume.file_name,
+        uploaded_at: resume.created_at,
+        source_email: '',
+        file_size: resume.file_size || 0,
+        processing_status: 'completed' as const,
+        extracted_json: {
+          candidate_name: resume.name,
+          email_address: resume.email || '',
+          contact_number: resume.phone || '',
+          educational_qualifications: resume.education_level || '',
+          job_history: `${resume.experience_years || 0} years at ${resume.current_company || 'N/A'}`,
+          skill_set: resume.skills?.join(', ') || '',
+          score: resume.fit_score?.toString() || '0',
+          justification: resume.justification || '',
+          countries: resume.location || '',
+          current_role: resume.role_title || ''
+        }
+      }));
       
       setUploads(typedUploads);
       setFilteredUploads(typedUploads);
