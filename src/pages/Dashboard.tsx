@@ -166,14 +166,28 @@ const Dashboard = () => {
     setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
+  // Get the actual filtered candidates that will be displayed based on the active filter
+  const getFilteredCandidates = (filterType: 'all' | 'best') => {
+    if (selectedCalendarDate) {
+      return filterType === 'best' 
+        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
+        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
+    }
+    return filterType === 'best' 
+      ? filterBestCandidates(uploads)
+      : filterValidCandidates(uploads);
+  };
+
+  const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType) as any[];
+
   const handleExportAll = () => {
     const fileName = candidateFilterType === 'best' ? 'best_candidates' : 'all_candidates';
     exportToCSV(actualDisplayedCandidates, fileName);
   };
 
-  // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
+  // Apply calendar date filter to filtered uploads
   const displayUploads = selectedCalendarDate 
-    ? uploads // Pass all uploads and let CandidateGrid handle the filtering
+    ? actualDisplayedCandidates // Use the already filtered candidates for the selected date
     : filteredUploads;
 
   // Sort uploads
@@ -192,19 +206,6 @@ const Dashboard = () => {
     }
   });
 
-  // Get the actual filtered candidates that will be displayed based on the active filter
-  const getFilteredCandidates = (filterType: 'all' | 'best') => {
-    if (selectedCalendarDate) {
-      return filterType === 'best' 
-        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
-        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
-    }
-    return filterType === 'best' 
-      ? filterBestCandidates(uploads)
-      : filterValidCandidates(uploads);
-  };
-
-  const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType) as any[];
   const allCandidatesCount = getFilteredCandidates('all').length;
   const bestCandidatesCount = getFilteredCandidates('best').length;
 
