@@ -40,7 +40,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
 
   const stats = [
     {
-      title: 'QUALIFIED CANDIDATES',
+      title: 'TOTAL QUALIFIED CANDIDATES',
       value: totalCandidates,
       icon: Users,
       color: 'blue'
