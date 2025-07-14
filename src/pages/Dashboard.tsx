@@ -35,6 +35,13 @@ const Dashboard = () => {
   const { exportToCSV } = useExport();
   const subscriptionRef = useRef<any>(null);
 
+  // Force clear any cached state on component mount
+  useEffect(() => {
+    console.log('Dashboard: Forcing state reset - clearing all uploads');
+    setUploads([]);
+    setFilteredUploads([]);
+  }, []);
+
   useEffect(() => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
     
@@ -255,7 +262,7 @@ const Dashboard = () => {
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email);
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email, 'Current uploads state:', uploads.slice(0, 3));
 
   return (
     <div className="min-h-screen dot-grid-bg">
