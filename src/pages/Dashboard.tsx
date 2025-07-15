@@ -180,11 +180,13 @@ const Dashboard = () => {
 
   // Get the actual filtered candidates that will be displayed based on the active filter
   const getFilteredCandidates = (filterType: 'all' | 'best') => {
+    // Always show all candidates unless a specific date is selected
     if (selectedCalendarDate) {
       return filterType === 'best' 
         ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
         : filterValidCandidatesForDate(uploads, selectedCalendarDate);
     }
+    // Default to showing all candidates, not filtering by date
     return filterType === 'best' 
       ? filterBestCandidates(uploads)
       : filterValidCandidates(uploads);
