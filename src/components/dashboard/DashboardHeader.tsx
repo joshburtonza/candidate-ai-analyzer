@@ -1,5 +1,5 @@
 
-import { Search, Grid3X3, List, User, LogOut, Brain } from 'lucide-react';
+import { Search, Grid3X3, List, User, LogOut, Brain, CalendarDays, TrendingDown, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,16 +53,39 @@ export const DashboardHeader = ({
           </div>
 
           <div className="flex items-center gap-4">
-            <Select value={sortBy} onValueChange={onSortChange}>
-              <SelectTrigger className="w-32 bg-white/5 backdrop-blur-xl border border-slate-400/30 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-slate-400/30 text-white">
-                <SelectItem value="date">Date</SelectItem>
-                <SelectItem value="score">Score</SelectItem>
-                <SelectItem value="name">Name</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <span className="text-white/70 text-sm font-medium">Sort by:</span>
+              <Select value={sortBy} onValueChange={onSortChange}>
+                <SelectTrigger className="w-40 bg-white/5 backdrop-blur-xl border border-slate-400/30 text-white">
+                  <div className="flex items-center gap-2">
+                    {sortBy === 'date' && <CalendarDays className="w-4 h-4" />}
+                    {sortBy === 'score' && <TrendingUp className="w-4 h-4" />}
+                    {sortBy === 'name' && <User className="w-4 h-4" />}
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-slate-400/30 text-white">
+                  <SelectItem value="date">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="w-4 h-4" />
+                      Date (Newest First)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="score">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Score (Highest First)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="name">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Name (A-Z)
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="flex bg-white/5 backdrop-blur-xl rounded-lg p-1 border border-slate-400/30">
               <Button
