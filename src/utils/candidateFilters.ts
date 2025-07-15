@@ -14,13 +14,17 @@ export const removeDuplicatesByEmail = (uploads: CVUpload[]): CVUpload[] => {
 };
 
 export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  console.log('filterValidCandidates: Input uploads:', uploads.length);
   const validUploads = uploads.filter(upload => 
     upload && 
     upload.extracted_json &&
     upload.extracted_json.candidate_name &&
     upload.extracted_json.email_address
   );
-  return removeDuplicatesByEmail(validUploads);
+  console.log('filterValidCandidates: Valid uploads before dedup:', validUploads.length);
+  const result = removeDuplicatesByEmail(validUploads);
+  console.log('filterValidCandidates: Final result after dedup:', result.length);
+  return result;
 };
 
 export const filterValidCandidatesForDate = (uploads: CVUpload[], selectedDate: Date): CVUpload[] => {
