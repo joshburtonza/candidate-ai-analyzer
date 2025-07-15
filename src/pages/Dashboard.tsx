@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -178,48 +178,53 @@ const Dashboard = () => {
     setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
-  // Get the actual filtered candidates that will be displayed based on the active filter
-  const getFilteredCandidates = (filterType: 'all' | 'best') => {
-    // Always show all candidates unless a specific date is selected
+  // Memoized filtering to prevent infinite loops
+  const actualDisplayedCandidates = useMemo(() => {
     if (selectedCalendarDate) {
-      return filterType === 'best' 
+      return candidateFilterType === 'best' 
         ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
         : filterValidCandidatesForDate(uploads, selectedCalendarDate);
     }
-    // Default to showing all candidates, not filtering by date
-    return filterType === 'best' 
+    return candidateFilterType === 'best' 
       ? filterBestCandidates(uploads)
       : filterValidCandidates(uploads);
-  };
+  }, [uploads, selectedCalendarDate, candidateFilterType]);
 
-  const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType) as any[];
+  const allCandidatesCount = useMemo(() => {
+    if (selectedCalendarDate) {
+      return filterValidCandidatesForDate(uploads, selectedCalendarDate).length;
+    }
+    return filterValidCandidates(uploads).length;
+  }, [uploads, selectedCalendarDate]);
+
+  const bestCandidatesCount = useMemo(() => {
+    if (selectedCalendarDate) {
+      return filterBestCandidatesForDate(uploads, selectedCalendarDate).length;
+    }
+    return filterBestCandidates(uploads).length;
+  }, [uploads, selectedCalendarDate]);
+
+  const sortedUploads = useMemo(() => {
+    return [...actualDisplayedCandidates].sort((a, b) => {
+      switch (sortBy) {
+        case 'score':
+          const scoreA = parseFloat(a.extracted_json?.score || '0') || 0;
+          const scoreB = parseFloat(b.extracted_json?.score || '0') || 0;
+          return scoreB - scoreA;
+        case 'name':
+          const nameA = a.extracted_json?.candidate_name || '';
+          const nameB = b.extracted_json?.candidate_name || '';
+          return nameA.localeCompare(nameB);
+        default:
+          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+      }
+    });
+  }, [actualDisplayedCandidates, sortBy]);
 
   const handleExportAll = () => {
     const fileName = candidateFilterType === 'best' ? 'best_candidates' : 'all_candidates';
     exportToCSV(actualDisplayedCandidates, fileName);
   };
-
-  // Always use the properly filtered candidates
-  const displayUploads = actualDisplayedCandidates;
-
-  // Sort uploads
-  const sortedUploads = [...displayUploads].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        const scoreA = parseFloat(a.extracted_json?.score || '0') || 0;
-        const scoreB = parseFloat(b.extracted_json?.score || '0') || 0;
-        return scoreB - scoreA;
-      case 'name':
-        const nameA = a.extracted_json?.candidate_name || '';
-        const nameB = b.extracted_json?.candidate_name || '';
-        return nameA.localeCompare(nameB);
-      default:
-        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
-    }
-  });
-
-  const allCandidatesCount = getFilteredCandidates('all').length;
-  const bestCandidatesCount = getFilteredCandidates('best').length;
 
   // Show loading only if auth is loading
   if (authLoading) {
