@@ -152,7 +152,7 @@ const Dashboard = () => {
   };
 
 
-  const handleCalendarDateSelect = (date: Date) => {
+  const handleCalendarDateSelect = (date: Date | null) => {
     setSelectedCalendarDate(date);
   };
 

@@ -10,7 +10,7 @@ import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
-  onDateSelect: (date: Date) => void;
+  onDateSelect: (date: Date | null) => void;
   selectedDate: Date | null;
 }
 
@@ -183,6 +183,18 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
               <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
+          
+          {/* Clear date filter button */}
+          {selectedDate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDateSelect(null as any)}
+              className="text-white/70 hover:text-white hover:bg-white/10 border-white/20 rounded-xl transition-all duration-200"
+            >
+              Clear Date Filter
+            </Button>
+          )}
         </div>
       </div>
 
