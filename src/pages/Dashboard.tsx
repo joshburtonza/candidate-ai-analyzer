@@ -199,10 +199,8 @@ const Dashboard = () => {
     exportToCSV(actualDisplayedCandidates, fileName);
   };
 
-  // Apply calendar date filter to filtered uploads
-  const displayUploads = selectedCalendarDate 
-    ? actualDisplayedCandidates // Use the already filtered candidates for the selected date
-    : filteredUploads;
+  // Always use the properly filtered candidates
+  const displayUploads = actualDisplayedCandidates;
 
   // Sort uploads
   const sortedUploads = [...displayUploads].sort((a, b) => {
