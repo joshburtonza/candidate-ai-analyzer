@@ -405,6 +405,7 @@ const Dashboard = () => {
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="all"
+                      sortBy={sortBy}
                       onCandidateDelete={handleCandidateDelete}
                     />
                   </TabsContent>
@@ -415,6 +416,7 @@ const Dashboard = () => {
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="best"
+                      sortBy={sortBy}
                       onCandidateDelete={handleCandidateDelete}
                     />
                   </TabsContent>

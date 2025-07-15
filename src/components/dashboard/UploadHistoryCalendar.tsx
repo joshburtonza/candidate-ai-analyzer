@@ -140,10 +140,10 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white text-elegant tracking-wider">
-              QUALIFIED CANDIDATES
+              UPLOAD CALENDAR
             </h2>
             <p className="text-sm text-white/60 mt-1">
-              Click on a day to filter candidates • Shows all candidates with email addresses
+              Click on a day to filter candidates • Sort by date to see chronological organization
             </p>
           </div>
         </div>
