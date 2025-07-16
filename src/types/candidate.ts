@@ -1,3 +1,4 @@
+
 export interface CandidateData {
   candidate_name: string;
   email_address: string;
@@ -8,7 +9,6 @@ export interface CandidateData {
   score: string;
   justification: string;
   countries: string; // Keep as string for consistency in UI
-  current_role?: string; // Add current role field
 }
 
 export interface CVUpload {
@@ -21,28 +21,6 @@ export interface CVUpload {
   source_email?: string;
   file_size?: number;
   processing_status: 'pending' | 'processing' | 'completed' | 'error';
-}
-
-export interface Resume {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  location: string | null;
-  nationality: string | null;
-  role_title: string | null;
-  current_company: string | null;
-  experience_years: number | null;
-  education_level: string | null;
-  skills: string[] | null;
-  fit_score: number | null;
-  justification: string | null;
-  created_at: string;
-  updated_at: string;
-  file_name: string;
-  file_url: string | null;
-  is_archived: boolean | null;
-  status: string | null;
 }
 
 export interface Profile {

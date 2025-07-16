@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -18,7 +18,6 @@ import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
 
-
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
   const [uploads, setUploads] = useState<CVUpload[]>([]);
@@ -34,13 +33,6 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { exportToCSV } = useExport();
   const subscriptionRef = useRef<any>(null);
-
-  // Force clear any cached state on component mount
-  useEffect(() => {
-    console.log('Dashboard: Forcing state reset - clearing all uploads');
-    setUploads([]);
-    setFilteredUploads([]);
-  }, []);
 
   useEffect(() => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
@@ -86,7 +78,12 @@ const Dashboard = () => {
           
           const newUpload = payload.new as CVUpload;
           
-          if (newUpload) {
+          const shouldShow = !newUpload.source_email || 
+                           newUpload.source_email === '' || 
+                           newUpload.source_email === profile?.email ||
+                           profile?.is_admin;
+          
+          if (shouldShow) {
             setUploads(prev => [newUpload, ...prev]);
             
             if (newUpload.extracted_json?.candidate_name) {
@@ -95,6 +92,11 @@ const Dashboard = () => {
                 description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
               });
             }
+          } else {
+            console.log('Dashboard: Upload filtered out due to email mismatch', {
+              sourceEmail: newUpload.source_email,
+              userEmail: profile?.email
+            });
           }
         }
       )
@@ -114,10 +116,6 @@ const Dashboard = () => {
       console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
       setError(null);
       
-      // Clear existing data first to prevent stale state
-      setUploads([]);
-      setFilteredUploads([]);
-      
       const { data, error } = await supabase
         .from('cv_uploads')
         .select('*')
@@ -128,13 +126,13 @@ const Dashboard = () => {
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads from cv_uploads table');
-      console.log('Dashboard: Raw data:', data);
+      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
       
-      const typedUploads = (data || []).map(upload => ({
+      const typedUploads: CVUpload[] = (data || []).map(upload => ({
         ...upload,
-        extracted_json: upload.extracted_json as any, // Type assertion for JSON field
-      })) as CVUpload[];
+        extracted_json: upload.extracted_json as any,
+        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
+      }));
       
       setUploads(typedUploads);
       setFilteredUploads(typedUploads);
@@ -152,7 +150,7 @@ const Dashboard = () => {
   };
 
 
-  const handleCalendarDateSelect = (date: Date | null) => {
+  const handleCalendarDateSelect = (date: Date) => {
     setSelectedCalendarDate(date);
   };
 
@@ -166,65 +164,53 @@ const Dashboard = () => {
     setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
   };
 
-  const handleUploadComplete = (upload: CVUpload) => {
-    console.log('Dashboard: New upload completed:', upload);
-    setUploads(prev => [upload, ...prev]);
-    setFilteredUploads(prev => [upload, ...prev]);
-  };
-
   const handleBulkDelete = (deletedIds: string[]) => {
     console.log('Dashboard: Bulk removing candidates from state:', deletedIds);
     setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
     setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
   };
 
-  // Memoized filtering to prevent infinite loops
-  const actualDisplayedCandidates = useMemo(() => {
-    if (selectedCalendarDate) {
-      return candidateFilterType === 'best' 
-        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
-        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
-    }
-    return candidateFilterType === 'best' 
-      ? filterBestCandidates(uploads)
-      : filterValidCandidates(uploads);
-  }, [uploads, selectedCalendarDate, candidateFilterType]);
-
-  const allCandidatesCount = useMemo(() => {
-    if (selectedCalendarDate) {
-      return filterValidCandidatesForDate(uploads, selectedCalendarDate).length;
-    }
-    return filterValidCandidates(uploads).length;
-  }, [uploads, selectedCalendarDate]);
-
-  const bestCandidatesCount = useMemo(() => {
-    if (selectedCalendarDate) {
-      return filterBestCandidatesForDate(uploads, selectedCalendarDate).length;
-    }
-    return filterBestCandidates(uploads).length;
-  }, [uploads, selectedCalendarDate]);
-
-  const sortedUploads = useMemo(() => {
-    return [...actualDisplayedCandidates].sort((a, b) => {
-      switch (sortBy) {
-        case 'score':
-          const scoreA = parseFloat(a.extracted_json?.score || '0') || 0;
-          const scoreB = parseFloat(b.extracted_json?.score || '0') || 0;
-          return scoreB - scoreA;
-        case 'name':
-          const nameA = a.extracted_json?.candidate_name || '';
-          const nameB = b.extracted_json?.candidate_name || '';
-          return nameA.localeCompare(nameB);
-        default:
-          return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
-      }
-    });
-  }, [actualDisplayedCandidates, sortBy]);
-
   const handleExportAll = () => {
     const fileName = candidateFilterType === 'best' ? 'best_candidates' : 'all_candidates';
     exportToCSV(actualDisplayedCandidates, fileName);
   };
+
+  // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
+  const displayUploads = selectedCalendarDate 
+    ? uploads // Pass all uploads and let CandidateGrid handle the filtering
+    : filteredUploads;
+
+  // Sort uploads
+  const sortedUploads = [...displayUploads].sort((a, b) => {
+    switch (sortBy) {
+      case 'score':
+        const scoreA = parseInt(a.extracted_json?.score || '0');
+        const scoreB = parseInt(b.extracted_json?.score || '0');
+        return scoreB - scoreA;
+      case 'name':
+        const nameA = a.extracted_json?.candidate_name || '';
+        const nameB = b.extracted_json?.candidate_name || '';
+        return nameA.localeCompare(nameB);
+      default:
+        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+    }
+  });
+
+  // Get the actual filtered candidates that will be displayed based on the active filter
+  const getFilteredCandidates = (filterType: 'all' | 'best') => {
+    if (selectedCalendarDate) {
+      return filterType === 'best' 
+        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
+        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
+    }
+    return filterType === 'best' 
+      ? filterBestCandidates(uploads)
+      : filterValidCandidates(uploads);
+  };
+
+  const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType);
+  const allCandidatesCount = getFilteredCandidates('all').length;
+  const bestCandidatesCount = getFilteredCandidates('best').length;
 
   // Show loading only if auth is loading
   if (authLoading) {
@@ -267,7 +253,7 @@ const Dashboard = () => {
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email, 'Current uploads state:', uploads.slice(0, 3));
+  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email);
 
   return (
     <div className="min-h-screen dot-grid-bg">
@@ -320,11 +306,10 @@ const Dashboard = () => {
             </TabsList>
 
             <TabsContent value="candidates" className="space-y-8 mt-8">
-
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+                transition={{ duration: 0.6 }}
               >
                 <UploadHistoryCalendar 
                   uploads={uploads} 
@@ -410,7 +395,6 @@ const Dashboard = () => {
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="all"
-                      sortBy={sortBy}
                       onCandidateDelete={handleCandidateDelete}
                     />
                   </TabsContent>
@@ -421,7 +405,6 @@ const Dashboard = () => {
                       viewMode={viewMode} 
                       selectedDate={selectedCalendarDate}
                       filterType="best"
-                      sortBy={sortBy}
                       onCandidateDelete={handleCandidateDelete}
                     />
                   </TabsContent>

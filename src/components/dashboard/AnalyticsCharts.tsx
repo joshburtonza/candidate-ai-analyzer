@@ -9,16 +9,22 @@ interface AnalyticsChartsProps {
 
 const COLORS = ['#8399A2', '#A8B5BA', '#BCC7CB', '#D1DADC', '#E6ECED', '#3b82f6', '#8b5cf6', '#ec4899'];
 
-const filterValidCandidatesForAnalytics = (uploads: CVUpload[]): CVUpload[] => {
+const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const seenEmails = new Set<string>();
   
   return uploads.filter(upload => {
-    if (!upload.extracted_json?.candidate_name || !upload.extracted_json?.email_address) return false;
+    if (upload.processing_status !== 'completed' || !upload.extracted_json) return false;
     
-    const score = parseFloat(upload.extracted_json?.score || '0') || 0;
+    const data = upload.extracted_json;
+    if (!(data.candidate_name && data.contact_number && data.email_address && 
+          data.countries && data.skill_set && data.educational_qualifications && 
+          data.job_history && data.justification)) return false;
+    
+    const rawScore = parseFloat(data.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
     if (score < 5) return false;
     
-    const candidateEmail = upload.extracted_json.email_address;
+    const candidateEmail = data.email_address;
     if (candidateEmail) {
       const normalizedEmail = candidateEmail.toLowerCase().trim();
       if (seenEmails.has(normalizedEmail)) return false;
@@ -152,13 +158,15 @@ const extractSkills = (skillsData: any): string[] => {
 };
 
 export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
-  const validUploads = filterValidCandidatesForAnalytics(uploads);
+  const validUploads = filterValidCandidates(uploads);
   console.log('Valid uploads for analytics:', validUploads.length);
+  console.log('Sample upload data:', validUploads[0]?.extracted_json);
 
   // Score distribution data
   const scoreDistribution = validUploads.reduce((acc, upload) => {
-    const score = parseFloat(upload.extracted_json?.score || '0') || 0;
-    const range = `${Math.round(score)}/10`;
+    const rawScore = parseFloat(upload.extracted_json?.score || '0');
+    const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
+    const range = `${score}/10`;
     acc[range] = (acc[range] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -167,17 +175,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     .map(([score, count]) => ({ score, count }))
     .sort((a, b) => parseInt(a.score) - parseInt(b.score));
 
-  // Country distribution data
+  // Country distribution data with improved extraction and normalization
   const countryDistribution = validUploads.reduce((acc, upload) => {
-    if (upload.extracted_json?.countries) {
-      const countries = upload.extracted_json.countries.split(',').map(c => c.trim());
-      countries.forEach(country => {
-        if (country) {
-          const normalizedCountry = normalizeCountryName(country);
-          acc[normalizedCountry] = (acc[normalizedCountry] || 0) + 1;
-        }
-      });
-    }
+    const countries = extractCountries(upload.extracted_json?.countries);
+    countries.forEach(country => {
+      if (country) {
+        acc[country] = (acc[country] || 0) + 1;
+      }
+    });
     return acc;
   }, {} as Record<string, number>);
 
@@ -207,17 +212,14 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
     };
   });
 
-  // Top skills
+  // Top skills with improved extraction and normalization
   const skillsDistribution = validUploads.reduce((acc, upload) => {
-    if (upload.extracted_json?.skill_set) {
-      const skills = upload.extracted_json.skill_set.split(',').map(s => s.trim());
-      skills.forEach(skill => {
-        if (skill && skill.length > 1) {
-          const normalizedSkill = normalizeSkillName(skill);
-          acc[normalizedSkill] = (acc[normalizedSkill] || 0) + 1;
-        }
-      });
-    }
+    const skills = extractSkills(upload.extracted_json?.skill_set);
+    skills.forEach(skill => {
+      if (skill && skill.length > 1) { // Filter out single character skills
+        acc[skill] = (acc[skill] || 0) + 1;
+      }
+    });
     return acc;
   }, {} as Record<string, number>);
 

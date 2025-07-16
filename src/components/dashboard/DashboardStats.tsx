@@ -15,24 +15,29 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
   // Calculate average score
   const averageScore = validCandidates.length > 0 
     ? validCandidates.reduce((sum, upload) => {
-        const score = parseFloat(upload.extracted_json?.score || '0') || 0;
+        const rawScore = parseFloat(upload.extracted_json?.score || '0');
+        const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
         return sum + score;
       }, 0) / validCandidates.length
     : 0;
 
-  // Get unique countries from extracted data
+  // Get unique countries with proper type checking
   const uniqueCountries = new Set<string>();
   validCandidates.forEach(upload => {
-    if (upload.extracted_json?.countries) {
-      const countriesData = upload.extracted_json.countries;
-      if (typeof countriesData === 'string') {
-        const countries = countriesData.split(',').map(c => c.trim());
-        countries.forEach(country => {
-          if (country) uniqueCountries.add(country);
+    const countries = upload.extracted_json?.countries;
+    if (countries) {
+      // Handle different data types for countries
+      if (typeof countries === 'string') {
+        countries.split(',').forEach(country => {
+          uniqueCountries.add(country.trim());
         });
-      } else if (Array.isArray(countriesData)) {
-        (countriesData as string[]).forEach(country => {
-          if (country && typeof country === 'string') uniqueCountries.add(country.trim());
+      } else if (Array.isArray(countries)) {
+        // Type assert the array as string array and filter for strings
+        const countryArray = countries as unknown[];
+        countryArray.forEach((country) => {
+          if (typeof country === 'string') {
+            uniqueCountries.add(country.trim());
+          }
         });
       }
     }
@@ -40,7 +45,7 @@ export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
 
   const stats = [
     {
-      title: 'TOTAL QUALIFIED CANDIDATES',
+      title: 'QUALIFIED CANDIDATES',
       value: totalCandidates,
       icon: Users,
       color: 'blue'

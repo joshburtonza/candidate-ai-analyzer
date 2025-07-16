@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
-import { DateGroupedCandidates } from './DateGroupedCandidates';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
 import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
@@ -13,11 +12,10 @@ interface CandidateGridProps {
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
   filterType?: 'all' | 'best';
-  sortBy?: 'date' | 'score' | 'name';
   onCandidateDelete?: (deletedId: string) => void;
 }
 
-export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'all', sortBy = 'date', onCandidateDelete }: CandidateGridProps) => {
+export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'all', onCandidateDelete }: CandidateGridProps) => {
   const [localUploads, setLocalUploads] = useState(uploads);
   
   // Update local uploads when prop changes
@@ -88,13 +86,35 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
     );
   }
 
-  // Use DateGroupedCandidates component for better date organization
+  if (viewMode === 'list') {
+    return (
+      <div className="space-y-4">
+        {validUploads.map((upload, index) => (
+          <motion.div
+            key={upload.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: index * 0.05 }}
+          >
+            <CandidateListItem upload={upload} onDelete={handleCandidateDelete} />
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <DateGroupedCandidates 
-      uploads={validUploads}
-      viewMode={viewMode}
-      sortBy={sortBy}
-      onCandidateDelete={handleCandidateDelete}
-    />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {validUploads.map((upload, index) => (
+        <motion.div
+          key={upload.id}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: index * 0.05 }}
+        >
+          <CandidateCard upload={upload} onDelete={handleCandidateDelete} />
+        </motion.div>
+      ))}
+    </div>
   );
 };

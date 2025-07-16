@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star, Building2 } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -176,12 +176,6 @@ const CandidateProfile = () => {
                       <div className="flex items-center gap-4 text-white/90">
                         <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
                         <span className="break-words min-w-0">{data.countries}</span>
-                      </div>
-                    )}
-                    {data.current_role && (
-                      <div className="flex items-center gap-4 text-white/90">
-                        <Building2 className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">{data.current_role}</span>
                       </div>
                     )}
                   </div>

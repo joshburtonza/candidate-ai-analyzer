@@ -10,7 +10,7 @@ import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
-  onDateSelect: (date: Date | null) => void;
+  onDateSelect: (date: Date) => void;
   selectedDate: Date | null;
 }
 
@@ -38,8 +38,8 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
       
       console.log('UploadHistoryCalendar: Setting up realtime subscription');
       
-        const channel = supabase
-        .channel(`calendar_uploads_${Date.now()}`)
+      const channel = supabase
+        .channel(`calendar_cv_uploads_${Date.now()}`)
         .on(
           'postgres_changes',
           {
@@ -140,10 +140,10 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white text-elegant tracking-wider">
-              UPLOAD CALENDAR
+              QUALIFIED CANDIDATES
             </h2>
             <p className="text-sm text-white/60 mt-1">
-              Click on a day to filter candidates • Sort by date to see chronological organization
+              Click on a day to filter candidates • Shows all candidates with email addresses
             </p>
           </div>
         </div>
@@ -183,18 +183,6 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
               <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
-          
-          {/* Clear date filter button */}
-          {selectedDate && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDateSelect(null as any)}
-              className="text-white/70 hover:text-white hover:bg-white/10 border-white/20 rounded-xl transition-all duration-200"
-            >
-              Clear Date Filter
-            </Button>
-          )}
         </div>
       </div>
 

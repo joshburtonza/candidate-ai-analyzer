@@ -43,19 +43,11 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
   const availableCountries = useMemo(() => {
     const countrySet = new Set<string>();
     validUploads.forEach(upload => {
-      if (upload.extracted_json?.countries) {
-        const countriesData = upload.extracted_json.countries;
-        if (typeof countriesData === 'string') {
-          const countries = countriesData.split(',').map(c => c.trim());
-          countries.forEach(country => {
-            if (country) countrySet.add(country);
-          });
-        } else if (Array.isArray(countriesData)) {
-          (countriesData as string[]).forEach(country => {
-            if (country && typeof country === 'string') countrySet.add(country.trim());
-          });
-        }
-      }
+      const countries = upload.extracted_json?.countries;
+      const countryArray = normalizeToArray(countries);
+      countryArray.forEach(country => {
+        if (country) countrySet.add(country);
+      });
     });
     return Array.from(countrySet).sort();
   }, [validUploads]);
@@ -64,12 +56,11 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
     validUploads.forEach(upload => {
-      if (upload.extracted_json?.skill_set) {
-        const skills = upload.extracted_json.skill_set.split(',').map(s => s.trim());
-        skills.forEach(skill => {
-          if (skill) skillSet.add(skill);
-        });
-      }
+      const skills = upload.extracted_json?.skill_set;
+      const skillArray = normalizeToArray(skills);
+      skillArray.forEach(skill => {
+        if (skill) skillSet.add(skill);
+      });
     });
     return Array.from(skillSet).sort();
   }, [validUploads]);
@@ -82,12 +73,12 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(upload => {
-        const data = upload.extracted_json;
+        const data = upload.extracted_json!;
         return (
-          data?.candidate_name?.toLowerCase().includes(query) ||
-          data?.email_address?.toLowerCase().includes(query) ||
-          data?.skill_set?.toLowerCase().includes(query) ||
-          (typeof data?.countries === 'string' ? data.countries.toLowerCase().includes(query) : false)
+          data.candidate_name?.toLowerCase().includes(query) ||
+          data.email_address?.toLowerCase().includes(query) ||
+          normalizeToArray(data.skill_set).some(skill => skill.toLowerCase().includes(query)) ||
+          normalizeToArray(data.countries).some(country => country.toLowerCase().includes(query))
         );
       });
     }
@@ -95,10 +86,9 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Country filter
     if (selectedCountries.length > 0) {
       filtered = filtered.filter(upload => {
-        const countriesData = upload.extracted_json?.countries || '';
-        const countriesString = typeof countriesData === 'string' ? countriesData : '';
+        const countries = normalizeToArray(upload.extracted_json?.countries);
         return selectedCountries.some(selectedCountry =>
-          countriesString.toLowerCase().includes(selectedCountry.toLowerCase())
+          countries.some(country => country.toLowerCase().includes(selectedCountry.toLowerCase()))
         );
       });
     }
@@ -106,16 +96,17 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Skills filter
     if (selectedSkills.length > 0) {
       filtered = filtered.filter(upload => {
-        const skillSet = upload.extracted_json?.skill_set || '';
+        const skills = normalizeToArray(upload.extracted_json?.skill_set);
         return selectedSkills.some(selectedSkill =>
-          skillSet.toLowerCase().includes(selectedSkill.toLowerCase())
+          skills.some(skill => skill.toLowerCase().includes(selectedSkill.toLowerCase()))
         );
       });
     }
 
     // Score filter
     filtered = filtered.filter(upload => {
-      const score = parseFloat(upload.extracted_json?.score || '0') || 0;
+      const rawScore = parseFloat(upload.extracted_json?.score || '0');
+      const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
       return score >= scoreRange[0] && score <= scoreRange[1];
     });
 
