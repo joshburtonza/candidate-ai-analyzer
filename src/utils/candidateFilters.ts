@@ -18,7 +18,10 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
     upload && 
     upload.extracted_json &&
     upload.extracted_json.candidate_name &&
-    upload.extracted_json.email_address
+    upload.extracted_json.candidate_name.trim() !== '' &&
+    upload.extracted_json.candidate_name !== 'Candidate Name Not Found' &&
+    upload.extracted_json.candidate_name !== 'Unknown Candidate' &&
+    (upload.extracted_json.email_address || upload.extracted_json.contact_number || upload.extracted_json.educational_qualifications)
   );
   return removeDuplicatesByEmail(validUploads);
 };
@@ -31,7 +34,10 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], selectedDate: 
   endOfDay.setHours(23, 59, 59, 999);
   
   const dateFiltered = uploads.filter(upload => {
-    if (!upload || !upload.extracted_json || !upload.extracted_json.candidate_name || !upload.extracted_json.email_address) {
+    if (!upload || !upload.extracted_json || !upload.extracted_json.candidate_name || 
+        upload.extracted_json.candidate_name.trim() === '' ||
+        upload.extracted_json.candidate_name === 'Candidate Name Not Found' ||
+        upload.extracted_json.candidate_name === 'Unknown Candidate') {
       return false;
     }
     
@@ -44,7 +50,10 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], selectedDate: 
 
 export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
   const bestCandidates = uploads.filter(upload => {
-    if (!upload || !upload.extracted_json || !upload.extracted_json.candidate_name || !upload.extracted_json.email_address) {
+    if (!upload || !upload.extracted_json || !upload.extracted_json.candidate_name || 
+        upload.extracted_json.candidate_name.trim() === '' ||
+        upload.extracted_json.candidate_name === 'Candidate Name Not Found' ||
+        upload.extracted_json.candidate_name === 'Unknown Candidate') {
       return false;
     }
 
