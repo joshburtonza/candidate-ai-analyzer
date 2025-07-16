@@ -137,27 +137,89 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // File uploaded - processing will be handled by n8n workflow
-      setUploadFiles(prev => prev.map(f => 
-        f.file === uploadFile.file ? { 
-          ...f, 
-          progress: 100, 
-          status: 'completed' 
-        } : f
-      ));
+      // Now process the file with the edge function
+      console.log('Starting candidate data extraction for:', typedCvUpload.id);
+      
+      try {
+        // Call the process-cv edge function
+        const { data: processedData, error: processError } = await supabase.functions
+          .invoke('process-cv', {
+            body: {
+              upload_id: typedCvUpload.id,
+              file_url: publicUrl,
+              original_filename: uploadFile.file.name,
+              user_email: user.email || ''
+            }
+          });
 
-      // Notify parent component with properly typed upload
-      onUploadComplete(typedCvUpload);
+        if (processError) {
+          console.error('Processing error:', processError);
+          throw new Error(`Processing failed: ${processError.message}`);
+        }
+
+        console.log('Processing response:', processedData);
+
+        // Update the processing status to completed
+        const { data: updatedUpload, error: updateError } = await supabase
+          .from('cv_uploads')
+          .update({ processing_status: 'completed' })
+          .eq('id', typedCvUpload.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Update error:', updateError);
+        } else {
+          // Update our typed upload with the latest data
+          typedCvUpload.processing_status = 'completed';
+          typedCvUpload.extracted_json = updatedUpload.extracted_json as unknown as CandidateData | null;
+        }
+
+        setUploadFiles(prev => prev.map(f => 
+          f.file === uploadFile.file ? { 
+            ...f, 
+            progress: 100, 
+            status: 'completed' 
+          } : f
+        ));
+
+        // Notify parent component with processed upload
+        onUploadComplete(typedCvUpload);
+
+        toast({
+          title: "Processing Complete",
+          description: `${uploadFile.file.name} has been processed and candidate data extracted`,
+        });
+
+      } catch (processError: any) {
+        console.error('Candidate processing error:', processError);
+        
+        // Update processing status to error
+        await supabase
+          .from('cv_uploads')
+          .update({ processing_status: 'error' })
+          .eq('id', typedCvUpload.id);
+
+        setUploadFiles(prev => prev.map(f => 
+          f.file === uploadFile.file ? { 
+            ...f, 
+            progress: 100, 
+            status: 'error',
+            error: processError.message
+          } : f
+        ));
+
+        toast({
+          title: "Processing Failed",
+          description: `Failed to process ${uploadFile.file.name}: ${processError.message}`,
+          variant: "destructive"
+        });
+      }
 
       // Remove completed file after delay
       setTimeout(() => {
         setUploadFiles(prev => prev.filter(f => f.file !== uploadFile.file));
-      }, 3000);
-
-      toast({
-        title: "Upload Successful",
-        description: `${uploadFile.file.name} uploaded - processing will be handled by your n8n workflow`,
-      });
+      }, 5000);
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -233,7 +295,7 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2 tracking-wider">UPLOAD CV FILES</h2>
-          <p className="text-gray-400">Upload files for processing via your n8n workflow</p>
+          <p className="text-gray-400">Upload and process CV files to extract candidate data</p>
           {!user && (
             <p className="text-red-400 text-sm mt-2">Please log in to upload files</p>
           )}
