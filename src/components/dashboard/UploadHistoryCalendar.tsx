@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { CVUpload } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { filterValidCandidatesForDate } from '@/utils/candidateFilters';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
@@ -95,7 +94,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         supabase.removeChannel(channel);
       }
     };
-  }, []); // Empty dependency array to prevent re-subscription
+  }, []);
 
   // Memoized week days calculation
   const weekDays = useMemo(() => {
@@ -133,131 +132,136 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
 
   return (
-    <div className="glass-card p-8 rounded-2xl elegant-border">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 glass-card rounded-xl elegant-border">
-            <CalendarIcon className="w-6 h-6 text-white/80" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white text-elegant tracking-wider">
-              ALL UPLOADS
-            </h2>
-            <p className="text-sm text-white/60 mt-1">
-              Click on a day to filter uploads • Shows all CV uploads
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <div className="text-3xl font-bold text-brand-gradient">
-              {totalUploadsThisWeek}
+    <div className="relative overflow-hidden w-full">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
+      
+      <div className="relative z-10 p-8 border border-white/10 rounded-2xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="p-3 glass-card rounded-xl border border-white/10 bg-slate-500/10">
+              <CalendarIcon className="w-6 h-6 text-white/80" />
             </div>
-            <div className="text-xs text-white/60 font-medium tracking-wider">
-              THIS WEEK
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-wider">
+                UPLOAD CALENDAR
+              </h2>
+              <p className="text-sm text-white/60 mt-1">
+                Click on a day to filter uploads by date
+              </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={navigateToPrevWeek}
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            
-            <div className="px-4 py-2 glass-card rounded-xl elegant-border">
-              <span className="text-white font-semibold tracking-wide">
-                {format(currentWeek, 'MMMM yyyy').toUpperCase()}
-              </span>
+          <div className="flex items-center justify-center gap-6 mb-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-400">
+                {totalUploadsThisWeek}
+              </div>
+              <div className="text-xs text-white/60 font-medium tracking-wider">
+                THIS WEEK
+              </div>
             </div>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={navigateToNextWeek}
-              className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={navigateToPrevWeek}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              
+              <div className="px-4 py-2 bg-slate-500/10 border border-white/10 rounded-xl">
+                <span className="text-white font-semibold tracking-wide">
+                  {format(currentWeek, 'MMMM yyyy').toUpperCase()}
+                </span>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={navigateToNextWeek}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Week range */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full elegant-border">
-          <div className="w-2 h-2 bg-white/60 rounded-full"></div>
-          <span className="text-white font-medium">
-            {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
-          </span>
+        {/* Week range */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-500/10 border border-white/10 rounded-full">
+            <div className="w-2 h-2 bg-white/60 rounded-full"></div>
+            <span className="text-white font-medium">
+              {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Day tiles */}
-      <div className="grid grid-cols-7 gap-3">
-        {weekDays.map(({ date, count }) => {
-          const isSelected = isDaySelected(date);
-          const dayName = format(date, 'EEE');
-          const dayNumber = format(date, 'd');
-          const isToday = isSameDay(date, new Date());
-          
-          return (
-            <Button
-              key={date.toISOString()}
-              variant="ghost"
-              onClick={() => handleDateSelect(date)}
-              className={`
-                relative flex flex-col items-center gap-3 p-6 rounded-2xl transition-all duration-300 min-h-[120px] group
-                ${isSelected 
-                  ? 'bg-brand-gradient text-slate-800 shadow-lg shadow-brand/25 scale-105 border border-brand/30' 
-                  : 'glass-card elegant-border text-white hover:bg-white/10 hover:border-white/20 hover:scale-105'
-                }
-                ${isToday && !isSelected ? 'ring-2 ring-brand/50' : ''}
-              `}
-            >
-              {/* Day name */}
-              <div className={`text-xs font-semibold tracking-wider uppercase ${
-                isSelected ? 'text-slate-700' : 'text-white/60 group-hover:text-white/80'
-              }`}>
-                {dayName}
-              </div>
-              
-              {/* Day number */}
-              <div className={`text-2xl font-bold ${
-                isSelected ? 'text-slate-800' : 'text-white group-hover:text-white'
-              }`}>
-                {dayNumber}
-              </div>
-              
-              {/* Upload count badge */}
-              {count > 0 && (
-                <div className="absolute -top-2 -right-2">
-                  <Badge 
-                    className={`text-xs px-2 py-1 font-semibold border-0 ${
-                      isSelected 
-                        ? 'bg-white text-slate-800' 
-                        : 'bg-brand-gradient text-slate-800 shadow-lg'
-                    }`}
-                  >
-                    {count}
-                  </Badge>
+        {/* Day tiles - Full width grid */}
+        <div className="grid grid-cols-7 gap-4 max-w-4xl mx-auto">
+          {weekDays.map(({ date, count }) => {
+            const isSelected = isDaySelected(date);
+            const dayName = format(date, 'EEE');
+            const dayNumber = format(date, 'd');
+            const isToday = isSameDay(date, new Date());
+            
+            return (
+              <Button
+                key={date.toISOString()}
+                variant="ghost"
+                onClick={() => handleDateSelect(date)}
+                className={`
+                  relative flex flex-col items-center gap-3 p-6 rounded-2xl transition-all duration-300 min-h-[120px] group
+                  ${isSelected 
+                    ? 'bg-blue-400/20 text-white shadow-lg shadow-blue-400/25 scale-105 border border-blue-400/30' 
+                    : 'bg-slate-500/10 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:scale-105'
+                  }
+                  ${isToday && !isSelected ? 'ring-2 ring-blue-400/50' : ''}
+                `}
+              >
+                {/* Day name */}
+                <div className={`text-xs font-semibold tracking-wider uppercase ${
+                  isSelected ? 'text-white' : 'text-white/60 group-hover:text-white/80'
+                }`}>
+                  {dayName}
                 </div>
-              )}
-              
-              {/* Today indicator */}
-              {isToday && (
-                <div className={`absolute bottom-2 w-2 h-2 rounded-full ${
-                  isSelected ? 'bg-slate-700' : 'bg-brand'
-                }`}></div>
-              )}
-            </Button>
-          );
-        })}
+                
+                {/* Day number */}
+                <div className={`text-2xl font-bold ${
+                  isSelected ? 'text-white' : 'text-white group-hover:text-white'
+                }`}>
+                  {dayNumber}
+                </div>
+                
+                {/* Upload count badge */}
+                {count > 0 && (
+                  <div className="absolute -top-2 -right-2">
+                    <Badge 
+                      className={`text-xs px-2 py-1 font-semibold border-0 ${
+                        isSelected 
+                          ? 'bg-white text-slate-800' 
+                          : 'bg-blue-400 text-slate-800 shadow-lg'
+                      }`}
+                    >
+                      {count}
+                    </Badge>
+                  </div>
+                )}
+                
+                {/* Today indicator */}
+                {isToday && (
+                  <div className={`absolute bottom-2 w-2 h-2 rounded-full ${
+                    isSelected ? 'bg-white' : 'bg-blue-400'
+                  }`}></div>
+                )}
+              </Button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

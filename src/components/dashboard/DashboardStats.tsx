@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,46 +52,74 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ uploads, selectedDate }
       title: 'Total Uploads',
       value: stats.total,
       icon: Upload,
-      description: selectedDate ? 'Selected date' : 'Today'
+      description: selectedDate ? 'Selected date' : 'Today',
+      color: 'text-blue-400'
     },
     {
       title: 'Processed',
       value: stats.processed,
       icon: CheckCircle,
-      description: 'CVs analyzed'
+      description: 'CVs analyzed',
+      color: 'text-green-400'
     },
     {
       title: 'Pending',
       value: stats.pending,
       icon: Clock,
-      description: 'Awaiting processing'
+      description: 'Awaiting processing',
+      color: 'text-yellow-400'
     },
     {
       title: 'Avg Score',
       value: stats.avgScore,
       icon: TrendingUp,
-      description: 'Out of 100'
+      description: 'Out of 100',
+      color: 'text-purple-400'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statCards.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground">
-              {stat.description}
-            </p>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-4">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2 tracking-wider">DASHBOARD STATISTICS</h2>
+        <p className="text-gray-400">Overview of your CV upload activity</p>
+      </div>
+      
+      <div className="space-y-4">
+        {statCards.map((stat) => (
+          <Card key={stat.title} className="w-full">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <div className={`p-4 rounded-2xl bg-slate-500/10 border border-slate-500/20`}>
+                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1 tracking-wider">
+                      {stat.title.toUpperCase()}
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      {stat.description}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className={`text-5xl font-bold ${stat.color} mb-2`}>
+                    {stat.value}
+                  </div>
+                  {stat.title === 'Total Uploads' && (
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedDate ? 'FILTERED' : 'TODAY'}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
