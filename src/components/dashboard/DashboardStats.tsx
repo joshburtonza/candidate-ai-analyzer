@@ -1,104 +1,98 @@
-
+import React, { useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
-import { Users, TrendingUp, MapPin, Award } from 'lucide-react';
-import { filterValidCandidates } from '@/utils/candidateFilters';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Upload, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { isSameDay } from 'date-fns';
 
 interface DashboardStatsProps {
   uploads: CVUpload[];
+  selectedDate?: Date | null;
 }
 
-export const DashboardStats = ({ uploads }: DashboardStatsProps) => {
-  // Use the centralized filtering logic
-  const validCandidates = filterValidCandidates(uploads);
-  const totalCandidates = validCandidates.length;
-  
-  // Calculate average score
-  const averageScore = validCandidates.length > 0 
-    ? validCandidates.reduce((sum, upload) => {
-        const rawScore = parseFloat(upload.extracted_json?.score || '0');
-        const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-        return sum + score;
-      }, 0) / validCandidates.length
-    : 0;
-
-  // Get unique countries with proper type checking
-  const uniqueCountries = new Set<string>();
-  validCandidates.forEach(upload => {
-    const countries = upload.extracted_json?.countries;
-    if (countries) {
-      // Handle different data types for countries
-      if (typeof countries === 'string') {
-        countries.split(',').forEach(country => {
-          uniqueCountries.add(country.trim());
-        });
-      } else if (Array.isArray(countries)) {
-        // Type assert the array as string array and filter for strings
-        const countryArray = countries as unknown[];
-        countryArray.forEach((country) => {
-          if (typeof country === 'string') {
-            uniqueCountries.add(country.trim());
-          }
-        });
-      }
-    }
+const DashboardStats: React.FC<DashboardStatsProps> = ({ uploads, selectedDate }) => {
+  const todayUploads = uploads.filter(upload => {
+    const today = new Date();
+    const uploadDate = new Date(upload.uploaded_at);
+    return isSameDay(uploadDate, today);
   });
 
-  const stats = [
+  const stats = useMemo(() => {
+    const baseUploads = selectedDate 
+      ? uploads.filter(upload => {
+          const uploadDate = new Date(upload.uploaded_at);
+          return isSameDay(uploadDate, selectedDate);
+        })
+      : todayUploads;
+    
+    const processedUploads = baseUploads.filter(upload => 
+      upload.processing_status === 'completed' && upload.extracted_json
+    );
+    
+    const totalScore = processedUploads.reduce((sum, upload) => {
+      const score = upload.extracted_json?.score;
+      return sum + (score ? parseFloat(score) : 0);
+    }, 0);
+    
+    const avgScore = processedUploads.length > 0 
+      ? Math.round(totalScore / processedUploads.length) 
+      : 0;
+    
+    return {
+      total: baseUploads.length,
+      processed: processedUploads.length,
+      pending: baseUploads.filter(upload => upload.processing_status === 'pending').length,
+      avgScore
+    };
+  }, [uploads, todayUploads, selectedDate]);
+
+  const statCards = [
     {
-      title: 'QUALIFIED CANDIDATES',
-      value: totalCandidates,
-      icon: Users,
-      color: 'blue'
+      title: 'Total Uploads',
+      value: stats.total,
+      icon: Upload,
+      description: selectedDate ? 'Selected date' : 'Today'
     },
     {
-      title: 'AVERAGE FIT SCORE',
-      value: `${Math.round(averageScore)}/10`,
+      title: 'Processed',
+      value: stats.processed,
+      icon: CheckCircle,
+      description: 'CVs analyzed'
+    },
+    {
+      title: 'Pending',
+      value: stats.pending,
+      icon: Clock,
+      description: 'Awaiting processing'
+    },
+    {
+      title: 'Avg Score',
+      value: stats.avgScore,
       icon: TrendingUp,
-      color: 'brand'
-    },
-    {
-      title: 'UNIQUE COUNTRIES',
-      value: uniqueCountries.size,
-      icon: MapPin,
-      color: 'red'
+      description: 'Out of 100'
     }
   ];
 
-  const getIconColor = (color: string) => {
-    switch (color) {
-      case 'blue': return 'text-blue-400 bg-blue-500/10';
-      case 'brand': return 'text-slate-400 bg-slate-500/10';
-      case 'red': return 'text-red-400 bg-red-500/10';
-      default: return 'text-slate-400 bg-slate-500/10';
-    }
-  };
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {stats.map((stat, index) => (
-        <div key={index} className="relative overflow-hidden">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
-          
-          {/* Content */}
-          <div className="relative z-10 p-8 border border-white/10 rounded-2xl transition-all duration-300 hover:scale-105 hover:border-slate-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400 tracking-wider mb-2">
-                  {stat.title}
-                </p>
-                <p className="text-4xl font-bold text-white">
-                  {stat.value}
-                </p>
-              </div>
-              <div className={`p-4 rounded-xl ${getIconColor(stat.color)}`}>
-                <stat.icon className="w-8 h-8" />
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statCards.map((stat) => (
+        <Card key={stat.title}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {stat.title}
+            </CardTitle>
+            <stat.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <p className="text-xs text-muted-foreground">
+              {stat.description}
+            </p>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
 };
+
+export default DashboardStats;

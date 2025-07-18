@@ -1,473 +1,200 @@
-
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { DashboardStats } from '@/components/dashboard/DashboardStats';
-import { CandidateGrid } from '@/components/dashboard/CandidateGrid';
-import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
-import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
-import { AdvancedFilters } from '@/components/dashboard/AdvancedFilters';
-import { BulkActions } from '@/components/dashboard/BulkActions';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Grid, List, Calendar, Upload, BarChart3, Download, Settings } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { UploadSection } from '@/components/dashboard/UploadSection';
+import CandidateGrid from '@/components/dashboard/CandidateGrid';
+import DashboardStats from '@/components/dashboard/DashboardStats';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
+import { GoogleConnectButton } from '@/components/dashboard/GoogleConnectButton';
+import { GoogleDocUpload } from '@/components/dashboard/GoogleDocUpload';
+import { N8nApiInfo } from '@/components/dashboard/N8nApiInfo';
+import { useAuth } from '@/hooks/useAuth';
 import { useExport } from '@/hooks/useExport';
-import { BarChart3, Download, Users } from 'lucide-react';
-import { 
-  filterAllQualifiedCandidates, 
-  filterValidCandidatesForDate, 
-  filterAllBestCandidates, 
-  filterBestCandidatesForDate 
-} from '@/utils/candidateFilters';
 
 const Dashboard = () => {
-  const { user, profile, loading: authLoading } = useAuth();
-  const [uploads, setUploads] = useState<CVUpload[]>([]);
-  const [filteredUploads, setFilteredUploads] = useState<CVUpload[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'score' | 'name'>('date');
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
-  const [activeTab, setActiveTab] = useState('candidates');
-  const [candidateFilterType, setCandidateFilterType] = useState<'all' | 'best'>('all');
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { exportToCSV } = useExport();
-  const subscriptionRef = useRef<any>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showStats, setShowStats] = useState(true);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
+  const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
 
-  useEffect(() => {
-    console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
-    
-    if (!authLoading && user) {
-      console.log('Dashboard: User authenticated, fetching uploads');
-      fetchUploads();
-      setupRealtimeSubscription();
-    } else if (!authLoading && !user) {
-      console.log('Dashboard: No user found after auth loaded');
-      setLoading(false);
-    }
+  // Simple fetch of ALL uploads - no filtering
+  const { data: uploads = [], refetch, isLoading, error } = useQuery({
+    queryKey: ['cv-uploads'],
+    queryFn: async () => {
+      console.log('Fetching ALL CV uploads...');
+      
+      const { data, error } = await supabase
+        .from('cv_uploads')
+        .select('*')
+        .order('uploaded_at', { ascending: false });
 
-    return () => {
-      if (subscriptionRef.current) {
-        console.log('Dashboard: Cleaning up realtime subscription');
-        supabase.removeChannel(subscriptionRef.current);
-        subscriptionRef.current = null;
+      if (error) {
+        console.error('Error fetching uploads:', error);
+        throw error;
       }
-    };
-  }, [user, authLoading, profile?.email]);
 
-  const setupRealtimeSubscription = () => {
-    if (subscriptionRef.current) {
-      console.log('Dashboard: Removing existing subscription');
-      supabase.removeChannel(subscriptionRef.current);
-      subscriptionRef.current = null;
-    }
+      console.log('Total uploads found:', data?.length || 0);
+      return (data || []).map(upload => ({
+        ...upload,
+        extracted_json: upload.extracted_json as any
+      })) as CVUpload[];
+    },
+  });
 
-    console.log('Dashboard: Setting up new realtime subscription');
+  // Real-time subscription for immediate updates
+  useEffect(() => {
+    console.log('Setting up real-time subscription...');
     
     const channel = supabase
       .channel('cv_uploads_changes')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'cv_uploads'
         },
         (payload) => {
-          console.log('Dashboard: New upload received via realtime:', payload);
-          
-          const newUpload = payload.new as CVUpload;
-          
-          // Apply same email filtering logic as in fetchUploads
-          const shouldShow = !newUpload.source_email || 
-                           newUpload.source_email === '' || 
-                           newUpload.source_email === profile?.email ||
-                           profile?.is_admin;
-          
-          if (shouldShow) {
-            setUploads(prev => {
-              // Prevent duplicates
-              const exists = prev.some(upload => upload.id === newUpload.id);
-              if (exists) {
-                console.log('Dashboard: Upload already exists, skipping duplicate');
-                return prev;
-              }
-              console.log('Dashboard: Adding new upload to state');
-              return [newUpload, ...prev];
-            });
-            
-            if (newUpload.extracted_json?.candidate_name) {
-              toast({
-                title: "New Candidate Added",
-                description: `${newUpload.extracted_json.candidate_name} has been processed and added to your dashboard`,
-              });
-            }
-          } else {
-            console.log('Dashboard: Upload filtered out due to email mismatch', {
-              sourceEmail: newUpload.source_email,
-              userEmail: profile?.email
-            });
-          }
+          console.log('Real-time update:', payload);
+          refetch();
         }
       )
       .subscribe();
 
-    subscriptionRef.current = channel;
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
-  const fetchUploads = async () => {
-    if (!user) {
-      console.log('Dashboard: No user available for fetching uploads');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
-      
-      // Clear any stale state first
-      console.log('Dashboard: Clearing stale state');
-      setUploads([]);
-      setFilteredUploads([]);
-      setError(null);
-      
-      // Clear any cached data in localStorage
-      try {
-        Object.keys(localStorage).forEach(key => {
-          if (key.includes('cv_uploads') || key.includes('dashboard')) {
-            console.log('Dashboard: Clearing cached key:', key);
-            localStorage.removeItem(key);
-          }
-        });
-      } catch (e) {
-        console.warn('Dashboard: Could not clear localStorage:', e);
-      }
-      
-      let query = supabase
-        .from('cv_uploads')
-        .select('*')
-        .order('uploaded_at', { ascending: false });
-
-      // Apply email filtering (unless admin)
-      if (profile && !profile.is_admin && profile.email) {
-        console.log('Dashboard: Applying email filter for non-admin user:', profile.email);
-        query = query.or(`source_email.eq.${profile.email},source_email.is.null,source_email.eq.`);
-      } else if (profile?.is_admin) {
-        console.log('Dashboard: Admin user - showing all uploads');
-      } else {
-        console.log('Dashboard: No profile email found, showing uploads with empty source_email');
-        query = query.or('source_email.is.null,source_email.eq.');
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Dashboard: Error fetching uploads:', error);
-        throw error;
-      }
-      
-      console.log('Dashboard: Successfully fetched', data?.length || 0, 'uploads from database');
-      console.log('Dashboard: Raw data:', data);
-      
-      const typedUploads: CVUpload[] = (data || []).map(upload => ({
-        ...upload,
-        extracted_json: upload.extracted_json as any,
-        processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
-      }));
-      
-      console.log('Dashboard: Setting uploads state with', typedUploads.length, 'records');
-      setUploads(typedUploads);
-      setFilteredUploads(typedUploads);
-    } catch (error: any) {
-      console.error('Dashboard: Error in fetchUploads:', error);
-      setError(error.message);
-      toast({
-        title: "Error",
-        description: "Failed to fetch uploads",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCalendarDateSelect = (date: Date) => {
-    setSelectedCalendarDate(date);
-  };
-
-  const handleFilterChange = (filtered: CVUpload[]) => {
-    setFilteredUploads(filtered);
+  const handleUploadComplete = (newUpload: CVUpload) => {
+    console.log('New upload completed:', newUpload);
+    refetch();
+    toast.success(`CV "${newUpload.original_filename}" uploaded successfully!`);
   };
 
   const handleCandidateDelete = (deletedId: string) => {
-    console.log('Dashboard: Removing candidate from state:', deletedId);
-    setUploads(prev => prev.filter(upload => upload.id !== deletedId));
-    setFilteredUploads(prev => prev.filter(upload => upload.id !== deletedId));
+    console.log('Candidate deleted:', deletedId);
+    setSelectedUploads(prev => prev.filter(id => id !== deletedId));
+    refetch();
   };
 
-  const handleBulkDelete = (deletedIds: string[]) => {
-    console.log('Dashboard: Bulk removing candidates from state:', deletedIds);
-    setUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
-    setFilteredUploads(prev => prev.filter(upload => !deletedIds.includes(upload.id)));
+  const handleCalendarDateChange = (date: Date | null) => {
+    console.log('Calendar date changed:', date);
+    setSelectedCalendarDate(date);
   };
 
-  const handleExportAll = () => {
-    const fileName = candidateFilterType === 'best' ? 'best_candidates' : 'all_candidates';
-    exportToCSV(actualDisplayedCandidates, fileName);
+  const handleExport = async () => {
+    exportToCSV(uploads, 'cv_uploads');
   };
 
-  // Apply calendar date filter to filtered uploads - now uses the new date-specific filtering
-  const displayUploads = selectedCalendarDate 
-    ? uploads // Pass all uploads and let CandidateGrid handle the filtering
-    : filteredUploads;
-
-  // Sort uploads
-  const sortedUploads = [...displayUploads].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        const scoreA = parseInt(a.extracted_json?.score || '0');
-        const scoreB = parseInt(b.extracted_json?.score || '0');
-        return scoreB - scoreA;
-      case 'name':
-        const nameA = a.extracted_json?.candidate_name || '';
-        const nameB = b.extracted_json?.candidate_name || '';
-        return nameA.localeCompare(nameB);
-      default:
-        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
-    }
-  });
-
-  // Get the actual filtered candidates that will be displayed based on the active filter
-  const getFilteredCandidates = (filterType: 'all' | 'best') => {
-    if (selectedCalendarDate) {
-      return filterType === 'best' 
-        ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
-        : filterValidCandidatesForDate(uploads, selectedCalendarDate);
-    }
-    // NEW: Use the comprehensive filter functions that show all candidates
-    return filterType === 'best' 
-      ? filterAllBestCandidates(uploads)
-      : filterAllQualifiedCandidates(uploads);
-  };
-
-  const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType);
-  const allCandidatesCount = getFilteredCandidates('all').length;
-  const bestCandidatesCount = getFilteredCandidates('best').length;
-
-  // Show loading only if auth is loading
-  if (authLoading) {
-    console.log('Dashboard: Showing auth loading screen');
+  if (isLoading) {
     return (
-      <div className="min-h-screen elegant-gradient flex items-center justify-center">
-        <div className="text-white text-elegant tracking-wider">LOADING AUTHENTICATION...</div>
-      </div>
-    );
-  }
-
-  if (loading && user) {
-    console.log('Dashboard: Showing data loading screen');
-    return (
-      <div className="min-h-screen elegant-gradient flex items-center justify-center">
-        <div className="text-white text-elegant tracking-wider">LOADING DASHBOARD...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.log('Dashboard: Showing error screen:', error);
-    return (
-      <div className="min-h-screen elegant-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-400 mb-4 text-elegant tracking-wider">ERROR LOADING DASHBOARD</div>
-          <div className="text-white text-sm">{error}</div>
-          <button 
-            onClick={() => {
-              setError(null);
-              setLoading(true);
-              fetchUploads();
-            }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black rounded-lg hover:from-yellow-500 hover:to-yellow-700 font-semibold text-elegant tracking-wider"
-          >
-            RETRY
-          </button>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  console.log('Dashboard: Rendering dashboard with', uploads.length, 'uploads for email:', profile?.email);
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Error loading dashboard</p>
+          <Button onClick={() => refetch()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen dot-grid-bg">
-      <div className="relative z-10">
-        <DashboardHeader
-          profile={profile}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          onDateRangeChange={() => {}} // Legacy prop - functionality moved to AdvancedFilters
-        />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Header */}
+            <DashboardHeader 
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              showStats={showStats}
+              setShowStats={setShowStats}
+              selectedUploads={selectedUploads}
+              setSelectedUploads={setSelectedUploads}
+              onExport={handleExport}
+              isExporting={false}
+            />
 
-        <div className="container mx-auto px-6 py-8 space-y-8">
-          {/* Email Filter Info */}
-          {profile && !profile.is_admin && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card p-4 rounded-xl elegant-border"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-brand-gradient rounded-full"></div>
-                <p className="text-white/80 text-sm">
-                  Showing candidates with email addresses sent to: <span className="text-brand-gradient font-medium">{profile.email}</span>
-                </p>
-              </div>
-            </motion.div>
-          )}
+            {/* Statistics */}
+            {showStats && (
+              <DashboardStats 
+                uploads={uploads}
+                selectedDate={selectedCalendarDate}
+              />
+            )}
 
-          {/* Main Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/5 backdrop-blur-xl border border-slate-500/30">
-              <TabsTrigger 
-                value="candidates" 
-                className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Candidates
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analytics" 
-                className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analytics
-              </TabsTrigger>
-            </TabsList>
+            {/* Upload Section */}
+            <UploadSection onUploadComplete={handleUploadComplete} />
 
-            <TabsContent value="candidates" className="space-y-8 mt-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <UploadHistoryCalendar 
+            {/* N8n API Information */}
+            <N8nApiInfo />
+
+            {/* Simple Tabs - Show ALL uploads */}
+            <Tabs defaultValue="all" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 lg:w-[300px]">
+                <TabsTrigger value="all" className="flex items-center gap-2">
+                  <span>All Uploads</span>
+                  <Badge variant="secondary">{uploads.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="processed" className="flex items-center gap-2">
+                  <span>Processed</span>
+                  <Badge variant="secondary">
+                    {uploads.filter(u => u.processing_status === 'completed').length}
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                <CandidateGrid 
                   uploads={uploads} 
-                  onDateSelect={handleCalendarDateSelect}
+                  viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
+                  onCandidateDelete={handleCandidateDelete}
                 />
-              </motion.div>
+              </TabsContent>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
-                <DashboardStats uploads={actualDisplayedCandidates} />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <AdvancedFilters 
-                  uploads={uploads}
-                  onFilterChange={handleFilterChange}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
+              <TabsContent value="processed">
+                <CandidateGrid 
+                  uploads={uploads.filter(u => u.processing_status === 'completed')} 
+                  viewMode={viewMode} 
+                  selectedDate={selectedCalendarDate}
+                  onCandidateDelete={handleCandidateDelete}
                 />
-              </motion.div>
+              </TabsContent>
+            </Tabs>
+          </div>
 
-              {/* Export and Bulk Actions */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex justify-between items-center"
-              >
-                <div className="flex items-center gap-4">
-                  <Button
-                    onClick={handleExportAll}
-                    variant="outline"
-                    className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export All ({actualDisplayedCandidates.length})
-                  </Button>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-              >
-                <BulkActions uploads={actualDisplayedCandidates} onBulkDelete={handleBulkDelete} />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                {/* Nested Candidate Filter Tabs */}
-                <Tabs value={candidateFilterType} onValueChange={(value) => setCandidateFilterType(value as 'all' | 'best')} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-white/5 backdrop-blur-xl border border-slate-500/30 mb-6">
-                    <TabsTrigger 
-                      value="all" 
-                      className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
-                    >
-                      All Candidates ({allCandidatesCount})
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="best" 
-                      className="data-[state=active]:bg-brand-gradient data-[state=active]:text-slate-800 text-white/70"
-                    >
-                      Best Candidates ({bestCandidatesCount})
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="all">
-                    <CandidateGrid 
-                      uploads={uploads} 
-                      viewMode={viewMode} 
-                      selectedDate={selectedCalendarDate}
-                      filterType="all"
-                      onCandidateDelete={handleCandidateDelete}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="best">
-                    <CandidateGrid 
-                      uploads={uploads} 
-                      viewMode={viewMode} 
-                      selectedDate={selectedCalendarDate}
-                      filterType="best"
-                      onCandidateDelete={handleCandidateDelete}
-                    />
-                  </TabsContent>
-                </Tabs>
-              </motion.div>
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-8 mt-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <AnalyticsCharts uploads={uploads} />
-              </motion.div>
-            </TabsContent>
-          </Tabs>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <UploadHistoryCalendar 
+              uploads={uploads}
+              onDateSelect={handleCalendarDateChange}
+              selectedDate={selectedCalendarDate}
+            />
+          </div>
         </div>
       </div>
     </div>

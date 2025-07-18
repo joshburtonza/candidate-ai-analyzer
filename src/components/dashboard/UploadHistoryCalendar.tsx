@@ -23,10 +23,12 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     setRealtimeUploads(uploads);
   }, [uploads]);
 
-  // Memoized function to get qualified count for a specific date
-  const getQualifiedCountForDate = useCallback((date: Date) => {
-    const validCandidates = filterValidCandidatesForDate(realtimeUploads, date);
-    return validCandidates.length;
+  // Simple count of ALL uploads for a specific date
+  const getUploadCountForDate = useCallback((date: Date) => {
+    return realtimeUploads.filter(upload => {
+      const uploadDate = new Date(upload.uploaded_at);
+      return isSameDay(uploadDate, date);
+    }).length;
   }, [realtimeUploads]);
 
   // Debounced realtime subscription setup
@@ -102,11 +104,11 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     
     return eachDayOfInterval({ start: weekStart, end: weekEnd }).map(date => ({
       date,
-      count: getQualifiedCountForDate(date)
+      count: getUploadCountForDate(date)
     }));
-  }, [currentWeek, getQualifiedCountForDate]);
+  }, [currentWeek, getUploadCountForDate]);
 
-  const totalQualifiedThisWeek = useMemo(() => {
+  const totalUploadsThisWeek = useMemo(() => {
     return weekDays.reduce((sum, day) => sum + day.count, 0);
   }, [weekDays]);
 
@@ -140,10 +142,10 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white text-elegant tracking-wider">
-              QUALIFIED CANDIDATES
+              ALL UPLOADS
             </h2>
             <p className="text-sm text-white/60 mt-1">
-              Click on a day to filter candidates • Shows all candidates with email addresses
+              Click on a day to filter uploads • Shows all CV uploads
             </p>
           </div>
         </div>
@@ -151,7 +153,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         <div className="flex items-center gap-6">
           <div className="text-right">
             <div className="text-3xl font-bold text-brand-gradient">
-              {totalQualifiedThisWeek}
+              {totalUploadsThisWeek}
             </div>
             <div className="text-xs text-white/60 font-medium tracking-wider">
               THIS WEEK
@@ -232,7 +234,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
                 {dayNumber}
               </div>
               
-              {/* Qualified candidate count badge */}
+              {/* Upload count badge */}
               {count > 0 && (
                 <div className="absolute -top-2 -right-2">
                   <Badge 
