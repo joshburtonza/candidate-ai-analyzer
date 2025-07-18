@@ -89,14 +89,16 @@ const Dashboard = () => {
 
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
-    refetch();
+    // Force immediate data refresh
+    queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
     toast.success(`CV "${newUpload.original_filename}" uploaded successfully!`);
   };
 
   const handleCandidateDelete = (deletedId: string) => {
     console.log('Candidate deleted:', deletedId);
     setSelectedUploads(prev => prev.filter(id => id !== deletedId));
-    refetch();
+    // Force immediate data refresh
+    queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
   };
 
   const handleCalendarDateChange = (date: Date | null) => {
