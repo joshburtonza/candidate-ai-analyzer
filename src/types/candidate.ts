@@ -1,14 +1,14 @@
-
 export interface CandidateData {
   candidate_name: string;
   email_address: string;
   contact_number: string;
   educational_qualifications: string;
   job_history: string;
-  skill_set: string;
+  current_employment: string; // Changed from skill_set
   score: string;
   justification: string;
-  countries: string; // Keep as string for consistency in UI
+  countries: string;
+  date_extracted: string; // Added new field
 }
 
 export interface CVUpload {

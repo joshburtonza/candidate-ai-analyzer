@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, GraduationCap, Briefcase, Star, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -95,7 +95,6 @@ const CandidateProfile = () => {
   // Convert score to be out of 10 instead of 100
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-  const skills = data.skill_set ? data.skill_set.split(',').map(s => s.trim()) : [];
 
   const getScoreColor = (score: number) => {
     if (score >= 8) return 'from-slate-400 to-slate-600';
@@ -178,6 +177,14 @@ const CandidateProfile = () => {
                         <span className="break-words min-w-0">{data.countries}</span>
                       </div>
                     )}
+                    {data.date_extracted && (
+                      <div className="flex items-center gap-4 text-white/90">
+                        <Calendar className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                        <span className="break-words min-w-0">
+                          {new Date(data.date_extracted).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -200,6 +207,32 @@ const CandidateProfile = () => {
 
             {/* Right Column - Detailed Info */}
             <div className="lg:col-span-2 space-y-6">
+
+              {/* Current Employment */}
+              {data.current_employment && (
+                <Card className="glass-card elegant-border p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Briefcase className="w-6 h-6 text-slate-400" />
+                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">CURRENT EMPLOYMENT</h3>
+                  </div>
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div className="text-white/90 leading-relaxed cursor-pointer">
+                        <p className="whitespace-pre-wrap break-words">
+                          {data.current_employment}
+                        </p>
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
+                      <div className="text-sm leading-relaxed">
+                        <p className="whitespace-pre-wrap break-words">
+                          {data.current_employment}
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </Card>
+              )}
 
               {/* Education */}
               {data.educational_qualifications && (

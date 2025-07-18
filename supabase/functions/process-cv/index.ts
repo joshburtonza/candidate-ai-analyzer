@@ -26,10 +26,11 @@ function extractCandidateData(filename: string): any {
     contact_number: '',
     educational_qualifications: 'Qualifications extracted from CV',
     job_history: 'Work experience extracted from CV',
-    skill_set: 'Skills extracted from CV file',
+    current_employment: 'Current job extracted from CV', // Changed from skill_set
     score: Math.floor(Math.random() * 40 + 60).toString(), // Random score 60-100
     justification: 'Candidate shows relevant experience and qualifications based on CV analysis',
-    countries: 'Location extracted from CV'
+    countries: 'Location extracted from CV',
+    date_extracted: new Date().toISOString() // Added new field
   };
   
   return mockData;

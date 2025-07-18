@@ -4,7 +4,7 @@ import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
@@ -13,18 +13,6 @@ interface CandidateCardProps {
   upload: CVUpload;
   onDelete?: (id: string) => void;
 }
-
-// Helper function to safely handle array or string data
-const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
-  if (!value) return [];
-  if (Array.isArray(value)) {
-    return value.filter(item => item && item.trim()).map(item => item.trim());
-  }
-  if (typeof value === 'string') {
-    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
-  }
-  return [];
-};
 
 const normalizeToString = (value: string | string[] | null | undefined): string => {
   if (!value) return '';
@@ -48,9 +36,6 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
   const scorePercentage = (score / 10) * 100; // For progress bar
 
-  // Handle skills as both string and array
-  const skills = normalizeToArray(data.skill_set);
-  
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
 
@@ -152,31 +137,21 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               )}
             </div>
 
-            {/* Expertise Section - only show if skills exist */}
-            {skills.length > 0 && (
+            {/* Current Employment Section - only show if current_employment exists */}
+            {data.current_employment && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">EXPERTISE</h4>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">CURRENT EMPLOYMENT</h4>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {skills.slice(0, 6).map((skill, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                  {skills.length > 6 && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
-                    >
-                      +{skills.length - 6}
-                    </Badge>
-                  )}
+                  <Badge
+                    variant="secondary"
+                    className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
+                  >
+                    <Briefcase className="w-3 h-3 mr-1" />
+                    {data.current_employment}
+                  </Badge>
                 </div>
               </div>
             )}
