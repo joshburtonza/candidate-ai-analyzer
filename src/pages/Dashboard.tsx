@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,7 +37,7 @@ const Dashboard = () => {
     console.log('Dashboard: Auth state - authLoading:', authLoading, 'user:', user?.id || 'null', 'profile email:', profile?.email);
     
     if (!authLoading && user) {
-      console.log('Dashboard: User authenticated, fetching uploads with email filtering');
+      console.log('Dashboard: User authenticated, fetching uploads');
       fetchUploads();
       setupRealtimeSubscription();
     } else if (!authLoading && !user) {
@@ -53,7 +52,7 @@ const Dashboard = () => {
         subscriptionRef.current = null;
       }
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, profile?.email]);
 
   const setupRealtimeSubscription = () => {
     if (subscriptionRef.current) {
@@ -62,7 +61,7 @@ const Dashboard = () => {
       subscriptionRef.current = null;
     }
 
-    console.log('Dashboard: Setting up new realtime subscription with email filtering');
+    console.log('Dashboard: Setting up new realtime subscription');
     
     const channel = supabase
       .channel('cv_uploads_changes')
@@ -78,13 +77,23 @@ const Dashboard = () => {
           
           const newUpload = payload.new as CVUpload;
           
+          // Apply same email filtering logic as in fetchUploads
           const shouldShow = !newUpload.source_email || 
                            newUpload.source_email === '' || 
                            newUpload.source_email === profile?.email ||
                            profile?.is_admin;
           
           if (shouldShow) {
-            setUploads(prev => [newUpload, ...prev]);
+            setUploads(prev => {
+              // Prevent duplicates
+              const exists = prev.some(upload => upload.id === newUpload.id);
+              if (exists) {
+                console.log('Dashboard: Upload already exists, skipping duplicate');
+                return prev;
+              }
+              console.log('Dashboard: Adding new upload to state');
+              return [newUpload, ...prev];
+            });
             
             if (newUpload.extracted_json?.candidate_name) {
               toast({
@@ -114,19 +123,50 @@ const Dashboard = () => {
 
     try {
       console.log('Dashboard: Fetching uploads for user:', user.id, 'with email:', profile?.email);
+      
+      // Clear any stale state first
+      console.log('Dashboard: Clearing stale state');
+      setUploads([]);
+      setFilteredUploads([]);
       setError(null);
       
-      const { data, error } = await supabase
+      // Clear any cached data in localStorage
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('cv_uploads') || key.includes('dashboard')) {
+            console.log('Dashboard: Clearing cached key:', key);
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.warn('Dashboard: Could not clear localStorage:', e);
+      }
+      
+      let query = supabase
         .from('cv_uploads')
         .select('*')
         .order('uploaded_at', { ascending: false });
+
+      // Apply email filtering (unless admin)
+      if (profile && !profile.is_admin && profile.email) {
+        console.log('Dashboard: Applying email filter for non-admin user:', profile.email);
+        query = query.or(`source_email.eq.${profile.email},source_email.is.null,source_email.eq.`);
+      } else if (profile?.is_admin) {
+        console.log('Dashboard: Admin user - showing all uploads');
+      } else {
+        console.log('Dashboard: No profile email found, showing uploads with empty source_email');
+        query = query.or('source_email.is.null,source_email.eq.');
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Dashboard: Error fetching uploads:', error);
         throw error;
       }
       
-      console.log('Dashboard: Fetched', data?.length || 0, 'uploads (filtered by email)');
+      console.log('Dashboard: Successfully fetched', data?.length || 0, 'uploads from database');
+      console.log('Dashboard: Raw data:', data);
       
       const typedUploads: CVUpload[] = (data || []).map(upload => ({
         ...upload,
@@ -134,6 +174,7 @@ const Dashboard = () => {
         processing_status: upload.processing_status as 'pending' | 'processing' | 'completed' | 'error'
       }));
       
+      console.log('Dashboard: Setting uploads state with', typedUploads.length, 'records');
       setUploads(typedUploads);
       setFilteredUploads(typedUploads);
     } catch (error: any) {
@@ -148,7 +189,6 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-
 
   const handleCalendarDateSelect = (date: Date) => {
     setSelectedCalendarDate(date);
@@ -325,7 +365,6 @@ const Dashboard = () => {
               >
                 <DashboardStats uploads={actualDisplayedCandidates} />
               </motion.div>
-
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
