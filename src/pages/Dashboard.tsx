@@ -6,15 +6,14 @@ import { CVUpload } from '@/types/candidate';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { UploadSection } from '@/components/dashboard/UploadSection';
 import CandidateGrid from '@/components/dashboard/CandidateGrid';
-import DashboardStats from '@/components/dashboard/DashboardStats';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
-import { GoogleDocUpload } from '@/components/dashboard/GoogleDocUpload';
-import { N8nApiInfo } from '@/components/dashboard/N8nApiInfo';
 import { useAuth } from '@/hooks/useAuth';
 import { useExport } from '@/hooks/useExport';
+import HorizontalStats from '@/components/dashboard/HorizontalStats';
+import { SimpleUploadSection } from '@/components/dashboard/SimpleUploadSection';
+import { SimpleApiInfo } from '@/components/dashboard/SimpleApiInfo';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -25,7 +24,7 @@ const Dashboard = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
 
-  // Simple fetch of ALL uploads - no filtering
+  // Fetch all uploads
   const { data: uploads = [], refetch, isLoading, error } = useQuery({
     queryKey: ['cv-uploads'],
     queryFn: async () => {
@@ -49,7 +48,7 @@ const Dashboard = () => {
     },
   });
 
-  // Real-time subscription for immediate updates
+  // Real-time subscription
   useEffect(() => {
     console.log('Setting up real-time subscription...');
     
@@ -123,7 +122,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="space-y-8">
-          {/* Header Section - Full Width */}
+          {/* Header Section */}
           <DashboardHeader 
             viewMode={viewMode}
             setViewMode={setViewMode}
@@ -135,45 +134,29 @@ const Dashboard = () => {
             isExporting={false}
           />
 
-          {/* Stats Section - Vertical Stack */}
-          {showStats && (
-            <DashboardStats 
-              uploads={uploads}
-              selectedDate={selectedCalendarDate}
-            />
-          )}
+          {/* Horizontal Stats Bar */}
+          <HorizontalStats uploads={uploads} />
 
-          {/* Upload Section - Full Width */}
-          <UploadSection onUploadComplete={handleUploadComplete} />
-
-          {/* Google Integration Section - Full Width */}
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
-            
-            <div className="relative z-10 p-8 border border-white/10 rounded-2xl">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-white mb-2 tracking-wider">IMPORT FROM GOOGLE</h2>
-                <p className="text-gray-400">Connect your Google account to import CVs from Gmail and Drive</p>
-              </div>
-              
-              <div className="max-w-2xl mx-auto">
-                <GoogleDocUpload onUploadComplete={handleUploadComplete} />
-              </div>
+          {/* Simplified Upload Section */}
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Upload CV Files</h2>
+              <p className="text-muted-foreground text-sm">Upload and process CV files to extract candidate data</p>
             </div>
+            <SimpleUploadSection onUploadComplete={handleUploadComplete} />
           </div>
 
-          {/* N8n API Integration Section - Full Width */}
-          <N8nApiInfo />
+          {/* API Integration Section */}
+          <SimpleApiInfo />
 
-          {/* Calendar/Date Filter Section - Full Width */}
+          {/* Calendar Section */}
           <UploadHistoryCalendar 
             uploads={uploads}
             onDateSelect={handleCalendarDateChange}
             selectedDate={selectedCalendarDate}
           />
 
-          {/* Uploads Display Section - Full Width */}
+          {/* Uploads Display Section */}
           <div className="space-y-6">
             <Tabs defaultValue="all" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
