@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,12 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useExport } from '@/hooks/useExport';
 import { BarChart3, Download, Users } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
+import { 
+  filterAllQualifiedCandidates, 
+  filterValidCandidatesForDate, 
+  filterAllBestCandidates, 
+  filterBestCandidatesForDate 
+} from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -243,9 +249,10 @@ const Dashboard = () => {
         ? filterBestCandidatesForDate(uploads, selectedCalendarDate)
         : filterValidCandidatesForDate(uploads, selectedCalendarDate);
     }
+    // NEW: Use the comprehensive filter functions that show all candidates
     return filterType === 'best' 
-      ? filterBestCandidates(uploads)
-      : filterValidCandidates(uploads);
+      ? filterAllBestCandidates(uploads)
+      : filterAllQualifiedCandidates(uploads);
   };
 
   const actualDisplayedCandidates = getFilteredCandidates(candidateFilterType);

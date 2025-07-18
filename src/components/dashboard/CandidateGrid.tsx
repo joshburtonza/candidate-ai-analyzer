@@ -5,7 +5,12 @@ import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { motion } from 'framer-motion';
 import { FileText, Calendar } from 'lucide-react';
-import { filterValidCandidates, filterValidCandidatesForDate, filterBestCandidates, filterBestCandidatesForDate } from '@/utils/candidateFilters';
+import { 
+  filterAllQualifiedCandidates, 
+  filterValidCandidatesForDate, 
+  filterAllBestCandidates, 
+  filterBestCandidatesForDate 
+} from '@/utils/candidateFilters';
 
 interface CandidateGridProps {
   uploads: CVUpload[];
@@ -48,41 +53,19 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
         return filterValidCandidatesForDate(localUploads, selectedDate);
       }
     } else {
-      // When no date is selected, show ALL qualified candidates (not just today's)
-      // Apply basic qualification filters without date restriction
-      const seenEmails = new Set<string>();
-      
-      return localUploads.filter(upload => {
-        // Basic qualification check (must have email and be completed)
-        if (upload.processing_status !== 'completed' || !upload.extracted_json?.email_address) {
-          return false;
-        }
-        
-        // Filter out duplicates based on email
-        const candidateEmail = upload.extracted_json.email_address;
-        if (candidateEmail) {
-          const normalizedEmail = candidateEmail.toLowerCase().trim();
-          if (seenEmails.has(normalizedEmail)) {
-            return false;
-          }
-          seenEmails.add(normalizedEmail);
-        }
-        
-        // Apply best candidate filters if needed
-        if (filterType === 'best') {
-          // You can add additional best candidate logic here if needed
-          return true; // For now, just show all qualified candidates
-        }
-        
-        return true;
-      });
+      // When no date is selected, show ALL qualified candidates with today's first
+      if (filterType === 'best') {
+        return filterAllBestCandidates(localUploads);
+      } else {
+        return filterAllQualifiedCandidates(localUploads);
+      }
     }
   }, [localUploads, selectedDate, filterType]);
 
   if (validUploads.length === 0) {
     const dateText = selectedDate 
       ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-      : 'TODAY';
+      : 'available';
     
     const filterText = filterType === 'best' ? 'BEST ' : '';
     const criteriaText = filterType === 'best' 
@@ -99,7 +82,7 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
           <Calendar className="w-10 h-10 gold-accent" />
         </div>
         <h3 className="text-2xl font-semibold text-white mb-4 text-elegant tracking-wider">
-          NO {filterText}CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'TODAY'}
+          NO {filterText}CANDIDATES {selectedDate ? 'FOR ' + dateText.toUpperCase() : 'AVAILABLE'}
         </h3>
         <p className="text-white/70 text-lg">
           {selectedDate 

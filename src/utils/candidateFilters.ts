@@ -1,4 +1,3 @@
-
 import { CVUpload } from '@/types/candidate';
 import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
@@ -63,10 +62,54 @@ export const isUploadedToday = (upload: CVUpload): boolean => {
   return isUploadedOnDate(upload, new Date());
 };
 
+// NEW: Show all qualified candidates (not just today's)
+export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  const filtered = uploads.filter(upload => {
+    // Filter out incomplete uploads (only requires email now)
+    if (!isQualifiedCandidate(upload)) {
+      return false;
+    }
+
+    // Filter out test candidates
+    if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+
+  // Sort by upload date with today's uploads first, then by most recent
+  return filtered.sort((a, b) => {
+    const aIsToday = isUploadedToday(a);
+    const bIsToday = isUploadedToday(b);
+    
+    // If one is from today and the other isn't, prioritize today's
+    if (aIsToday && !bIsToday) return -1;
+    if (!aIsToday && bIsToday) return 1;
+    
+    // Otherwise sort by upload date (newest first)
+    return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+  });
+};
+
 // Optimized filtering function with better memoization
 const filterCache = new Map<string, { result: CVUpload[], timestamp: number }>();
 const CACHE_DURATION = 30000; // 30 seconds
 
+// EXISTING: Keep this for "today only" filtering when specifically requested
 export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   // Create cache key based on uploads length and today's date
   const today = new Date();
@@ -122,7 +165,6 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
   return filtered;
 };
 
-// Optimized function for date-specific filtering
 // Helper functions for Best Candidates filtering
 export const hasValidEducation = (upload: CVUpload): boolean => {
   if (!upload.extracted_json?.educational_qualifications) return false;
@@ -367,6 +409,44 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
     }
 
     return true;
+  });
+};
+
+// NEW: Show all best candidates (not just today's)
+export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
+  const seenEmails = new Set<string>();
+  
+  const filtered = uploads.filter(upload => {
+    // Apply best candidate filters without date restriction
+    if (!isBestCandidate(upload)) {
+      return false;
+    }
+
+    const candidateEmail = upload.extracted_json?.email_address;
+
+    // Filter out duplicates based on email (case-insensitive)
+    if (candidateEmail) {
+      const normalizedEmail = candidateEmail.toLowerCase().trim();
+      if (seenEmails.has(normalizedEmail)) {
+        return false;
+      }
+      seenEmails.add(normalizedEmail);
+    }
+
+    return true;
+  });
+
+  // Sort by upload date with today's uploads first, then by most recent
+  return filtered.sort((a, b) => {
+    const aIsToday = isUploadedToday(a);
+    const bIsToday = isUploadedToday(b);
+    
+    // If one is from today and the other isn't, prioritize today's
+    if (aIsToday && !bIsToday) return -1;
+    if (!aIsToday && bIsToday) return 1;
+    
+    // Otherwise sort by upload date (newest first)
+    return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
   });
 };
 

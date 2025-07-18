@@ -4,10 +4,12 @@ import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
+import { isUploadedToday } from '@/utils/candidateFilters';
+import { format } from 'date-fns';
 
 interface CandidateCardProps {
   upload: CVUpload;
@@ -38,6 +40,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
+
+  // Check if uploaded today and format date
+  const uploadedToday = isUploadedToday(upload);
+  const uploadDate = new Date(upload.uploaded_at);
+  const formattedDate = format(uploadDate, 'MMM dd, yyyy');
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -72,6 +79,21 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
         
         {/* Content */}
         <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col">
+          {/* Upload Date Badge */}
+          <div className="absolute top-4 left-4 z-20">
+            <Badge
+              variant="secondary"
+              className={`text-xs px-2 py-1 rounded-xl ${
+                uploadedToday 
+                  ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                  : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+              }`}
+            >
+              <Clock className="w-3 h-3 mr-1" />
+              {uploadedToday ? 'Today' : formattedDate}
+            </Badge>
+          </div>
+
           {/* Delete Button */}
           <Button
             onClick={handleDelete}
@@ -88,7 +110,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             )}
           </Button>
 
-          <div className="space-y-6 flex-1 flex flex-col">
+          <div className="space-y-6 flex-1 flex flex-col mt-8">
             {/* Header with Avatar and Score */}
             <div className="flex items-center justify-between pr-12">
               <div className="flex items-center gap-4">
