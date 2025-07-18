@@ -17,7 +17,7 @@ const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
     
     const data = upload.extracted_json;
     if (!(data.candidate_name && data.contact_number && data.email_address && 
-          data.countries && data.skill_set && data.educational_qualifications && 
+          data.countries && data.current_employment && data.educational_qualifications && 
           data.job_history && data.justification)) return false;
     
     const rawScore = parseFloat(data.score || '0');
@@ -214,7 +214,7 @@ export const AnalyticsCharts = ({ uploads }: AnalyticsChartsProps) => {
 
   // Top skills with improved extraction and normalization
   const skillsDistribution = validUploads.reduce((acc, upload) => {
-    const skills = extractSkills(upload.extracted_json?.skill_set);
+    const skills = extractSkills(upload.extracted_json?.current_employment);
     skills.forEach(skill => {
       if (skill && skill.length > 1) { // Filter out single character skills
         acc[skill] = (acc[skill] || 0) + 1;

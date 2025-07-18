@@ -44,7 +44,7 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
   // Handle skills as both string and array
-  const skills = normalizeToArray(data.skill_set).slice(0, 4);
+  const skills = normalizeToArray(data.current_employment).slice(0, 4);
   
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);

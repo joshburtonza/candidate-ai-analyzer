@@ -56,7 +56,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
     validUploads.forEach(upload => {
-      const skills = upload.extracted_json?.skill_set;
+      const skills = upload.extracted_json?.current_employment;
       const skillArray = normalizeToArray(skills);
       skillArray.forEach(skill => {
         if (skill) skillSet.add(skill);
@@ -77,7 +77,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
         return (
           data.candidate_name?.toLowerCase().includes(query) ||
           data.email_address?.toLowerCase().includes(query) ||
-          normalizeToArray(data.skill_set).some(skill => skill.toLowerCase().includes(query)) ||
+          normalizeToArray(data.current_employment).some(skill => skill.toLowerCase().includes(query)) ||
           normalizeToArray(data.countries).some(country => country.toLowerCase().includes(query))
         );
       });
@@ -96,7 +96,7 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
     // Skills filter
     if (selectedSkills.length > 0) {
       filtered = filtered.filter(upload => {
-        const skills = normalizeToArray(upload.extracted_json?.skill_set);
+        const skills = normalizeToArray(upload.extracted_json?.current_employment);
         return selectedSkills.some(selectedSkill =>
           skills.some(skill => skill.toLowerCase().includes(selectedSkill.toLowerCase()))
         );

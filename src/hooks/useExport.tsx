@@ -15,7 +15,7 @@ export const useExport = () => {
         upload.extracted_json.contact_number &&
         upload.extracted_json.email_address &&
         upload.extracted_json.countries &&
-        upload.extracted_json.skill_set &&
+        upload.extracted_json.current_employment &&
         upload.extracted_json.educational_qualifications &&
         upload.extracted_json.job_history &&
         upload.extracted_json.justification &&
@@ -36,7 +36,7 @@ export const useExport = () => {
         'Email',
         'Phone',
         'Countries',
-        'Skills',
+        'Current Employment',
         'Education',
         'Experience',
         'Score',
@@ -53,7 +53,7 @@ export const useExport = () => {
             `"${data.email_address || ''}"`,
             `"${data.contact_number || ''}"`,
             `"${data.countries || ''}"`,
-            `"${data.skill_set || ''}"`,
+            `"${data.current_employment || ''}"`,
             `"${data.educational_qualifications || ''}"`,
             `"${data.job_history || ''}"`,
             data.score || '0',

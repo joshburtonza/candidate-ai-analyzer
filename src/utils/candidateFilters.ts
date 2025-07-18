@@ -193,9 +193,9 @@ export const hasValidExperience = (upload: CVUpload): boolean => {
 };
 
 export const hasValidSubject = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.job_history && !upload.extracted_json?.skill_set) return false;
+  if (!upload.extracted_json?.job_history && !upload.extracted_json?.current_employment) return false;
   
-  const text = `${upload.extracted_json.job_history || ''} ${upload.extracted_json.skill_set || ''}`.toLowerCase();
+  const text = `${upload.extracted_json.job_history || ''} ${upload.extracted_json.current_employment || ''}`.toLowerCase();
   
   // More lenient exclusion - only exclude obvious non-teaching roles
   const excludedSubjects = [
