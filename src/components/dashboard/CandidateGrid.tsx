@@ -40,16 +40,42 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
 
   // Memoize the filtering to prevent unnecessary recalculations
   const validUploads = useMemo(() => {
-    if (filterType === 'best') {
-      if (selectedDate) {
+    if (selectedDate) {
+      // When a specific date is selected, filter for that date
+      if (filterType === 'best') {
         return filterBestCandidatesForDate(localUploads, selectedDate);
-      }
-      return filterBestCandidates(localUploads);
-    } else {
-      if (selectedDate) {
+      } else {
         return filterValidCandidatesForDate(localUploads, selectedDate);
       }
-      return filterValidCandidates(localUploads);
+    } else {
+      // When no date is selected, show ALL qualified candidates (not just today's)
+      // Apply basic qualification filters without date restriction
+      const seenEmails = new Set<string>();
+      
+      return localUploads.filter(upload => {
+        // Basic qualification check (must have email and be completed)
+        if (upload.processing_status !== 'completed' || !upload.extracted_json?.email_address) {
+          return false;
+        }
+        
+        // Filter out duplicates based on email
+        const candidateEmail = upload.extracted_json.email_address;
+        if (candidateEmail) {
+          const normalizedEmail = candidateEmail.toLowerCase().trim();
+          if (seenEmails.has(normalizedEmail)) {
+            return false;
+          }
+          seenEmails.add(normalizedEmail);
+        }
+        
+        // Apply best candidate filters if needed
+        if (filterType === 'best') {
+          // You can add additional best candidate logic here if needed
+          return true; // For now, just show all qualified candidates
+        }
+        
+        return true;
+      });
     }
   }, [localUploads, selectedDate, filterType]);
 
@@ -61,7 +87,7 @@ export const CandidateGrid = ({ uploads, viewMode, selectedDate, filterType = 'a
     const filterText = filterType === 'best' ? 'BEST ' : '';
     const criteriaText = filterType === 'best' 
       ? 'Candidates must have: B.Ed/PGCE qualification, 2+ years teaching experience, teach academic subjects, and be from UK/USA/Australia/NZ/Canada/Ireland/SA/Dubai'
-      : 'Candidates uploaded today (12 AM - 11 PM) with email addresses will appear here';
+      : 'Candidates uploaded with email addresses will appear here (use calendar to filter by date)';
     
     return (
       <motion.div
