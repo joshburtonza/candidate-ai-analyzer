@@ -30,69 +30,30 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     }).length;
   }, [realtimeUploads]);
 
-  // Debounced realtime subscription setup
+  // Real-time subscription for calendar updates
   useEffect(() => {
-    let mounted = true;
+    console.log('UploadHistoryCalendar: Setting up realtime subscription');
     
-    const setupSubscription = () => {
-      if (!mounted) return;
-      
-      console.log('UploadHistoryCalendar: Setting up realtime subscription');
-      
-      const channel = supabase
-        .channel(`calendar_cv_uploads_${Date.now()}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'cv_uploads'
-          },
-          (payload) => {
-            if (!mounted) return;
-            console.log('UploadHistoryCalendar: New upload received via realtime:', payload);
-            const newUpload = payload.new as CVUpload;
-            
-            setRealtimeUploads(prev => {
-              // Prevent duplicates
-              const exists = prev.some(upload => upload.id === newUpload.id);
-              if (exists) return prev;
-              return [newUpload, ...prev];
-            });
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'cv_uploads'
-          },
-          (payload) => {
-            if (!mounted) return;
-            console.log('UploadHistoryCalendar: Upload updated via realtime:', payload);
-            const updatedUpload = payload.new as CVUpload;
-            
-            setRealtimeUploads(prev => 
-              prev.map(upload => 
-                upload.id === updatedUpload.id ? updatedUpload : upload
-              )
-            );
-          }
-        )
-        .subscribe();
-
-      return channel;
-    };
-
-    const channel = setupSubscription();
+    const channel = supabase
+      .channel(`calendar_cv_uploads_${Date.now()}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cv_uploads'
+        },
+        (payload) => {
+          console.log('UploadHistoryCalendar: Realtime update:', payload);
+          // Update the local state immediately when uploads prop changes
+          // The parent component will handle the main data refresh
+        }
+      )
+      .subscribe();
 
     return () => {
-      mounted = false;
-      if (channel) {
-        console.log('UploadHistoryCalendar: Cleaning up realtime subscription');
-        supabase.removeChannel(channel);
-      }
+      console.log('UploadHistoryCalendar: Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
     };
   }, []);
 

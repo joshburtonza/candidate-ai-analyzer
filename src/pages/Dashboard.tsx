@@ -57,13 +57,27 @@ const Dashboard = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'cv_uploads'
         },
         (payload) => {
-          console.log('Real-time update:', payload);
-          refetch();
+          console.log('Real-time INSERT:', payload);
+          // Force immediate refetch to get latest data
+          queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'cv_uploads'
+        },
+        (payload) => {
+          console.log('Real-time UPDATE:', payload);
+          // Force immediate refetch to get latest data
+          queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
         }
       )
       .subscribe();
@@ -71,7 +85,7 @@ const Dashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [queryClient]);
 
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
