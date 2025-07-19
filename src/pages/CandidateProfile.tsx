@@ -92,6 +92,12 @@ const CandidateProfile = () => {
 
   const data = upload.extracted_json;
   
+  // Debug logging to trace current employment data
+  console.log('Full Upload Object:', upload);
+  console.log('Extracted JSON Data:', data);
+  console.log('Current Employment Field:', data.current_employment);
+  console.log('All data keys:', Object.keys(data));
+  
   // Convert score to be out of 10 instead of 100
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
