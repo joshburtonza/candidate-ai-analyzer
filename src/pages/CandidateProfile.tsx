@@ -97,9 +97,29 @@ const CandidateProfile = () => {
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'from-slate-400 to-slate-600';
-    if (score >= 6) return 'from-slate-500 to-slate-700';
-    return 'from-slate-600 to-slate-800';
+    if (score >= 8) return 'from-green-500 to-green-600';
+    if (score >= 5) return 'from-yellow-500 to-yellow-600';
+    return 'from-red-500 to-red-600';
+  };
+
+  const getScoreBadgeColor = (score: number) => {
+    if (score >= 8) return 'bg-green-500/20 text-green-400 border-green-500/30';
+    if (score >= 5) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    return 'bg-red-500/20 text-red-400 border-red-500/30';
+  };
+
+  // Format date extracted
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB');
+  };
+
+  // Get candidate initials
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 2);
   };
 
   return (
@@ -136,181 +156,155 @@ const CandidateProfile = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Basic Info & Score */}
-            <div className="space-y-6">
-              <Card className="glass-card elegant-border p-8">
-                <div className="text-center">
-                  <div className="p-6 bg-gradient-to-br from-slate-400/20 to-slate-600/30 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                    <User className="w-12 h-12 text-slate-400" />
-                  </div>
-                  <h1 className="text-3xl font-bold text-white mb-4 text-elegant tracking-wider break-words">
-                    {data.candidate_name || 'UNKNOWN CANDIDATE'}
-                  </h1>
-                  
-                  {/* Score Circle */}
-                  <div className="mb-8">
-                    <div className={`w-28 h-28 rounded-full bg-gradient-to-r ${getScoreColor(score)} flex items-center justify-center mx-auto mb-4 shadow-xl`}>
-                      <span className="text-white font-bold text-3xl">{score}</span>
-                    </div>
-                    <p className="text-white/80 text-elegant tracking-wider">ASSESSMENT SCORE</p>
-                    <Progress value={(score / 10) * 100} className="mt-4 h-2" />
-                  </div>
+          {/* Header Section */}
+          <div className="text-center mb-8">
+            {/* Avatar with Initials */}
+            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-slate-400/20 to-slate-600/30 mx-auto mb-6 flex items-center justify-center border-2 border-slate-500/30">
+              <span className="text-4xl font-bold text-white">
+                {data.candidate_name ? getInitials(data.candidate_name) : 'UK'}
+              </span>
+            </div>
+            
+            {/* Candidate Name */}
+            <h1 className="text-4xl font-bold text-white mb-6 text-elegant tracking-wider break-words">
+              {data.candidate_name || 'UNKNOWN CANDIDATE'}
+            </h1>
+            
+            {/* Score Badge */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className={`inline-flex items-center px-6 py-3 rounded-full border ${getScoreBadgeColor(score)}`}>
+                <Star className="w-5 h-5 mr-2" />
+                <span className="text-2xl font-bold">{score}/10</span>
+              </div>
+            </div>
+          </div>
 
-                  {/* Contact Info */}
-                  <div className="space-y-4 text-left">
-                    {data.email_address && (
-                      <div className="flex items-center gap-4 text-white/90">
-                        <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-all min-w-0">{data.email_address}</span>
-                      </div>
-                    )}
-                    {data.contact_number && (
-                      <div className="flex items-center gap-4 text-white/90">
-                        <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">{data.contact_number}</span>
-                      </div>
-                    )}
-                    {data.countries && (
-                      <div className="flex items-center gap-4 text-white/90">
-                        <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">{data.countries}</span>
-                      </div>
-                    )}
-                    {data.date_extracted && (
-                      <div className="flex items-center gap-4 text-white/90">
-                        <Calendar className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                        <span className="break-words min-w-0">
-                          {new Date(data.date_extracted).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column */}
+            <div className="space-y-6">
+              
+              {/* Contact Information Card */}
+              <Card className="glass-card elegant-border p-6">
+                <h2 className="text-xl font-semibold text-white mb-4 text-elegant tracking-wider">CONTACT INFORMATION</h2>
+                <div className="space-y-4">
+                  {/* Date Extracted */}
+                  <div className="flex items-center gap-4 text-white/90">
+                    <Calendar className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-white/60 text-sm block">Date Extracted:</span>
+                      <span className="break-words">
+                        {data.date_extracted ? formatDate(data.date_extracted) : 'Not provided'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Email Address */}
+                  <div className="flex items-center gap-4 text-white/90">
+                    <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-white/60 text-sm block">Email Address:</span>
+                      <span className="break-all">{data.email_address || 'Not provided'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Contact Number */}
+                  <div className="flex items-center gap-4 text-white/90">
+                    <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-white/60 text-sm block">Contact Number:</span>
+                      <span className="break-words">{data.contact_number || 'Not provided'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Countries */}
+                  <div className="flex items-center gap-4 text-white/90">
+                    <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-white/60 text-sm block">Countries:</span>
+                      <span className="break-words">{data.countries || 'Not provided'}</span>
+                    </div>
                   </div>
                 </div>
               </Card>
 
-              {/* Justification */}
-              {data.justification && (
-                <Card className="glass-card elegant-border p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Star className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-xl font-semibold text-white text-elegant tracking-wider">SYSTEM ANALYSIS</h3>
-                  </div>
-                  <div className="text-white/90 leading-relaxed">
-                    <p className="whitespace-pre-wrap break-words">
-                      {data.justification}
-                    </p>
-                  </div>
-                </Card>
-              )}
+              {/* Current Employment */}
+              <Card className="glass-card elegant-border p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Briefcase className="w-6 h-6 text-slate-400" />
+                  <h2 className="text-xl font-semibold text-white text-elegant tracking-wider">CURRENT EMPLOYMENT</h2>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">CURRENT</Badge>
+                </div>
+                <div className="text-white/90 leading-relaxed">
+                  <p className="whitespace-pre-wrap break-words">
+                    {data.current_employment || 'Not provided'}
+                  </p>
+                </div>
+              </Card>
+
+              {/* Educational Qualifications */}
+              <Card className="glass-card elegant-border p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <GraduationCap className="w-6 h-6 text-slate-400" />
+                  <h2 className="text-xl font-semibold text-white text-elegant tracking-wider">EDUCATIONAL QUALIFICATIONS</h2>
+                </div>
+                <div className="text-white/90 leading-relaxed">
+                  <p className="whitespace-pre-wrap break-words">
+                    {data.educational_qualifications || 'Not provided'}
+                  </p>
+                </div>
+              </Card>
             </div>
 
-            {/* Right Column - Detailed Info */}
-            <div className="lg:col-span-2 space-y-6">
+            {/* Right Column */}
+            <div className="space-y-6">
+              
+              {/* Job History */}
+              <Card className="glass-card elegant-border p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Briefcase className="w-6 h-6 text-slate-400" />
+                  <h2 className="text-xl font-semibold text-white text-elegant tracking-wider">JOB HISTORY</h2>
+                </div>
+                <div className="text-white/90 leading-relaxed">
+                  <p className="whitespace-pre-wrap break-words">
+                    {data.job_history || 'Not provided'}
+                  </p>
+                </div>
+              </Card>
 
-              {/* Current Employment */}
-              {data.current_employment && (
-                <Card className="glass-card elegant-border p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Briefcase className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">CURRENT EMPLOYMENT</h3>
-                  </div>
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <div className="text-white/90 leading-relaxed cursor-pointer">
-                        <p className="whitespace-pre-wrap break-words">
-                          {data.current_employment}
-                        </p>
-                      </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
-                      <div className="text-sm leading-relaxed">
-                        <p className="whitespace-pre-wrap break-words">
-                          {data.current_employment}
-                        </p>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                </Card>
-              )}
+              {/* Score Justification */}
+              <Card className="glass-card elegant-border p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Star className="w-6 h-6 text-slate-400" />
+                  <h2 className="text-xl font-semibold text-white text-elegant tracking-wider">SCORE JUSTIFICATION</h2>
+                </div>
+                <div className="text-white/90 leading-relaxed">
+                  <p className="whitespace-pre-wrap break-words">
+                    {data.justification || 'Not provided'}
+                  </p>
+                </div>
+              </Card>
 
-              {/* Education */}
-              {data.educational_qualifications && (
-                <Card className="glass-card elegant-border p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <GraduationCap className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">ACADEMIC CREDENTIALS</h3>
-                  </div>
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <div className="text-white/90 leading-relaxed cursor-pointer">
-                        <p className="whitespace-pre-wrap break-words">
-                          {data.educational_qualifications}
-                        </p>
-                      </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
-                      <div className="text-sm leading-relaxed">
-                        <p className="whitespace-pre-wrap break-words">
-                          {data.educational_qualifications}
-                        </p>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                </Card>
-              )}
-
-              {/* Work Experience */}
-              {data.job_history && (
-                <Card className="glass-card elegant-border p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Briefcase className="w-6 h-6 text-slate-400" />
-                    <h3 className="text-2xl font-semibold text-white text-elegant tracking-wider">PROFESSIONAL EXPERIENCE</h3>
-                  </div>
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <div className="text-white/90 leading-relaxed cursor-pointer">
-                        <p className="whitespace-pre-wrap break-words">
-                          {data.job_history}
-                        </p>
-                      </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-96 max-w-[90vw] p-4 bg-slate-800/95 border-slate-600/50 text-white">
-                      <div className="text-sm leading-relaxed">
-                        <p className="whitespace-pre-wrap break-words">
-                          {data.job_history}
-                        </p>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
-                </Card>
-              )}
-
-              {/* File Info */}
-              <Card className="glass-card elegant-border p-8">
-                <h3 className="text-2xl font-semibold text-white mb-6 text-elegant tracking-wider">DOCUMENT DETAILS</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Document Details */}
+              <Card className="glass-card elegant-border p-6">
+                <h2 className="text-xl font-semibold text-white mb-4 text-elegant tracking-wider">DOCUMENT DETAILS</h2>
+                <div className="space-y-4">
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">ORIGINAL FILENAME:</span>
-                    <p className="text-white font-medium break-all">{upload.original_filename}</p>
+                    <span className="text-white/60 text-sm block">Original Filename:</span>
+                    <p className="text-white/90 break-all">{upload.original_filename}</p>
                   </div>
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">UPLOAD DATE:</span>
-                    <p className="text-white font-medium break-words">
-                      {new Date(upload.uploaded_at).toLocaleDateString()}
-                    </p>
+                    <span className="text-white/60 text-sm block">Upload Date:</span>
+                    <p className="text-white/90">{formatDate(upload.uploaded_at)}</p>
                   </div>
                   {upload.file_size && (
                     <div>
-                      <span className="text-white/60 text-sm tracking-wider">FILE SIZE:</span>
-                      <p className="text-white font-medium break-words">
-                        {(upload.file_size / 1024 / 1024).toFixed(2)} MB
-                      </p>
+                      <span className="text-white/60 text-sm block">File Size:</span>
+                      <p className="text-white/90">{(upload.file_size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   )}
                   <div>
-                    <span className="text-white/60 text-sm tracking-wider">PROCESSING STATUS:</span>
-                    <p className="text-white font-medium capitalize break-words">{upload.processing_status}</p>
+                    <span className="text-white/60 text-sm block">Processing Status:</span>
+                    <p className="text-white/90 capitalize">{upload.processing_status}</p>
                   </div>
                 </div>
               </Card>
