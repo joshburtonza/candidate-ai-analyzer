@@ -150,20 +150,7 @@ const Dashboard = () => {
             isExporting={false}
           />
 
-          {/* Horizontal Stats Bar */}
-          <HorizontalStats uploads={uploads} />
-
-          {/* Simplified Upload Section */}
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">Upload CV Files</h2>
-              <p className="text-muted-foreground text-sm">Upload and process CV files to extract candidate data</p>
-            </div>
-            <SimpleUploadSection onUploadComplete={handleUploadComplete} />
-          </div>
-
-          {/* API Integration Section */}
-          <SimpleApiInfo />
+          {/* Removed: Horizontal Stats Bar, Upload Section, and API Integration Section */}
 
           {/* Calendar Section */}
           <UploadHistoryCalendar 
