@@ -13,12 +13,39 @@ interface CandidateData {
   contact_number: string;
   educational_qualifications: string;
   job_history: string;
-  skill_set: string;
+  current_employment: string | { _type?: string; value?: string } | any; // Updated to handle object format
   score: string;
   justification: string;
   countries: string | string[]; // Allow both string and array
   original_filename?: string;
   source_email: string; // Now required - the email the CV was sent to
+  date_extracted?: string;
+}
+
+// Helper function to safely extract current employment as string
+function extractCurrentEmployment(value: string | { _type?: string; value?: string } | any): string {
+  if (!value) return '';
+  
+  // If it's already a string, return it
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  
+  // If it's an object with a value property, extract it
+  if (typeof value === 'object' && value !== null) {
+    if (value.value && typeof value.value === 'string') {
+      return value.value.trim();
+    }
+    // Handle other object formats that might contain employment data
+    if (value.text && typeof value.text === 'string') {
+      return value.text.trim();
+    }
+    if (value.content && typeof value.content === 'string') {
+      return value.content.trim();
+    }
+  }
+  
+  return '';
 }
 
 // Helper function to safely convert arrays or strings to normalized string format
@@ -88,20 +115,13 @@ function mergeCandidateData(existing: any, incoming: CandidateData): any {
     }
   }
   
-  // Skills: merge unique skills - using safe handling
-  if (incoming.skill_set) {
-    const normalizedIncomingSkills = normalizeToString(incoming.skill_set);
-    if (!merged.skill_set) {
-      merged.skill_set = normalizedIncomingSkills;
-    } else {
-      const existingSkills = safeSplit(merged.skill_set).map(s => s.toLowerCase());
-      const incomingSkills = safeSplit(normalizedIncomingSkills);
-      const newSkills = incomingSkills.filter(skill => 
-        !existingSkills.includes(skill.toLowerCase()) && skill.length > 0
-      );
-      if (newSkills.length > 0) {
-        merged.skill_set = normalizeToString(merged.skill_set) + ', ' + newSkills.join(', ');
-      }
+  // Current employment: properly extract and merge
+  const incomingCurrentEmployment = extractCurrentEmployment(incoming.current_employment);
+  if (incomingCurrentEmployment) {
+    if (!merged.current_employment) {
+      merged.current_employment = incomingCurrentEmployment;
+    } else if (incomingCurrentEmployment.length > merged.current_employment.length) {
+      merged.current_employment = incomingCurrentEmployment;
     }
   }
   
@@ -172,6 +192,7 @@ serve(async (req) => {
     // Parse request body
     const candidateData: CandidateData = await req.json();
     console.log('Received candidate data:', candidateData);
+    console.log('Current employment field raw:', candidateData.current_employment);
 
     // Validate required fields
     const requiredFields = ['candidate_name', 'source_email'];
@@ -344,6 +365,10 @@ serve(async (req) => {
       );
     }
 
+    // Extract and normalize current employment
+    const currentEmployment = extractCurrentEmployment(candidateData.current_employment);
+    console.log('Extracted current employment:', currentEmployment);
+
     // Create the CV upload record with the mapped user ID - normalize data before storing
     const cvUploadData = {
       user_id: profile.id, // Use the actual user ID from profile lookup
@@ -355,10 +380,11 @@ serve(async (req) => {
         contact_number: candidateData.contact_number || '',
         educational_qualifications: candidateData.educational_qualifications || '',
         job_history: candidateData.job_history || '',
-        skill_set: normalizeToString(candidateData.skill_set),
+        current_employment: currentEmployment, // Use properly extracted current employment
         score: String(candidateData.score || '0'),
         justification: candidateData.justification || '',
-        countries: normalizeToString(candidateData.countries) // Normalize to string format
+        countries: normalizeToString(candidateData.countries), // Normalize to string format
+        date_extracted: candidateData.date_extracted || new Date().toISOString()
       },
       processing_status: 'completed',
       source_email: candidateData.source_email, // Use the actual source email from request

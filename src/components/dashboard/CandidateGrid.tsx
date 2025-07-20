@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CVUpload } from '@/types/candidate';
 import { motion } from 'framer-motion';
@@ -12,19 +13,51 @@ interface CandidateGridProps {
   onCandidateDelete?: (deletedId: string) => void;
 }
 
+// Function to remove duplicates based on email and candidate name
+const removeDuplicates = (uploads: CVUpload[]): CVUpload[] => {
+  const seen = new Set<string>();
+  const uniqueUploads: CVUpload[] = [];
+
+  for (const upload of uploads) {
+    if (!upload.extracted_json) continue;
+    
+    const data = upload.extracted_json;
+    const email = data.email_address?.toLowerCase().trim() || '';
+    const name = data.candidate_name?.toLowerCase().trim() || '';
+    
+    // Create a unique key based on email and name
+    const uniqueKey = `${email}|${name}`;
+    
+    // Skip if we've already seen this combination
+    if (seen.has(uniqueKey)) {
+      console.log(`Filtering out duplicate candidate: ${data.candidate_name} (${data.email_address})`);
+      continue;
+    }
+    
+    seen.add(uniqueKey);
+    uniqueUploads.push(upload);
+  }
+
+  console.log(`Filtered ${uploads.length - uniqueUploads.length} duplicates from ${uploads.length} uploads`);
+  return uniqueUploads;
+};
+
 const CandidateGrid: React.FC<CandidateGridProps> = ({
   uploads,
   viewMode,
   selectedDate,
   onCandidateDelete
 }) => {
+  // Remove duplicates first
+  const uniqueUploads = removeDuplicates(uploads);
+  
   // Filter by date if selected
   const filteredUploads = selectedDate 
-    ? uploads.filter(upload => {
+    ? uniqueUploads.filter(upload => {
         const uploadDate = new Date(upload.uploaded_at);
         return isSameDay(uploadDate, selectedDate);
       })
-    : uploads;
+    : uniqueUploads;
 
   // Sort by upload date (newest first)
   const sortedUploads = [...filteredUploads].sort((a, b) => 

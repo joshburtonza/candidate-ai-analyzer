@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +64,32 @@ const CandidateProfile = () => {
     }
   };
 
+  // Helper function to extract current employment as string
+  const extractCurrentEmployment = (value: string | { _type?: string; value?: string } | any): string => {
+    if (!value) return '';
+    
+    // If it's already a string, return it
+    if (typeof value === 'string') {
+      return value.trim();
+    }
+    
+    // If it's an object with a value property, extract it
+    if (typeof value === 'object' && value !== null) {
+      if (value.value && typeof value.value === 'string') {
+        return value.value.trim();
+      }
+      // Handle other object formats that might contain employment data
+      if (value.text && typeof value.text === 'string') {
+        return value.text.trim();
+      }
+      if (value.content && typeof value.content === 'string') {
+        return value.content.trim();
+      }
+    }
+    
+    return '';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen elegant-gradient flex items-center justify-center">
@@ -92,10 +117,14 @@ const CandidateProfile = () => {
 
   const data = upload.extracted_json;
   
+  // Extract current employment properly
+  const currentEmployment = extractCurrentEmployment(data.current_employment);
+  
   // Debug logging to trace current employment data
   console.log('Full Upload Object:', upload);
   console.log('Extracted JSON Data:', data);
-  console.log('Current Employment Field:', data.current_employment);
+  console.log('Current Employment Field Raw:', data.current_employment);
+  console.log('Current Employment Extracted:', currentEmployment);
   console.log('All data keys:', Object.keys(data));
   
   // Convert score to be out of 10 instead of 100
@@ -242,7 +271,7 @@ const CandidateProfile = () => {
                 </div>
                 <div className="text-white/90 leading-relaxed">
                   <p className="whitespace-pre-wrap break-words">
-                    {data.current_employment || 'Not provided'}
+                    {currentEmployment || 'Not provided'}
                   </p>
                 </div>
               </Card>

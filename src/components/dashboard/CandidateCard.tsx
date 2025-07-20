@@ -27,6 +27,32 @@ const normalizeToString = (value: string | string[] | null | undefined): string 
   return String(value).trim();
 };
 
+// Helper function to extract current employment as string
+const extractCurrentEmployment = (value: string | { _type?: string; value?: string } | any): string => {
+  if (!value) return '';
+  
+  // If it's already a string, return it
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  
+  // If it's an object with a value property, extract it
+  if (typeof value === 'object' && value !== null) {
+    if (value.value && typeof value.value === 'string') {
+      return value.value.trim();
+    }
+    // Handle other object formats that might contain employment data
+    if (value.text && typeof value.text === 'string') {
+      return value.text.trim();
+    }
+    if (value.content && typeof value.content === 'string') {
+      return value.content.trim();
+    }
+  }
+  
+  return '';
+};
+
 export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
@@ -40,6 +66,9 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
+
+  // Extract current employment properly
+  const currentEmployment = extractCurrentEmployment(data.current_employment);
 
   // Check if uploaded today and format date
   const uploadedToday = isUploadedToday(upload);
@@ -160,7 +189,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             </div>
 
             {/* Current Employment Section - only show if current_employment exists */}
-            {data.current_employment && (
+            {currentEmployment && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-6 bg-slate-400 rounded"></div>
@@ -172,7 +201,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                     className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
                   >
                     <Briefcase className="w-3 h-3 mr-1" />
-                    {data.current_employment}
+                    {currentEmployment}
                   </Badge>
                 </div>
               </div>
