@@ -19,7 +19,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { exportToCSV } = useExport();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showStats, setShowStats] = useState(true);
+  const [showStats, setShowStats] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
 
