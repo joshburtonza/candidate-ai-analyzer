@@ -63,7 +63,6 @@ const Dashboard = () => {
         },
         (payload) => {
           console.log('Real-time INSERT:', payload);
-          // Force immediate refetch to get latest data
           queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
         }
       )
@@ -76,7 +75,6 @@ const Dashboard = () => {
         },
         (payload) => {
           console.log('Real-time UPDATE:', payload);
-          // Force immediate refetch to get latest data
           queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
         }
       )
@@ -89,7 +87,6 @@ const Dashboard = () => {
 
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
-    // Force immediate data refresh
     queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
     toast.success(`CV "${newUpload.original_filename}" uploaded successfully!`);
   };
@@ -97,7 +94,6 @@ const Dashboard = () => {
   const handleCandidateDelete = (deletedId: string) => {
     console.log('Candidate deleted:', deletedId);
     setSelectedUploads(prev => prev.filter(id => id !== deletedId));
-    // Force immediate data refresh
     queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
   };
 
@@ -150,7 +146,16 @@ const Dashboard = () => {
             isExporting={false}
           />
 
-          {/* Removed: Horizontal Stats Bar, Upload Section, and API Integration Section */}
+          {/* Statistics Bar */}
+          {showStats && (
+            <HorizontalStats uploads={uploads} />
+          )}
+
+          {/* Upload Section */}
+          <SimpleUploadSection onUploadComplete={handleUploadComplete} />
+
+          {/* API Integration Section */}
+          <SimpleApiInfo />
 
           {/* Calendar Section */}
           <UploadHistoryCalendar 
