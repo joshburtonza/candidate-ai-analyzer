@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -134,7 +133,6 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="space-y-8">
-          {/* Header Section */}
           <DashboardHeader 
             viewMode={viewMode}
             setViewMode={setViewMode}
@@ -146,25 +144,20 @@ const Dashboard = () => {
             isExporting={false}
           />
 
-          {/* Statistics Bar */}
           {showStats && (
             <HorizontalStats uploads={uploads} />
           )}
 
-          {/* Upload Section */}
           <SimpleUploadSection onUploadComplete={handleUploadComplete} />
 
-          {/* API Integration Section */}
           <SimpleApiInfo />
 
-          {/* Calendar Section */}
           <UploadHistoryCalendar 
             uploads={uploads}
             onDateSelect={handleCalendarDateChange}
             selectedDate={selectedCalendarDate}
           />
 
-          {/* Uploads Display Section */}
           <div className="space-y-6">
             <Tabs defaultValue="all" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
