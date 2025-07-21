@@ -2,26 +2,15 @@
 import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Phone, MapPin, Eye, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
+import { parseCurrentEmployment, parseEducation } from '@/utils/candidateDataParser';
 
 interface CandidateListItemProps {
   upload: CVUpload;
   onDelete?: (id: string) => void;
 }
-
-// Helper function to safely handle array or string data
-const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
-  if (!value) return [];
-  if (Array.isArray(value)) {
-    return value.filter(item => item && item.trim()).map(item => item.trim());
-  }
-  if (typeof value === 'string') {
-    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
-  }
-  return [];
-};
 
 const normalizeToString = (value: string | string[] | null | undefined): string => {
   if (!value) return '';
@@ -43,8 +32,9 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
-  // Handle skills as both string and array
-  const skills = normalizeToArray(data.current_employment).slice(0, 4);
+  // Parse employment and education data
+  const employment = parseCurrentEmployment(data.current_employment, data.job_history);
+  const education = parseEducation(data.educational_qualifications);
   
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
@@ -118,26 +108,45 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
           </div>
         </div>
 
-        {/* Skills */}
-        <div className="hidden md:flex items-center gap-2 flex-1">
-          {skills.map((skill, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              className="glass text-white border-border text-xs hover:bg-white/20 transition-colors backdrop-blur-sm"
-            >
-              {skill}
-            </Badge>
-          ))}
+        {/* Employment & Education Info */}
+        <div className="hidden md:flex items-center gap-6 flex-1">
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-slate-400" />
+            <div className="text-sm">
+              <div className="text-white font-medium truncate max-w-32">
+                {employment.jobTitle}
+              </div>
+              {employment.company && (
+                <div className="text-xs text-gray-400 truncate max-w-32">
+                  {employment.company}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-slate-400" />
+            <div className="text-sm">
+              <div className="text-white font-medium truncate max-w-32">
+                {education.degree}
+              </div>
+              {education.institution && (
+                <div className="text-xs text-gray-400 truncate max-w-32">
+                  {education.institution}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Score */}
-        <div className="text-center flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
-            <span className="font-bold text-lg text-slate-800">{score}</span>
+        {data.score && (
+          <div className="text-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+              <span className="font-bold text-lg text-slate-800">{score}</span>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">SCORE</div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">ASSESSMENT</div>
-        </div>
+        )}
 
         {/* Action */}
         <Button

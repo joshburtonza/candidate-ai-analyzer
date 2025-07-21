@@ -4,12 +4,13 @@ import { CVUpload } from '@/types/candidate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase, Clock } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase, Clock, GraduationCap, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { isUploadedToday } from '@/utils/candidateFilters';
 import { format } from 'date-fns';
+import { parseCurrentEmployment, parseEducation } from '@/utils/candidateDataParser';
 
 interface CandidateCardProps {
   upload: CVUpload;
@@ -27,32 +28,6 @@ const normalizeToString = (value: string | string[] | null | undefined): string 
   return String(value).trim();
 };
 
-// Helper function to extract current employment as string
-const extractCurrentEmployment = (value: string | { _type?: string; value?: string } | any): string => {
-  if (!value) return '';
-  
-  // If it's already a string, return it
-  if (typeof value === 'string') {
-    return value.trim();
-  }
-  
-  // If it's an object with a value property, extract it
-  if (typeof value === 'object' && value !== null) {
-    if (value.value && typeof value.value === 'string') {
-      return value.value.trim();
-    }
-    // Handle other object formats that might contain employment data
-    if (value.text && typeof value.text === 'string') {
-      return value.text.trim();
-    }
-    if (value.content && typeof value.content === 'string') {
-      return value.content.trim();
-    }
-  }
-  
-  return '';
-};
-
 export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
@@ -67,8 +42,9 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
 
-  // Extract current employment properly
-  const currentEmployment = extractCurrentEmployment(data.current_employment);
+  // Parse employment and education data
+  const employment = parseCurrentEmployment(data.current_employment, data.job_history);
+  const education = parseEducation(data.educational_qualifications);
 
   // Check if uploaded today and format date
   const uploadedToday = isUploadedToday(upload);
@@ -188,41 +164,66 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               )}
             </div>
 
-            {/* Current Employment Section - only show if current_employment exists */}
-            {currentEmployment && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">CURRENT EMPLOYMENT</h4>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="bg-white/5 text-white border-white/10 px-3 py-1 text-xs rounded-xl"
-                  >
-                    <Briefcase className="w-3 h-3 mr-1" />
-                    {currentEmployment}
-                  </Badge>
+            {/* Current Employment Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                <h4 className="text-sm font-bold text-gray-300 tracking-wider">CURRENT EMPLOYMENT</h4>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <Briefcase className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-white truncate">
+                      {employment.jobTitle}
+                    </div>
+                    {employment.company && (
+                      <div className="flex items-center gap-1 text-xs text-gray-400">
+                        <Building2 className="w-3 h-3" />
+                        <span className="truncate">{employment.company}</span>
+                      </div>
+                    )}
+                    {employment.duration && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {employment.duration}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Professional Assessment - only show if justification exists */}
-            {data.justification && (
-              <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">ASSESSMENT</h4>
-                </div>
-                <p className="text-sm text-gray-400 line-clamp-4 leading-relaxed">
-                  {data.justification}
-                </p>
+            {/* Education Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                <h4 className="text-sm font-bold text-gray-300 tracking-wider">EDUCATION</h4>
               </div>
-            )}
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <GraduationCap className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium text-white truncate">
+                      {education.degree}
+                    </div>
+                    {education.institution && (
+                      <div className="text-xs text-gray-400 truncate">
+                        {education.institution}
+                      </div>
+                    )}
+                    {education.year && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        {education.year}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Score Progress - only show if score exists */}
             {data.score && (
-              <div className="space-y-2">
+              <div className="space-y-2 mt-auto">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">FIT SCORE</span>
                   <span className="text-sm font-medium text-white">{score}/10</span>
