@@ -48,8 +48,15 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   selectedDate,
   onCandidateDelete
 }) => {
-  // Remove duplicates first
-  const uniqueUploads = removeDuplicates(uploads);
+  // Filter out candidates without names first
+  const uploadsWithNames = uploads.filter(upload => {
+    if (!upload.extracted_json) return false;
+    const candidateName = upload.extracted_json.candidate_name?.trim();
+    return candidateName && candidateName.length > 0;
+  });
+  
+  // Remove duplicates
+  const uniqueUploads = removeDuplicates(uploadsWithNames);
   
   // Filter by date if selected
   const filteredUploads = selectedDate 
