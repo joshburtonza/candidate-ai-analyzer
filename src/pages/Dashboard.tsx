@@ -148,9 +148,6 @@ const Dashboard = () => {
             <HorizontalStats uploads={uploads} />
           )}
 
-          <SimpleUploadSection onUploadComplete={handleUploadComplete} />
-
-          <SimpleApiInfo />
 
           <UploadHistoryCalendar 
             uploads={uploads}
