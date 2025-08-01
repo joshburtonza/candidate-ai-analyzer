@@ -8,7 +8,7 @@ export interface CandidateData {
   score: string;
   justification: string;
   countries: string;
-  date_extracted: string; // Added new field
+  date_recieved: string; // Date when CV was received
 }
 
 export interface CVUpload {

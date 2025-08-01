@@ -226,9 +226,9 @@ const CandidateProfile = () => {
                   <div className="flex items-center gap-4 text-white/90">
                     <Calendar className="w-5 h-5 text-slate-400 flex-shrink-0" />
                     <div>
-                      <span className="text-white/60 text-sm block">Date Extracted:</span>
+                      <span className="text-white/60 text-sm block">Date Received:</span>
                       <span className="break-words">
-                        {data.date_extracted ? formatDate(data.date_extracted) : 'Not provided'}
+                        {data.date_recieved ? formatDate(data.date_recieved) : 'Not provided'}
                       </span>
                     </div>
                   </div>

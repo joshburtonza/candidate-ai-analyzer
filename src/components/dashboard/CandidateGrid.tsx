@@ -61,8 +61,9 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   // Filter by date if selected
   const filteredUploads = selectedDate 
     ? uniqueUploads.filter(upload => {
-        const uploadDate = new Date(upload.uploaded_at);
-        return isSameDay(uploadDate, selectedDate);
+        if (!upload.extracted_json?.date_recieved) return false;
+        const receivedDate = new Date(upload.extracted_json.date_recieved);
+        return isSameDay(receivedDate, selectedDate);
       })
     : uniqueUploads;
 
