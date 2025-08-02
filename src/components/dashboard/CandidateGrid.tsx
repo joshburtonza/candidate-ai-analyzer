@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { motion } from 'framer-motion';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
 import { format, isSameDay } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CandidateGridProps {
   uploads: CVUpload[];
@@ -48,33 +49,93 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   selectedDate,
   onCandidateDelete
 }) => {
-  // Filter out candidates without names first
-  const uploadsWithNames = uploads.filter(upload => {
-    if (!upload.extracted_json) return false;
-    const candidateName = upload.extracted_json.candidate_name?.trim();
-    return candidateName && candidateName.length > 0;
-  });
-  
-  // Remove duplicates
-  const uniqueUploads = removeDuplicates(uploadsWithNames);
-  
-  // Filter by date if selected
-  const filteredUploads = selectedDate 
-    ? uniqueUploads.filter(upload => {
-        // Only show candidates with date_received when filtering by date
-        if (!upload.extracted_json?.date_received) {
-          console.log(`Skipping candidate ${upload.extracted_json?.candidate_name} - no date_received`);
-          return false;
+  const [dateFilteredUploads, setDateFilteredUploads] = useState<CVUpload[]>([]);
+  const [isLoadingDateFilter, setIsLoadingDateFilter] = useState(false);
+
+  // Fetch date-filtered candidates using the optimized API when a date is selected
+  useEffect(() => {
+    if (selectedDate) {
+      const fetchDateFilteredCandidates = async () => {
+        setIsLoadingDateFilter(true);
+        try {
+          const dateStr = format(selectedDate, 'yyyy-MM-dd');
+          const response = await fetch(
+            `https://qsvadxpossrsnenvfdsv.supabase.co/functions/v1/candidates-by-date?date=${dateStr}`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          setDateFilteredUploads(data.candidates || []);
+        } catch (error) {
+          console.error('Error fetching date-filtered candidates:', error);
+          // Fallback to legacy filtering if API fails
+          fallbackToLegacyFiltering();
+        } finally {
+          setIsLoadingDateFilter(false);
         }
-        const receivedDate = new Date(upload.extracted_json.date_received);
-        const isMatch = isSameDay(receivedDate, selectedDate);
-        console.log(`Candidate: ${upload.extracted_json.candidate_name}, received: ${receivedDate.toISOString()}, selected: ${selectedDate.toISOString()}, match: ${isMatch}`);
-        return isMatch;
-      })
-    : uniqueUploads;
+      };
+
+      fetchDateFilteredCandidates();
+    } else {
+      setDateFilteredUploads([]);
+    }
+  }, [selectedDate]);
+
+  // Fallback to legacy filtering if optimized API fails
+  const fallbackToLegacyFiltering = () => {
+    if (selectedDate) {
+      const uploadsWithNames = uploads.filter(upload => {
+        if (!upload.extracted_json) return false;
+        const candidateName = upload.extracted_json.candidate_name?.trim();
+        return candidateName && candidateName.length > 0;
+      });
+      
+      const uniqueUploads = removeDuplicates(uploadsWithNames);
+      
+      const filtered = uniqueUploads.filter(upload => {
+        // Check both received_date column and extracted_json.date_received
+        const receivedDateFromColumn = upload.received_date;
+        const receivedDateFromJson = upload.extracted_json?.date_received;
+        
+        if (receivedDateFromColumn) {
+          const receivedDate = new Date(receivedDateFromColumn);
+          return isSameDay(receivedDate, selectedDate);
+        } else if (receivedDateFromJson) {
+          const receivedDate = new Date(receivedDateFromJson);
+          return isSameDay(receivedDate, selectedDate);
+        }
+        
+        return false;
+      });
+      
+      setDateFilteredUploads(filtered);
+    }
+  };
+
+  // Determine which uploads to show
+  const uploadsToShow = selectedDate ? dateFilteredUploads : (() => {
+    // For non-date-filtered view, use legacy logic with deduplication
+    const uploadsWithNames = uploads.filter(upload => {
+      if (!upload.extracted_json) return false;
+      const candidateName = upload.extracted_json.candidate_name?.trim();
+      return candidateName && candidateName.length > 0;
+    });
+    
+    return removeDuplicates(uploadsWithNames);
+  })();
 
   // Sort by upload date (newest first)
-  const sortedUploads = [...filteredUploads].sort((a, b) => 
+  const sortedUploads = [...uploadsToShow].sort((a, b) => 
     new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
   );
 

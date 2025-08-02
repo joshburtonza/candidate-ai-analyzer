@@ -16,14 +16,66 @@ interface UploadHistoryCalendarProps {
 export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [realtimeUploads, setRealtimeUploads] = useState<CVUpload[]>(uploads);
+  
+  // State for calendar counts from the optimized API
+  const [calendarCounts, setCalendarCounts] = useState<Record<string, number>>({});
+  const [countsLoading, setCountsLoading] = useState(false);
 
   // Update local uploads when prop changes
   useEffect(() => {
     setRealtimeUploads(uploads);
   }, [uploads]);
 
-  // Simple count of ALL uploads for a specific date
+  // Fetch counts for the current week using the new optimized API
+  useEffect(() => {
+    const fetchWeekCounts = async () => {
+      const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
+      const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
+      
+      const startDate = format(weekStart, 'yyyy-MM-dd');
+      const endDate = format(weekEnd, 'yyyy-MM-dd');
+      
+      setCountsLoading(true);
+      try {
+        const response = await fetch(
+          `https://qsvadxpossrsnenvfdsv.supabase.co/functions/v1/candidate-counts?start=${startDate}&end=${endDate}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCalendarCounts(data || {});
+      } catch (error) {
+        console.error('Error fetching calendar counts:', error);
+        // Fallback to legacy counting if API fails
+        setCalendarCounts({});
+      } finally {
+        setCountsLoading(false);
+      }
+    };
+
+    fetchWeekCounts();
+  }, [currentWeek]);
+
+  // Use optimized counts if available, fallback to legacy counting
   const getUploadCountForDate = useCallback((date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    // Use optimized counts if available
+    if (Object.keys(calendarCounts).length > 0) {
+      return calendarCounts[dateStr] || 0;
+    }
+    
+    // Fallback to legacy counting
     return realtimeUploads.filter(upload => {
       // Use date_received if available, otherwise fall back to uploaded_at
       const dateToCheck = upload.extracted_json?.date_received 
@@ -31,7 +83,7 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
         : new Date(upload.uploaded_at);
       return isSameDay(dateToCheck, date);
     }).length;
-  }, [realtimeUploads]);
+  }, [calendarCounts, realtimeUploads]);
 
   // Real-time subscription for calendar updates
   useEffect(() => {

@@ -22,6 +22,8 @@ export interface CVUpload {
   source_email?: string;
   file_size?: number;
   processing_status: 'pending' | 'processing' | 'completed' | 'error';
+  received_at?: string; // New column: full timestamp when CV was received
+  received_date?: string; // New column: date-only when CV was received (YYYY-MM-DD)
 }
 
 export interface Profile {

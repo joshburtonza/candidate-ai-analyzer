@@ -163,6 +163,11 @@ function mergeCandidateData(existing: any, incoming: CandidateData): any {
     }
   }
   
+  // Date received: always use the most recent date_received if provided
+  if (incoming.date_received) {
+    merged.date_received = incoming.date_received;
+  }
+  
   return merged;
 }
 
@@ -308,13 +313,39 @@ serve(async (req) => {
         
         console.log('Merged candidate data:', mergedData);
         
-        // Update the existing candidate with merged data
+        // Parse and validate the received date for merging
+        let receivedAtForUpdate = null;
+        let receivedDateForUpdate = null;
+        
+        if (candidateData.date_received) {
+          try {
+            const receivedDate = new Date(candidateData.date_received);
+            if (!isNaN(receivedDate.getTime()) && receivedDate <= new Date()) {
+              receivedAtForUpdate = receivedDate.toISOString();
+              receivedDateForUpdate = candidateData.date_received.split('T')[0]; // Ensure YYYY-MM-DD format
+            }
+          } catch (error) {
+            console.warn('Error parsing date_received for merge:', error);
+          }
+        }
+
+        // Update the existing candidate with merged data and new columns
+        const updateData: any = {
+          extracted_json: mergedData,
+          source_email: candidateData.source_email // Update source email to latest
+        };
+        
+        // Only update date columns if we have valid dates
+        if (receivedAtForUpdate) {
+          updateData.received_at = receivedAtForUpdate;
+        }
+        if (receivedDateForUpdate) {
+          updateData.received_date = receivedDateForUpdate;
+        }
+
         const { data: updatedCandidate, error: updateError } = await supabase
           .from('cv_uploads')
-          .update({
-            extracted_json: mergedData,
-            source_email: candidateData.source_email // Update source email to latest
-          })
+          .update(updateData)
           .eq('id', duplicateCandidate.id)
           .select()
           .single();
@@ -409,7 +440,9 @@ serve(async (req) => {
       processing_status: 'completed',
       source_email: candidateData.source_email, // Use the actual source email from request
       file_size: 0,
-      uploaded_at: uploadedAtDate.toISOString() // Use the actual received date for uploaded_at
+      uploaded_at: uploadedAtDate.toISOString(), // Use the actual received date for uploaded_at
+      received_at: uploadedAtDate.toISOString(), // Populate new received_at column
+      received_date: candidateData.date_received ? candidateData.date_received.split('T')[0] : uploadedAtDate.toISOString().split('T')[0] // Populate new received_date column
     };
 
     console.log('Inserting CV upload data:', cvUploadData);
