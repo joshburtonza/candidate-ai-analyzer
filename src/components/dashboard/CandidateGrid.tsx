@@ -59,6 +59,7 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
         setIsLoadingDateFilter(true);
         try {
           const dateStr = format(selectedDate, 'yyyy-MM-dd');
+          console.log(`CandidateGrid: Fetching candidates for date ${dateStr}`);
           const response = await fetch(
             `https://qsvadxpossrsnenvfdsv.supabase.co/functions/v1/candidates-by-date?date=${dateStr}`,
             {
@@ -75,6 +76,7 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
           }
 
           const data = await response.json();
+          console.log(`CandidateGrid: API returned ${data.candidates?.length || 0} candidates for ${dateStr}:`, data);
           setDateFilteredUploads(data.candidates || []);
         } catch (error) {
           console.error('Error fetching date-filtered candidates:', error);
