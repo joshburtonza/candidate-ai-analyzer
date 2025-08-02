@@ -320,7 +320,7 @@ serve(async (req) => {
         if (candidateData.date_received) {
           try {
             const receivedDate = new Date(candidateData.date_received);
-            if (!isNaN(receivedDate.getTime()) && receivedDate <= new Date()) {
+            if (!isNaN(receivedDate.getTime())) {
               receivedAtForUpdate = receivedDate.toISOString();
               receivedDateForUpdate = candidateData.date_received.split('T')[0]; // Ensure YYYY-MM-DD format
             }
@@ -408,7 +408,7 @@ serve(async (req) => {
       try {
         // Try to parse the date_received from n8n
         const receivedDate = new Date(candidateData.date_received);
-        if (!isNaN(receivedDate.getTime()) && receivedDate <= new Date()) {
+        if (!isNaN(receivedDate.getTime())) {
           uploadedAtDate = receivedDate;
           console.log('Using received date:', candidateData.date_received);
         } else {
