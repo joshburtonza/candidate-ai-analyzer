@@ -32,7 +32,7 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('cv_uploads')
         .select('*')
-        .order('uploaded_at', { ascending: false });
+        .order('received_date', { ascending: false });
 
       if (error) {
         console.error('Error fetching uploads:', error);
