@@ -23,28 +23,31 @@ const Dashboard = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
 
-  // Fetch all uploads
+  // Fetch uploads with pagination for better performance
   const { data: uploads = [], refetch, isLoading, error } = useQuery({
     queryKey: ['cv-uploads'],
     queryFn: async () => {
-      console.log('Fetching ALL CV uploads...');
+      console.log('Fetching CV uploads...');
       
       const { data, error } = await supabase
         .from('cv_uploads')
         .select('*')
-        .order('received_date', { ascending: false });
+        .order('received_date', { ascending: false })
+        .limit(500); // Limit to recent 500 uploads for faster loading
 
       if (error) {
         console.error('Error fetching uploads:', error);
         throw error;
       }
 
-      console.log('Total uploads found:', data?.length || 0);
+      console.log('Uploads found:', data?.length || 0);
       return (data || []).map(upload => ({
         ...upload,
         extracted_json: upload.extracted_json as any
       })) as CVUpload[];
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    gcTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
   });
 
   // Real-time subscription
