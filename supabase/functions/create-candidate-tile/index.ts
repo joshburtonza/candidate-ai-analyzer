@@ -21,6 +21,7 @@ interface CandidateData {
   original_filename?: string;
   source_email: string; // Now required - the email the CV was sent to
   date_extracted?: string;
+  date_received?: string; // The actual date the email was received
 }
 
 // Helper function to safely extract current employment as string
@@ -370,6 +371,23 @@ serve(async (req) => {
     const currentEmployment = extractCurrentEmployment(candidateData.current_employment);
     console.log('Extracted current employment:', currentEmployment);
 
+    // Parse and validate the received date
+    let uploadedAtDate = new Date();
+    if (candidateData.date_received) {
+      try {
+        // Try to parse the date_received from n8n
+        const receivedDate = new Date(candidateData.date_received);
+        if (!isNaN(receivedDate.getTime()) && receivedDate <= new Date()) {
+          uploadedAtDate = receivedDate;
+          console.log('Using received date:', candidateData.date_received);
+        } else {
+          console.warn('Invalid or future date_received, using current date:', candidateData.date_received);
+        }
+      } catch (error) {
+        console.warn('Error parsing date_received, using current date:', error);
+      }
+    }
+
     // Create the CV upload record with the mapped user ID - normalize data before storing
     const cvUploadData = {
       user_id: profile.id, // Use the actual user ID from profile lookup
@@ -385,11 +403,13 @@ serve(async (req) => {
         score: String(candidateData.score || '0'),
         justification: candidateData.justification || '',
         countries: normalizeToString(candidateData.countries), // Normalize to string format
-        date_extracted: candidateData.date_extracted || new Date().toISOString()
+        date_extracted: candidateData.date_extracted || new Date().toISOString(),
+        date_recieved: candidateData.date_received || uploadedAtDate.toISOString().split('T')[0] // Store as YYYY-MM-DD format
       },
       processing_status: 'completed',
       source_email: candidateData.source_email, // Use the actual source email from request
-      file_size: 0
+      file_size: 0,
+      uploaded_at: uploadedAtDate.toISOString() // Use the actual received date for uploaded_at
     };
 
     console.log('Inserting CV upload data:', cvUploadData);
