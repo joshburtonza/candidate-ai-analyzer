@@ -404,7 +404,7 @@ serve(async (req) => {
         justification: candidateData.justification || '',
         countries: normalizeToString(candidateData.countries), // Normalize to string format
         date_extracted: candidateData.date_extracted || new Date().toISOString(),
-        date_recieved: candidateData.date_received || uploadedAtDate.toISOString().split('T')[0] // Store as YYYY-MM-DD format
+        date_received: candidateData.date_received || uploadedAtDate.toISOString().split('T')[0] // Store as YYYY-MM-DD format
       },
       processing_status: 'completed',
       source_email: candidateData.source_email, // Use the actual source email from request
