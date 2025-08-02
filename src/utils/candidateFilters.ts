@@ -46,13 +46,16 @@ export const isTestCandidate = (upload: CVUpload): boolean => {
 };
 
 export const isUploadedOnDate = (upload: CVUpload, targetDate: Date): boolean => {
-  const uploadDate = new Date(upload.uploaded_at);
+  // Use date_received from extracted_json if available, fallback to uploaded_at
+  const dateToCheck = upload.extracted_json?.date_received 
+    ? new Date(upload.extracted_json.date_received)
+    : new Date(upload.uploaded_at);
   
   // Create time range from 12:00 AM to 11:59 PM of target day
   const startOfTargetDay = startOfDay(targetDate);
   const endOfTargetDay = endOfDay(targetDate);
   
-  return isWithinInterval(uploadDate, {
+  return isWithinInterval(dateToCheck, {
     start: startOfTargetDay,
     end: endOfTargetDay
   });
@@ -91,7 +94,7 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
     return true;
   });
 
-  // Sort by upload date with today's uploads first, then by most recent
+  // Sort by date received with today's uploads first, then by most recent
   return filtered.sort((a, b) => {
     const aIsToday = isUploadedToday(a);
     const bIsToday = isUploadedToday(b);
@@ -100,8 +103,10 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
     if (aIsToday && !bIsToday) return -1;
     if (!aIsToday && bIsToday) return 1;
     
-    // Otherwise sort by upload date (newest first)
-    return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+    // Otherwise sort by received date (newest first), fallback to uploaded_at
+    const aDate = a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date(a.uploaded_at);
+    const bDate = b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date(b.uploaded_at);
+    return bDate.getTime() - aDate.getTime();
   });
 };
 
@@ -436,7 +441,7 @@ export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
     return true;
   });
 
-  // Sort by upload date with today's uploads first, then by most recent
+  // Sort by date received with today's uploads first, then by most recent
   return filtered.sort((a, b) => {
     const aIsToday = isUploadedToday(a);
     const bIsToday = isUploadedToday(b);
@@ -445,8 +450,10 @@ export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
     if (aIsToday && !bIsToday) return -1;
     if (!aIsToday && bIsToday) return 1;
     
-    // Otherwise sort by upload date (newest first)
-    return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+    // Otherwise sort by received date (newest first), fallback to uploaded_at
+    const aDate = a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date(a.uploaded_at);
+    const bDate = b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date(b.uploaded_at);
+    return bDate.getTime() - aDate.getTime();
   });
 };
 

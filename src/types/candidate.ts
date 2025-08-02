@@ -8,7 +8,8 @@ export interface CandidateData {
   score: string;
   justification: string;
   countries: string;
-  date_recieved: string; // Date when CV was received
+  date_recieved: string; // Date when CV was received (legacy spelling)
+  date_received?: string; // Date when CV was received (correct spelling)
 }
 
 export interface CVUpload {

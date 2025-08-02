@@ -25,8 +25,8 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
   // Simple count of ALL uploads for a specific date
   const getUploadCountForDate = useCallback((date: Date) => {
     return realtimeUploads.filter(upload => {
-      if (!upload.extracted_json?.date_recieved) return false;
-      const receivedDate = new Date(upload.extracted_json.date_recieved);
+      if (!upload.extracted_json?.date_received) return false;
+      const receivedDate = new Date(upload.extracted_json.date_received);
       return isSameDay(receivedDate, date);
     }).length;
   }, [realtimeUploads]);
