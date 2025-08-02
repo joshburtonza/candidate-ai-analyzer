@@ -77,10 +77,12 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     
     // Fallback to legacy counting
     return realtimeUploads.filter(upload => {
-      // Use date_received if available, otherwise fall back to uploaded_at
-      const dateToCheck = upload.extracted_json?.date_received 
+      // Use received_date or fallback to date_received from extracted_json
+      const dateToCheck = upload.received_date 
+        ? new Date(upload.received_date)
+        : upload.extracted_json?.date_received 
         ? new Date(upload.extracted_json.date_received)
-        : new Date(upload.uploaded_at);
+        : new Date(); // Default fallback
       return isSameDay(dateToCheck, date);
     }).length;
   }, [calendarCounts, realtimeUploads]);

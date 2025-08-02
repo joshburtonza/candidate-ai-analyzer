@@ -18,12 +18,10 @@ export interface CVUpload {
   file_url: string;
   extracted_json: CandidateData | null;
   original_filename: string;
-  uploaded_at: string;
   source_email?: string;
   file_size?: number;
   processing_status: 'pending' | 'processing' | 'completed' | 'error';
-  received_at?: string; // New column: full timestamp when CV was received
-  received_date?: string; // New column: date-only when CV was received (YYYY-MM-DD)
+  received_date?: string; // Date when CV was received (YYYY-MM-DD)
 }
 
 export interface Profile {

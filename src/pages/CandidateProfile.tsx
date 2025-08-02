@@ -329,7 +329,10 @@ const CandidateProfile = () => {
                   </div>
                   <div>
                     <span className="text-white/60 text-sm block">Upload Date:</span>
-                    <p className="text-white/90">{formatDate(upload.uploaded_at)}</p>
+                    <p className="text-white/90">{(() => {
+                      const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
+                      return formatDate(uploadDate.toISOString());
+                    })()}</p>
                   </div>
                   {upload.file_size && (
                     <div>

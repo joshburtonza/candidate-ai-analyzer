@@ -46,10 +46,12 @@ export const isTestCandidate = (upload: CVUpload): boolean => {
 };
 
 export const isUploadedOnDate = (upload: CVUpload, targetDate: Date): boolean => {
-  // Use date_received from extracted_json if available, fallback to uploaded_at
-  const dateToCheck = upload.extracted_json?.date_received 
+  // Use received_date or fallback to date_received from extracted_json
+  const dateToCheck = upload.received_date 
+    ? new Date(upload.received_date)
+    : upload.extracted_json?.date_received 
     ? new Date(upload.extracted_json.date_received)
-    : new Date(upload.uploaded_at);
+    : new Date(); // Default fallback
   
   // Create time range from 12:00 AM to 11:59 PM of target day
   const startOfTargetDay = startOfDay(targetDate);
@@ -103,9 +105,9 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
     if (aIsToday && !bIsToday) return -1;
     if (!aIsToday && bIsToday) return 1;
     
-    // Otherwise sort by received date (newest first), fallback to uploaded_at
-    const aDate = a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date(a.uploaded_at);
-    const bDate = b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date(b.uploaded_at);
+    // Otherwise sort by received date (newest first)
+    const aDate = a.received_date ? new Date(a.received_date) : a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date();
+    const bDate = b.received_date ? new Date(b.received_date) : b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date();
     return bDate.getTime() - aDate.getTime();
   });
 };
@@ -450,9 +452,9 @@ export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
     if (aIsToday && !bIsToday) return -1;
     if (!aIsToday && bIsToday) return 1;
     
-    // Otherwise sort by received date (newest first), fallback to uploaded_at
-    const aDate = a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date(a.uploaded_at);
-    const bDate = b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date(b.uploaded_at);
+    // Otherwise sort by received date (newest first)
+    const aDate = a.received_date ? new Date(a.received_date) : a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date();
+    const bDate = b.received_date ? new Date(b.received_date) : b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date();
     return bDate.getTime() - aDate.getTime();
   });
 };

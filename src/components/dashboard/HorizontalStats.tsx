@@ -11,7 +11,7 @@ const HorizontalStats: React.FC<HorizontalStatsProps> = ({ uploads }) => {
   const stats = useMemo(() => {
     const today = new Date();
     const todayUploads = uploads.filter(upload => {
-      const uploadDate = new Date(upload.uploaded_at);
+      const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
       return isSameDay(uploadDate, today);
     });
     

@@ -48,7 +48,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
   // Check if uploaded today and format date
   const uploadedToday = isUploadedToday(upload);
-  const uploadDate = new Date(upload.uploaded_at);
+  const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
   const formattedDate = format(uploadDate, 'MMM dd, yyyy');
 
   const handleDelete = async (e: React.MouseEvent) => {

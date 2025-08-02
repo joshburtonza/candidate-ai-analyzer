@@ -126,10 +126,8 @@ export type Database = {
           id: string
           original_filename: string
           processing_status: string | null
-          received_at: string | null
           received_date: string | null
           source_email: string | null
-          uploaded_at: string | null
           user_id: string
         }
         Insert: {
@@ -139,10 +137,8 @@ export type Database = {
           id?: string
           original_filename: string
           processing_status?: string | null
-          received_at?: string | null
           received_date?: string | null
           source_email?: string | null
-          uploaded_at?: string | null
           user_id: string
         }
         Update: {
@@ -152,10 +148,8 @@ export type Database = {
           id?: string
           original_filename?: string
           processing_status?: string | null
-          received_at?: string | null
           received_date?: string | null
           source_email?: string | null
-          uploaded_at?: string | null
           user_id?: string
         }
         Relationships: []

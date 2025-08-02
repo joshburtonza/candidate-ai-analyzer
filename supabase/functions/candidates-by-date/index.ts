@@ -82,15 +82,13 @@ serve(async (req) => {
     console.log(`Fetching candidates for date ${date}, offset ${offset}, limit ${limit}`);
 
     // Query candidates by received_date using the authenticated client
-    // Order by received_at NULLS LAST, then uploaded_at DESC for consistent ordering
     const { data: candidates, error } = await supabaseClient
       .from('cv_uploads')
       .select('*')
       .eq('received_date', date)
       .eq('processing_status', 'completed')
       .not('extracted_json', 'is', null)
-      .order('received_at', { nullsFirst: false })
-      .order('uploaded_at', { ascending: false })
+      .order('received_date', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {

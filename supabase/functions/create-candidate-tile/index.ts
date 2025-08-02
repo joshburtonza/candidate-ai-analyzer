@@ -314,14 +314,12 @@ serve(async (req) => {
         console.log('Merged candidate data:', mergedData);
         
         // Parse and validate the received date for merging
-        let receivedAtForUpdate = null;
         let receivedDateForUpdate = null;
         
         if (candidateData.date_received) {
           try {
             const receivedDate = new Date(candidateData.date_received);
             if (!isNaN(receivedDate.getTime())) {
-              receivedAtForUpdate = receivedDate.toISOString();
               receivedDateForUpdate = candidateData.date_received.split('T')[0]; // Ensure YYYY-MM-DD format
             }
           } catch (error) {
@@ -329,16 +327,13 @@ serve(async (req) => {
           }
         }
 
-        // Update the existing candidate with merged data and new columns
+        // Update the existing candidate with merged data
         const updateData: any = {
           extracted_json: mergedData,
           source_email: candidateData.source_email // Update source email to latest
         };
         
-        // Only update date columns if we have valid dates
-        if (receivedAtForUpdate) {
-          updateData.received_at = receivedAtForUpdate;
-        }
+        // Only update date column if we have valid date
         if (receivedDateForUpdate) {
           updateData.received_date = receivedDateForUpdate;
         }
@@ -402,17 +397,18 @@ serve(async (req) => {
     const currentEmployment = extractCurrentEmployment(candidateData.current_employment);
     console.log('Extracted current employment:', currentEmployment);
 
-    // Parse and validate the received date
-    let uploadedAtDate = new Date();
+    // Prepare received_date (date only in YYYY-MM-DD format)
+    let receivedDateStr = new Date().toISOString().split('T')[0]; // Default to today
+    
     if (candidateData.date_received) {
       try {
         // Try to parse the date_received from n8n
         const receivedDate = new Date(candidateData.date_received);
         if (!isNaN(receivedDate.getTime())) {
-          uploadedAtDate = receivedDate;
+          receivedDateStr = candidateData.date_received.split('T')[0];
           console.log('Using received date:', candidateData.date_received);
         } else {
-          console.warn('Invalid or future date_received, using current date:', candidateData.date_received);
+          console.warn('Invalid date_received, using current date:', candidateData.date_received);
         }
       } catch (error) {
         console.warn('Error parsing date_received, using current date:', error);
@@ -435,14 +431,12 @@ serve(async (req) => {
         justification: candidateData.justification || '',
         countries: normalizeToString(candidateData.countries), // Normalize to string format
         date_extracted: candidateData.date_extracted || new Date().toISOString(),
-        date_received: candidateData.date_received || uploadedAtDate.toISOString().split('T')[0] // Store as YYYY-MM-DD format
+        date_received: candidateData.date_received || receivedDateStr
       },
       processing_status: 'completed',
       source_email: candidateData.source_email, // Use the actual source email from request
       file_size: 0,
-      uploaded_at: uploadedAtDate.toISOString(), // Use the actual received date for uploaded_at
-      received_at: uploadedAtDate.toISOString(), // Populate new received_at column
-      received_date: candidateData.date_received ? candidateData.date_received.split('T')[0] : uploadedAtDate.toISOString().split('T')[0] // Populate new received_date column
+      received_date: receivedDateStr // Only use received_date
     };
 
     console.log('Inserting CV upload data:', cvUploadData);

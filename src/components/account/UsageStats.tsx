@@ -24,7 +24,7 @@ export const UsageStats = () => {
         .from('cv_uploads')
         .select('*')
         .eq('user_id', user?.id)
-        .order('uploaded_at', { ascending: false });
+        .order('received_date', { ascending: false });
 
       if (error) throw error;
 
@@ -58,13 +58,13 @@ export const UsageStats = () => {
   const errorUploads = uploads.filter(u => u.processing_status === 'error').length;
 
   const thisMonthUploads = uploads.filter(u => {
-    const uploadDate = new Date(u.uploaded_at);
+    const uploadDate = u.received_date ? new Date(u.received_date) : u.extracted_json?.date_received ? new Date(u.extracted_json.date_received) : new Date();
     const now = new Date();
     return uploadDate.getMonth() === now.getMonth() && uploadDate.getFullYear() === now.getFullYear();
   }).length;
 
   const thisWeekUploads = uploads.filter(u => {
-    const uploadDate = new Date(u.uploaded_at);
+    const uploadDate = u.received_date ? new Date(u.received_date) : u.extracted_json?.date_received ? new Date(u.extracted_json.date_received) : new Date();
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     return uploadDate >= weekAgo;
@@ -190,10 +190,12 @@ export const UsageStats = () => {
                   <FileText className="w-5 h-5 text-violet-400" />
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-medium truncate">{upload.original_filename}</p>
-                    <p className="text-xs text-slate-400">
-                      {new Date(upload.uploaded_at).toLocaleDateString()} at{' '}
-                      {new Date(upload.uploaded_at).toLocaleTimeString()}
-                    </p>
+                     <p className="text-xs text-slate-400">
+                       {(() => {
+                         const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
+                         return `${uploadDate.toLocaleDateString()} at ${uploadDate.toLocaleTimeString()}`;
+                       })()}
+                     </p>
                   </div>
                   <div className={`px-2 py-1 rounded text-xs ${
                     upload.processing_status === 'completed' 

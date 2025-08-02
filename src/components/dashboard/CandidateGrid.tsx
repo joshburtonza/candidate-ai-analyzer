@@ -134,10 +134,12 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
     return removeDuplicates(uploadsWithNames);
   })();
 
-  // Sort by upload date (newest first)
-  const sortedUploads = [...uploadsToShow].sort((a, b) => 
-    new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
-  );
+  // Sort by received date (newest first)
+  const sortedUploads = [...uploadsToShow].sort((a, b) => {
+    const aDate = a.received_date ? new Date(a.received_date) : a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date();
+    const bDate = b.received_date ? new Date(b.received_date) : b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date();
+    return bDate.getTime() - aDate.getTime();
+  });
 
   const handleCandidateDelete = (deletedId: string) => {
     onCandidateDelete?.(deletedId);

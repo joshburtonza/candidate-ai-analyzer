@@ -57,7 +57,10 @@ export const useExport = () => {
             `"${data.educational_qualifications || ''}"`,
             `"${data.job_history || ''}"`,
             data.score || '0',
-            new Date(upload.uploaded_at).toLocaleDateString(),
+            (() => {
+              const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
+              return uploadDate.toLocaleDateString();
+            })(),
             `"${data.justification || ''}"`
           ].join(',');
         })
