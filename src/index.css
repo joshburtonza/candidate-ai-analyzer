@@ -3,6 +3,31 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: 213 77% 14%;
+    --foreground: 0 0% 95%;
+    --card: 213 77% 14%;
+    --card-foreground: 0 0% 95%;
+    --popover: 213 77% 14%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 197 14% 57%;
+    --primary-foreground: 213 77% 14%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 215 28% 17%;
+    --ring: 197 14% 57%;
+    --radius: 0.5rem;
+  }
+}
+
 /* Dark theme utilities */
 .dark-card {
   background: linear-gradient(135deg, 
