@@ -228,7 +228,7 @@ const CandidateProfile = () => {
                     <div>
                       <span className="text-white/60 text-sm block">Date Received:</span>
                       <span className="break-words">
-                        {data.date_recieved ? formatDate(data.date_recieved) : 'Not provided'}
+                        {upload.received_date ? formatDate(upload.received_date) : 'Not provided'}
                       </span>
                     </div>
                   </div>

@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
 import { isSameDay } from 'date-fns';
+import { getUploadDate } from '@/utils/dateUtils';
 
 interface HorizontalStatsProps {
   uploads: CVUpload[];
@@ -11,7 +12,7 @@ const HorizontalStats: React.FC<HorizontalStatsProps> = ({ uploads }) => {
   const stats = useMemo(() => {
     const today = new Date();
     const todayUploads = uploads.filter(upload => {
-      const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
+      const uploadDate = getUploadDate(upload);
       return isSameDay(uploadDate, today);
     });
     
