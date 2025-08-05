@@ -137,84 +137,22 @@ export const UploadSection = ({ onUploadComplete }: UploadSectionProps) => {
         } : f
       ));
 
-      // Now process the file with the edge function
-      console.log('Starting candidate data extraction for:', typedCvUpload.id);
-      
-      try {
-        // Call the process-cv edge function
-        const { data: processedData, error: processError } = await supabase.functions
-          .invoke('process-cv', {
-            body: {
-              upload_id: typedCvUpload.id,
-              file_url: publicUrl,
-              original_filename: uploadFile.file.name,
-              user_email: user.email || ''
-            }
-          });
+      // File uploaded successfully - N8N system will handle processing
+      setUploadFiles(prev => prev.map(f => 
+        f.file === uploadFile.file ? { 
+          ...f, 
+          progress: 100, 
+          status: 'completed' 
+        } : f
+      ));
 
-        if (processError) {
-          console.error('Processing error:', processError);
-          throw new Error(`Processing failed: ${processError.message}`);
-        }
+      // Notify parent component with uploaded file (processing will happen via N8N)
+      onUploadComplete(typedCvUpload);
 
-        console.log('Processing response:', processedData);
-
-        // Update the processing status to completed
-        const { data: updatedUpload, error: updateError } = await supabase
-          .from('cv_uploads')
-          .update({ processing_status: 'completed' })
-          .eq('id', typedCvUpload.id)
-          .select()
-          .single();
-
-        if (updateError) {
-          console.error('Update error:', updateError);
-        } else {
-          // Update our typed upload with the latest data
-          typedCvUpload.processing_status = 'completed';
-          typedCvUpload.extracted_json = updatedUpload.extracted_json as unknown as CandidateData | null;
-        }
-
-        setUploadFiles(prev => prev.map(f => 
-          f.file === uploadFile.file ? { 
-            ...f, 
-            progress: 100, 
-            status: 'completed' 
-          } : f
-        ));
-
-        // Notify parent component with processed upload
-        onUploadComplete(typedCvUpload);
-
-        toast({
-          title: "Processing Complete",
-          description: `${uploadFile.file.name} has been processed and candidate data extracted`,
-        });
-
-      } catch (processError: any) {
-        console.error('Candidate processing error:', processError);
-        
-        // Update processing status to error
-        await supabase
-          .from('cv_uploads')
-          .update({ processing_status: 'error' })
-          .eq('id', typedCvUpload.id);
-
-        setUploadFiles(prev => prev.map(f => 
-          f.file === uploadFile.file ? { 
-            ...f, 
-            progress: 100, 
-            status: 'error',
-            error: processError.message
-          } : f
-        ));
-
-        toast({
-          title: "Processing Failed",
-          description: `Failed to process ${uploadFile.file.name}: ${processError.message}`,
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Upload Complete",
+        description: `${uploadFile.file.name} has been uploaded and will be processed by your N8N workflow`,
+      });
 
       // Remove completed file after delay
       setTimeout(() => {

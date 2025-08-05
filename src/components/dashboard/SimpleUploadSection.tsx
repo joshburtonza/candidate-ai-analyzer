@@ -118,68 +118,21 @@ export const SimpleUploadSection = ({ onUploadComplete }: SimpleUploadSectionPro
         } : f
       ));
 
-      // Process the file with the edge function
-      try {
-        const { data: processedData, error: processError } = await supabase.functions
-          .invoke('process-cv', {
-            body: {
-              upload_id: typedCvUpload.id,
-              file_url: publicUrl,
-              original_filename: uploadFile.file.name,
-              user_email: user.email || ''
-            }
-          });
+      // File uploaded successfully - N8N system will handle processing
+      setUploadFiles(prev => prev.map(f => 
+        f.file === uploadFile.file ? { 
+          ...f, 
+          progress: 100, 
+          status: 'completed' 
+        } : f
+      ));
 
-        if (processError) throw new Error(`Processing failed: ${processError.message}`);
+      onUploadComplete(typedCvUpload);
 
-        const { data: updatedUpload, error: updateError } = await supabase
-          .from('cv_uploads')
-          .update({ processing_status: 'completed' })
-          .eq('id', typedCvUpload.id)
-          .select()
-          .single();
-
-        if (!updateError) {
-          typedCvUpload.processing_status = 'completed';
-          typedCvUpload.extracted_json = updatedUpload.extracted_json as unknown as CandidateData | null;
-        }
-
-        setUploadFiles(prev => prev.map(f => 
-          f.file === uploadFile.file ? { 
-            ...f, 
-            progress: 100, 
-            status: 'completed' 
-          } : f
-        ));
-
-        onUploadComplete(typedCvUpload);
-
-        toast({
-          title: "Processing Complete",
-          description: `${uploadFile.file.name} has been processed successfully`,
-        });
-
-      } catch (processError: any) {
-        await supabase
-          .from('cv_uploads')
-          .update({ processing_status: 'error' })
-          .eq('id', typedCvUpload.id);
-
-        setUploadFiles(prev => prev.map(f => 
-          f.file === uploadFile.file ? { 
-            ...f, 
-            progress: 100, 
-            status: 'error',
-            error: processError.message
-          } : f
-        ));
-
-        toast({
-          title: "Processing Failed",
-          description: `Failed to process ${uploadFile.file.name}`,
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Upload Complete",
+        description: `${uploadFile.file.name} has been uploaded and will be processed by your N8N workflow`,
+      });
 
       // Remove completed file after delay
       setTimeout(() => {
