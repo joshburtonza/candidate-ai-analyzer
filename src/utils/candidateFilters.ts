@@ -45,6 +45,19 @@ export const isTestCandidate = (upload: CVUpload): boolean => {
   return testPatterns.some(pattern => name.includes(pattern));
 };
 
+export const hasMinimumScore = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.score) return false;
+  
+  const score = upload.extracted_json.score;
+  
+  // Extract numeric score from string (e.g., "8/10", "7", "8.5/10")
+  const scoreMatch = score.match(/(\d+(?:\.\d+)?)/);
+  if (!scoreMatch) return false;
+  
+  const numericScore = parseFloat(scoreMatch[1]);
+  return numericScore >= 6;
+};
+
 export const isUploadedOnDate = (upload: CVUpload, targetDate: Date): boolean => {
   // Use received_date or fallback to date_received from extracted_json
   const dateToCheck = upload.received_date 
@@ -79,6 +92,11 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
 
     // Filter out test candidates
     if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    // Filter out candidates with score under 6/10
+    if (!hasMinimumScore(upload)) {
       return false;
     }
 
@@ -143,6 +161,11 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
     // Filter out test candidates
     if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    // Filter out candidates with score under 6/10
+    if (!hasMinimumScore(upload)) {
       return false;
     }
 
@@ -360,6 +383,11 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
     // Filter out test candidates
     if (isTestCandidate(upload)) {
+      return false;
+    }
+
+    // Filter out candidates with score under 6/10
+    if (!hasMinimumScore(upload)) {
       return false;
     }
 
