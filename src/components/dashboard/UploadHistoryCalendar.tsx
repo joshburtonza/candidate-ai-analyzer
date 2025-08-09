@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { CVUpload } from '@/types/candidate';
 import { format, isSameDay, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { getEffectiveDateString } from '@/utils/dateUtils';
 
 interface UploadHistoryCalendarProps {
   uploads: CVUpload[];
@@ -75,16 +76,8 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
       return calendarCounts[dateStr] || 0;
     }
     
-    // Fallback to legacy counting
-    return realtimeUploads.filter(upload => {
-      // Use received_date or fallback to date_received from extracted_json
-      const dateToCheck = upload.received_date 
-        ? new Date(upload.received_date)
-        : upload.extracted_json?.date_received 
-        ? new Date(upload.extracted_json.date_received)
-        : new Date(); // Default fallback
-      return isSameDay(dateToCheck, date);
-    }).length;
+// Fallback to legacy counting using normalized YYYY-MM-DD
+return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateStr).length;
   }, [calendarCounts, realtimeUploads]);
 
   // Real-time subscription for calendar updates

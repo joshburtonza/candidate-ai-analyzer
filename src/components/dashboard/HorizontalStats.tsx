@@ -1,8 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { CVUpload } from '@/types/candidate';
-import { isSameDay } from 'date-fns';
-import { getUploadDate } from '@/utils/dateUtils';
+import { getEffectiveDateString, formatDateForDB } from '@/utils/dateUtils';
 
 interface HorizontalStatsProps {
   uploads: CVUpload[];
@@ -10,11 +9,8 @@ interface HorizontalStatsProps {
 
 const HorizontalStats: React.FC<HorizontalStatsProps> = ({ uploads }) => {
   const stats = useMemo(() => {
-    const today = new Date();
-    const todayUploads = uploads.filter(upload => {
-      const uploadDate = getUploadDate(upload);
-      return isSameDay(uploadDate, today);
-    });
+const todayStr = formatDateForDB(new Date());
+const todayUploads = uploads.filter(upload => getEffectiveDateString(upload) === todayStr);
     
     const processedUploads = uploads.filter(upload => 
       upload.processing_status === 'completed' && upload.extracted_json

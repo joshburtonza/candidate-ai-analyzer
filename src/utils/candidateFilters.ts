@@ -1,6 +1,5 @@
 import { CVUpload } from '@/types/candidate';
-import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
-
+import { getEffectiveDateString, formatDateForDB } from '@/utils/dateUtils';
 export const isQualifiedCandidate = (upload: CVUpload): boolean => {
   // Filter out incomplete uploads
   if (upload.processing_status !== 'completed' || !upload.extracted_json) {
@@ -59,21 +58,9 @@ export const hasMinimumScore = (upload: CVUpload): boolean => {
 };
 
 export const isUploadedOnDate = (upload: CVUpload, targetDate: Date): boolean => {
-  // Use received_date or fallback to date_received from extracted_json
-  const dateToCheck = upload.received_date 
-    ? new Date(upload.received_date)
-    : upload.extracted_json?.date_received 
-    ? new Date(upload.extracted_json.date_received)
-    : new Date(); // Default fallback
-  
-  // Create time range from 12:00 AM to 11:59 PM of target day
-  const startOfTargetDay = startOfDay(targetDate);
-  const endOfTargetDay = endOfDay(targetDate);
-  
-  return isWithinInterval(dateToCheck, {
-    start: startOfTargetDay,
-    end: endOfTargetDay
-  });
+  const eff = getEffectiveDateString(upload);
+  const target = formatDateForDB(targetDate);
+  return eff === target;
 };
 
 export const isUploadedToday = (upload: CVUpload): boolean => {
@@ -114,20 +101,18 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
     return true;
   });
 
-  // Sort by date received with today's uploads first, then by most recent
-  return filtered.sort((a, b) => {
-    const aIsToday = isUploadedToday(a);
-    const bIsToday = isUploadedToday(b);
-    
-    // If one is from today and the other isn't, prioritize today's
-    if (aIsToday && !bIsToday) return -1;
-    if (!aIsToday && bIsToday) return 1;
-    
-    // Otherwise sort by received date (newest first)
-    const aDate = a.received_date ? new Date(a.received_date) : a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date();
-    const bDate = b.received_date ? new Date(b.received_date) : b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date();
-    return bDate.getTime() - aDate.getTime();
-  });
+// Sort by date_received (YYYY-MM-DD) with today's first
+return filtered.sort((a, b) => {
+  const aIsToday = isUploadedToday(a);
+  const bIsToday = isUploadedToday(b);
+  
+  if (aIsToday && !bIsToday) return -1;
+  if (!aIsToday && bIsToday) return 1;
+  
+  const aStr = getEffectiveDateString(a);
+  const bStr = getEffectiveDateString(b);
+  return bStr.localeCompare(aStr);
+});
 };
 
 // Optimized filtering function with better memoization
@@ -471,20 +456,18 @@ export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
     return true;
   });
 
-  // Sort by date received with today's uploads first, then by most recent
-  return filtered.sort((a, b) => {
-    const aIsToday = isUploadedToday(a);
-    const bIsToday = isUploadedToday(b);
-    
-    // If one is from today and the other isn't, prioritize today's
-    if (aIsToday && !bIsToday) return -1;
-    if (!aIsToday && bIsToday) return 1;
-    
-    // Otherwise sort by received date (newest first)
-    const aDate = a.received_date ? new Date(a.received_date) : a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date();
-    const bDate = b.received_date ? new Date(b.received_date) : b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date();
-    return bDate.getTime() - aDate.getTime();
-  });
+// Sort by date_received (YYYY-MM-DD) with today's first
+return filtered.sort((a, b) => {
+  const aIsToday = isUploadedToday(a);
+  const bIsToday = isUploadedToday(b);
+  
+  if (aIsToday && !bIsToday) return -1;
+  if (!aIsToday && bIsToday) return 1;
+  
+  const aStr = getEffectiveDateString(a);
+  const bStr = getEffectiveDateString(b);
+  return bStr.localeCompare(aStr);
+});
 };
 
 export const filterBestCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {

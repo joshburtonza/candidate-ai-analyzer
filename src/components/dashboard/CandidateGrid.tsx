@@ -4,9 +4,9 @@ import { CVUpload } from '@/types/candidate';
 import { motion } from 'framer-motion';
 import { CandidateCard } from './CandidateCard';
 import { CandidateListItem } from './CandidateListItem';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-
+import { getEffectiveDateString, formatDateForDB } from '@/utils/dateUtils';
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
@@ -104,21 +104,8 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
       
       const uniqueUploads = removeDuplicates(uploadsWithNames);
       
-      const filtered = uniqueUploads.filter(upload => {
-        // Check both received_date column and extracted_json.date_received
-        const receivedDateFromColumn = upload.received_date;
-        const receivedDateFromJson = upload.extracted_json?.date_received;
-        
-        if (receivedDateFromColumn) {
-          const receivedDate = new Date(receivedDateFromColumn);
-          return isSameDay(receivedDate, selectedDate);
-        } else if (receivedDateFromJson) {
-          const receivedDate = new Date(receivedDateFromJson);
-          return isSameDay(receivedDate, selectedDate);
-        }
-        
-        return false;
-      });
+const targetStr = formatDateForDB(selectedDate);
+const filtered = uniqueUploads.filter(upload => getEffectiveDateString(upload) === targetStr);
       
       setDateFilteredUploads(filtered);
     }
@@ -136,12 +123,12 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
     return removeDuplicates(uploadsWithNames);
   })();
 
-  // Sort by received date (newest first)
-  const sortedUploads = [...uploadsToShow].sort((a, b) => {
-    const aDate = a.received_date ? new Date(a.received_date) : a.extracted_json?.date_received ? new Date(a.extracted_json.date_received) : new Date();
-    const bDate = b.received_date ? new Date(b.received_date) : b.extracted_json?.date_received ? new Date(b.extracted_json.date_received) : new Date();
-    return bDate.getTime() - aDate.getTime();
-  });
+// Sort by date_received string (YYYY-MM-DD), newest first
+const sortedUploads = [...uploadsToShow].sort((a, b) => {
+  const aStr = getEffectiveDateString(a);
+  const bStr = getEffectiveDateString(b);
+  return bStr.localeCompare(aStr);
+});
 
   const handleCandidateDelete = (deletedId: string) => {
     onCandidateDelete?.(deletedId);
