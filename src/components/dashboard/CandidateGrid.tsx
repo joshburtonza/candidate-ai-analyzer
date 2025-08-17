@@ -7,6 +7,7 @@ import { CandidateListItem } from './CandidateListItem';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { getEffectiveDateString, formatDateForDB } from '@/utils/dateUtils';
+import { normalizeFirstLastName } from '@/utils/candidateFilters';
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
@@ -14,7 +15,7 @@ interface CandidateGridProps {
   onCandidateDelete?: (deletedId: string) => void;
 }
 
-// Function to remove duplicates based on email and candidate name
+// Function to remove duplicates based on first and last name
 const removeDuplicates = (uploads: CVUpload[]): CVUpload[] => {
   const seen = new Set<string>();
   const uniqueUploads: CVUpload[] = [];
@@ -23,19 +24,22 @@ const removeDuplicates = (uploads: CVUpload[]): CVUpload[] => {
     if (!upload.extracted_json) continue;
     
     const data = upload.extracted_json;
-    const email = data.email_address?.toLowerCase().trim() || '';
-    const name = data.candidate_name?.toLowerCase().trim() || '';
+    const candidateName = data.candidate_name?.trim() || '';
     
-    // Create a unique key based on email and name
-    const uniqueKey = `${email}|${name}`;
+    if (!candidateName) continue;
     
-    // Skip if we've already seen this combination
-    if (seen.has(uniqueKey)) {
-      console.log(`Filtering out duplicate candidate: ${data.candidate_name} (${data.email_address})`);
+    // Extract first and last name
+    const normalizedName = normalizeFirstLastName(candidateName);
+    
+    // Skip if we've already seen this name combination
+    if (normalizedName && seen.has(normalizedName)) {
+      console.log(`Filtering out duplicate candidate: ${data.candidate_name}`);
       continue;
     }
     
-    seen.add(uniqueKey);
+    if (normalizedName) {
+      seen.add(normalizedName);
+    }
     uniqueUploads.push(upload);
   }
 

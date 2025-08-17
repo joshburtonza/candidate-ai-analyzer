@@ -1,5 +1,21 @@
 import { CVUpload } from '@/types/candidate';
 import { getEffectiveDateString, formatDateForDB } from '@/utils/dateUtils';
+
+// Helper function to extract and normalize first and last name
+export const normalizeFirstLastName = (candidateName: string | null | undefined): string => {
+  if (!candidateName) return '';
+  
+  const normalized = candidateName.toLowerCase().trim();
+  // Split by space and take first and last parts
+  const parts = normalized.split(/\s+/).filter(part => part);
+  
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0];
+  
+  // Use first and last parts only (ignore middle names)
+  return `${parts[0]}_${parts[parts.length - 1]}`;
+};
+
 export const isQualifiedCandidate = (upload: CVUpload): boolean => {
   // Filter out incomplete uploads
   if (upload.processing_status !== 'completed' || !upload.extracted_json) {
@@ -69,7 +85,7 @@ export const isUploadedToday = (upload: CVUpload): boolean => {
 
 // NEW: Show all qualified candidates (not just today's)
 export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
+  const seenNames = new Set<string>();
   
   const filtered = uploads.filter(upload => {
     // Filter out incomplete uploads (only requires email now)
@@ -87,15 +103,17 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateName = upload.extracted_json?.candidate_name;
 
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
+    // Filter out duplicates based on first and last name
+    if (candidateName) {
+      const normalizedName = normalizeFirstLastName(candidateName);
+      if (normalizedName && seenNames.has(normalizedName)) {
         return false;
       }
-      seenEmails.add(normalizedEmail);
+      if (normalizedName) {
+        seenNames.add(normalizedName);
+      }
     }
 
     return true;
@@ -131,7 +149,7 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
     return cached.result;
   }
 
-  const seenEmails = new Set<string>();
+  const seenNames = new Set<string>();
   
   const filtered = uploads.filter(upload => {
     // Filter out uploads not from today for the main dashboard view
@@ -154,15 +172,17 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateName = upload.extracted_json?.candidate_name;
 
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
+    // Filter out duplicates based on first and last name
+    if (candidateName) {
+      const normalizedName = normalizeFirstLastName(candidateName);
+      if (normalizedName && seenNames.has(normalizedName)) {
         return false;
       }
-      seenEmails.add(normalizedEmail);
+      if (normalizedName) {
+        seenNames.add(normalizedName);
+      }
     }
 
     return true;
@@ -353,7 +373,7 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
     return cached.result;
   }
 
-  const seenEmails = new Set<string>();
+  const seenNames = new Set<string>();
   
   const filtered = uploads.filter(upload => {
     // Filter for specific date instead of just today
@@ -376,15 +396,17 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateName = upload.extracted_json?.candidate_name;
 
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
+    // Filter out duplicates based on first and last name
+    if (candidateName) {
+      const normalizedName = normalizeFirstLastName(candidateName);
+      if (normalizedName && seenNames.has(normalizedName)) {
         return false;
       }
-      seenEmails.add(normalizedEmail);
+      if (normalizedName) {
+        seenNames.add(normalizedName);
+      }
     }
 
     return true;
@@ -404,7 +426,7 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
 // Filter functions for Best Candidates
 export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
+  const seenNames = new Set<string>();
   
   return uploads.filter(upload => {
     // Filter out uploads not from today for the main dashboard view
@@ -417,15 +439,17 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateName = upload.extracted_json?.candidate_name;
 
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
+    // Filter out duplicates based on first and last name
+    if (candidateName) {
+      const normalizedName = normalizeFirstLastName(candidateName);
+      if (normalizedName && seenNames.has(normalizedName)) {
         return false;
       }
-      seenEmails.add(normalizedEmail);
+      if (normalizedName) {
+        seenNames.add(normalizedName);
+      }
     }
 
     return true;
@@ -434,7 +458,7 @@ export const filterBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
 // NEW: Show all best candidates (not just today's)
 export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
-  const seenEmails = new Set<string>();
+  const seenNames = new Set<string>();
   
   const filtered = uploads.filter(upload => {
     // Apply best candidate filters without date restriction
@@ -442,15 +466,17 @@ export const filterAllBestCandidates = (uploads: CVUpload[]): CVUpload[] => {
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateName = upload.extracted_json?.candidate_name;
 
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
+    // Filter out duplicates based on first and last name
+    if (candidateName) {
+      const normalizedName = normalizeFirstLastName(candidateName);
+      if (normalizedName && seenNames.has(normalizedName)) {
         return false;
       }
-      seenEmails.add(normalizedEmail);
+      if (normalizedName) {
+        seenNames.add(normalizedName);
+      }
     }
 
     return true;
@@ -471,7 +497,7 @@ return filtered.sort((a, b) => {
 };
 
 export const filterBestCandidatesForDate = (uploads: CVUpload[], targetDate: Date): CVUpload[] => {
-  const seenEmails = new Set<string>();
+  const seenNames = new Set<string>();
   
   return uploads.filter(upload => {
     // Filter for specific date instead of just today
@@ -484,15 +510,17 @@ export const filterBestCandidatesForDate = (uploads: CVUpload[], targetDate: Dat
       return false;
     }
 
-    const candidateEmail = upload.extracted_json?.email_address;
+    const candidateName = upload.extracted_json?.candidate_name;
 
-    // Filter out duplicates based on email (case-insensitive)
-    if (candidateEmail) {
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-      if (seenEmails.has(normalizedEmail)) {
+    // Filter out duplicates based on first and last name
+    if (candidateName) {
+      const normalizedName = normalizeFirstLastName(candidateName);
+      if (normalizedName && seenNames.has(normalizedName)) {
         return false;
       }
-      seenEmails.add(normalizedEmail);
+      if (normalizedName) {
+        seenNames.add(normalizedName);
+      }
     }
 
     return true;
