@@ -105,11 +105,77 @@ serve(async (req) => {
       );
     }
 
-    // Filter candidates with valid names (same logic as frontend)
+    // Centralized country validation - replicate the logic from candidateFilters.ts
+    const APPROVED_COUNTRIES = [
+      // South Africa
+      'south africa', 'south african', 'sa', 'rsa', 'republic of south africa',
+      
+      // UAE
+      'uae', 'united arab emirates', 'emirates', 'dubai', 'abu dhabi', 'sharjah', 'ajman', 'fujairah', 'ras al khaimah', 'umm al quwain',
+      
+      // UK
+      'uk', 'united kingdom', 'britain', 'great britain', 'england', 'scotland', 'wales', 'northern ireland', 'british',
+      
+      // Ireland  
+      'ireland', 'irish', 'republic of ireland', 'eire',
+      
+      // USA
+      'usa', 'united states', 'united states of america', 'america', 'us', 'american', 'states',
+      
+      // New Zealand
+      'nz', 'new zealand', 'zealand', 'new zealander', 'kiwi',
+      
+      // Australia
+      'aus', 'australia', 'australian', 'aussie', 'oz',
+      
+      // Oman
+      'oman', 'omani', 'sultanate of oman', 'muscat',
+      
+      // Saudi Arabia
+      'saudi arabia', 'saudi', 'ksa', 'kingdom of saudi arabia', 'saudis', 'riyadh', 'jeddah', 'mecca', 'medina',
+      
+      // Kuwait
+      'kuwait', 'kuwaiti', 'state of kuwait', 'kuwait city'
+    ];
+
+    const normalizeCountryData = (countriesData: string | string[] | null | undefined): string => {
+      if (!countriesData) return '';
+      
+      if (typeof countriesData === 'string') {
+        return countriesData.toLowerCase().trim();
+      } else if (Array.isArray(countriesData)) {
+        return (countriesData as string[]).join(' ').toLowerCase().trim();
+      }
+      
+      return '';
+    };
+
+    const isCountryAllowed = (countriesData: string | string[] | null | undefined): boolean => {
+      const normalizedCountries = normalizeCountryData(countriesData);
+      
+      if (!normalizedCountries) {
+        return false; // Block empty/missing country data
+      }
+      
+      return APPROVED_COUNTRIES.some(approvedCountry => 
+        normalizedCountries.includes(approvedCountry)
+      );
+    };
+
+    // Filter candidates with valid names and approved countries
     const validCandidates = candidates?.filter(upload => {
       if (!upload.extracted_json) return false;
+      
       const candidateName = upload.extracted_json.candidate_name?.trim();
-      return candidateName && candidateName.length > 0;
+      if (!candidateName || candidateName.length === 0) return false;
+      
+      // Apply country filtering
+      if (!isCountryAllowed(upload.extracted_json.countries)) {
+        console.log('Filtering out candidate due to country restriction:', candidateName, 'Country:', normalizeCountryData(upload.extracted_json.countries) || 'NONE');
+        return false;
+      }
+      
+      return true;
     }) || [];
 
     console.log(`Returning ${validCandidates.length} candidates for date ${date}`);

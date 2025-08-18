@@ -103,6 +103,11 @@ export const filterAllQualifiedCandidates = (uploads: CVUpload[]): CVUpload[] =>
       return false;
     }
 
+    // Filter out candidates from non-approved countries
+    if (!isFromApprovedCountry(upload)) {
+      return false;
+    }
+
     const candidateName = upload.extracted_json?.candidate_name;
 
     // Filter out duplicates based on first and last name
@@ -169,6 +174,11 @@ export const filterValidCandidates = (uploads: CVUpload[]): CVUpload[] => {
 
     // Filter out candidates with score under 6/10
     if (!hasMinimumScore(upload)) {
+      return false;
+    }
+
+    // Filter out candidates from non-approved countries
+    if (!isFromApprovedCountry(upload)) {
       return false;
     }
 
@@ -300,40 +310,86 @@ export const hasValidSubject = (upload: CVUpload): boolean => {
   return isValid;
 };
 
-export const isFromApprovedCountry = (upload: CVUpload): boolean => {
-  if (!upload.extracted_json?.countries) {
-    // If no country info, be lenient and allow it through for now
-    console.log('Country check for:', upload.extracted_json?.candidate_name, ': No country data, allowing through');
-    return true;
-  }
+// Centralized country allow-list with aliases for case-insensitive matching
+const APPROVED_COUNTRIES = [
+  // South Africa
+  'south africa', 'south african', 'sa', 'rsa', 'republic of south africa',
   
-  // Handle countries as string or array safely
-  let countries = '';
-  const countriesData = upload.extracted_json.countries;
+  // UAE
+  'uae', 'united arab emirates', 'emirates', 'dubai', 'abu dhabi', 'sharjah', 'ajman', 'fujairah', 'ras al khaimah', 'umm al quwain',
+  
+  // UK
+  'uk', 'united kingdom', 'britain', 'great britain', 'england', 'scotland', 'wales', 'northern ireland', 'british',
+  
+  // Ireland  
+  'ireland', 'irish', 'republic of ireland', 'eire',
+  
+  // USA
+  'usa', 'united states', 'united states of america', 'america', 'us', 'american', 'states',
+  
+  // New Zealand
+  'nz', 'new zealand', 'zealand', 'new zealander', 'kiwi',
+  
+  // Australia
+  'aus', 'australia', 'australian', 'aussie', 'oz',
+  
+  // Oman
+  'oman', 'omani', 'sultanate of oman', 'muscat',
+  
+  // Saudi Arabia
+  'saudi arabia', 'saudi', 'ksa', 'kingdom of saudi arabia', 'saudis', 'riyadh', 'jeddah', 'mecca', 'medina',
+  
+  // Kuwait
+  'kuwait', 'kuwaiti', 'state of kuwait', 'kuwait city'
+];
+
+// Helper function to normalize country data for matching
+const normalizeCountryData = (countriesData: string | string[] | null | undefined): string => {
+  if (!countriesData) return '';
   
   if (typeof countriesData === 'string') {
-    countries = countriesData.toLowerCase();
+    return countriesData.toLowerCase().trim();
   } else if (Array.isArray(countriesData)) {
-    countries = (countriesData as string[]).join(' ').toLowerCase();
-  } else {
-    console.log('Country check: No valid countries data for:', upload.extracted_json?.candidate_name);
+    return (countriesData as string[]).join(' ').toLowerCase().trim();
+  }
+  
+  return '';
+};
+
+// Core country validation function
+export const isFromApprovedCountry = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.countries) {
+    // Block candidates with no country data - this is now a hard requirement
+    console.log('Country check for:', upload.extracted_json?.candidate_name, ': No country data, BLOCKING');
     return false;
   }
   
-  const approvedCountries = [
-    'united kingdom', 'uk', 'britain', 'england', 'scotland', 'wales', 'northern ireland',
-    'united states', 'usa', 'america', 'us', 'states',
-    'australia', 'australian', 'aus',
-    'new zealand', 'nz', 'zealand',
-    'canada', 'canadian', 'can',
-    'ireland', 'irish', 'republic of ireland',
-    'south africa', 'south african', 'sa', 'rsa',
-    'dubai', 'uae', 'emirates', 'united arab emirates', 'abu dhabi'
-  ];
+  const normalizedCountries = normalizeCountryData(upload.extracted_json.countries);
   
-  const isValid = approvedCountries.some(country => countries.includes(country));
-  console.log('Country check for:', upload.extracted_json?.candidate_name, ':', countries, 'Valid:', isValid);
+  if (!normalizedCountries) {
+    console.log('Country check for:', upload.extracted_json?.candidate_name, ': Empty country data, BLOCKING');
+    return false;
+  }
+  
+  const isValid = APPROVED_COUNTRIES.some(approvedCountry => 
+    normalizedCountries.includes(approvedCountry)
+  );
+  
+  console.log('Country check for:', upload.extracted_json?.candidate_name, ':', normalizedCountries, 'Valid:', isValid);
   return isValid;
+};
+
+// Export the country validation for use in edge functions
+export const isCountryAllowed = (countriesData: string | string[] | null | undefined): boolean => {
+  const normalizedCountries = normalizeCountryData(countriesData);
+  
+  if (!normalizedCountries) {
+    return false; // Block empty/missing country data
+  }
+  
+  return APPROVED_COUNTRIES.some(approvedCountry => 
+    normalizedCountries.includes(approvedCountry)
+  );
 };
 
 export const isBestCandidate = (upload: CVUpload): boolean => {
@@ -393,6 +449,11 @@ export const filterValidCandidatesForDate = (uploads: CVUpload[], targetDate: Da
 
     // Filter out candidates with score under 6/10
     if (!hasMinimumScore(upload)) {
+      return false;
+    }
+
+    // Filter out candidates from non-approved countries
+    if (!isFromApprovedCountry(upload)) {
       return false;
     }
 
@@ -505,7 +566,7 @@ export const filterBestCandidatesForDate = (uploads: CVUpload[], targetDate: Dat
       return false;
     }
 
-    // Apply best candidate filters
+    // Apply best candidate filters (includes country validation)
     if (!isBestCandidate(upload)) {
       return false;
     }
