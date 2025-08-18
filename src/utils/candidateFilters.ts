@@ -310,6 +310,219 @@ export const hasValidSubject = (upload: CVUpload): boolean => {
   return isValid;
 };
 
+// ============= STRICT FILTER FUNCTIONS FOR ENHANCED BEST CANDIDATES =============
+
+// Strict B.Ed or Degree + PGCE requirement
+export const hasStrictEducation = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.educational_qualifications) return false;
+  
+  const education = upload.extracted_json.educational_qualifications.toLowerCase();
+  
+  // B.Ed variations
+  const bedPatterns = [
+    'b.ed', 'bachelor of education', 'bed', 'b ed', 'b-ed',
+    'bachelor\'s in education', 'education bachelor', 'teaching degree'
+  ];
+  
+  // PGCE patterns
+  const pgcePatterns = [
+    'pgce', 'postgraduate certificate in education', 'post graduate certificate in education',
+    'pgc education', 'postgrad cert education'
+  ];
+  
+  // Check for B.Ed
+  const hasBEd = bedPatterns.some(pattern => education.includes(pattern));
+  
+  // Check for Degree + PGCE combination
+  const hasPGCE = pgcePatterns.some(pattern => education.includes(pattern));
+  const hasDegree = ['bachelor', 'degree', 'honours', 'diploma'].some(qual => education.includes(qual));
+  const hasDegreeWithPGCE = hasDegree && hasPGCE;
+  
+  const isValid = hasBEd || hasDegreeWithPGCE;
+  console.log('Strict education check for:', upload.extracted_json?.candidate_name, 'B.Ed:', hasBEd, 'Degree+PGCE:', hasDegreeWithPGCE, 'Valid:', isValid);
+  return isValid;
+};
+
+// Extended citizenship validation (South African + approved countries globally)
+export const hasStrictCitizenship = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.countries) return false;
+  
+  const normalizedCountries = normalizeCountryData(upload.extracted_json.countries);
+  if (!normalizedCountries) return false;
+  
+  const isValid = STRICT_APPROVED_CITIZENSHIPS.some(approvedCountry => 
+    normalizedCountries.includes(approvedCountry)
+  );
+  
+  console.log('Strict citizenship check for:', upload.extracted_json?.candidate_name, ':', normalizedCountries, 'Valid:', isValid);
+  return isValid;
+};
+
+// 2+ years teaching experience post-qualification
+export const hasPostQualificationTeachingExperience = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.job_history) return false;
+  
+  const jobHistory = upload.extracted_json.job_history.toLowerCase();
+  
+  // Look for specific post-qualification experience patterns
+  const postQualPatterns = [
+    /(?:post|after|following)\s*(?:qualification|graduation|degree)\s*.*?(\d+)\s*years?\s*(?:teaching|experience)/gi,
+    /(\d+)\s*years?\s*(?:post|after|since)\s*(?:qualification|graduation|degree|qualifying)/gi,
+    /qualified.*?(\d+)\s*years?\s*(?:ago|experience|teaching)/gi,
+    /teaching\s*(?:for|experience)?\s*(\d+)\s*years?\s*(?:since|after|post)\s*(?:qualification|graduation)/gi
+  ];
+  
+  let maxPostQualYears = 0;
+  
+  for (const pattern of postQualPatterns) {
+    const matches = jobHistory.matchAll(pattern);
+    for (const match of matches) {
+      const years = parseInt(match[1]);
+      if (!isNaN(years) && years > maxPostQualYears) {
+        maxPostQualYears = years;
+      }
+    }
+  }
+  
+  // If no specific post-qual experience found, fall back to general teaching experience
+  if (maxPostQualYears === 0) {
+    return hasValidExperience(upload); // Use existing experience check as fallback
+  }
+  
+  const isValid = maxPostQualYears >= 2;
+  console.log('Post-qualification experience check for:', upload.extracted_json?.candidate_name, ':', maxPostQualYears, 'years, Valid:', isValid);
+  return isValid;
+};
+
+// Must be currently teaching
+export const isCurrentlyTeaching = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.current_employment) return false;
+  
+  const currentJob = upload.extracted_json.current_employment.toLowerCase();
+  
+  // Current teaching indicators
+  const currentTeachingPatterns = [
+    'teacher', 'teaching', 'educator', 'lecturer', 'instructor', 'tutor',
+    'currently teaching', 'presently teaching', 'working as teacher',
+    'employed as teacher', 'position: teacher', 'role: teacher'
+  ];
+  
+  // Exclude non-teaching roles more strictly
+  const nonTeachingRoles = [
+    'admin', 'administration', 'assistant', 'clerk', 'secretary',
+    'receptionist', 'coordinator', 'manager', 'supervisor', 'principal',
+    'head teacher', 'deputy head', 'pastoral care', 'counselor'
+  ];
+  
+  const hasCurrentTeaching = currentTeachingPatterns.some(pattern => currentJob.includes(pattern));
+  const hasNonTeachingRole = nonTeachingRoles.some(role => currentJob.includes(role));
+  
+  const isValid = hasCurrentTeaching && !hasNonTeachingRole;
+  console.log('Currently teaching check for:', upload.extracted_json?.candidate_name, 'Current:', currentJob, 'Valid:', isValid);
+  return isValid;
+};
+
+// Teaching experience matches degree phase
+export const hasMatchingTeachingPhase = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.educational_qualifications || !upload.extracted_json?.job_history) return true; // Skip if data unavailable
+  
+  const education = upload.extracted_json.educational_qualifications.toLowerCase();
+  const jobHistory = upload.extracted_json.job_history.toLowerCase();
+  
+  // Phase indicators in education
+  const primaryEducation = ['primary', 'foundation', 'elementary', 'early childhood', 'kindergarten'].some(phase => education.includes(phase));
+  const secondaryEducation = ['secondary', 'high school', 'senior', 'grade 8', 'grade 9', 'grade 10', 'grade 11', 'grade 12'].some(phase => education.includes(phase));
+  
+  // Phase indicators in job history
+  const primaryExperience = ['primary', 'foundation', 'elementary', 'early childhood', 'kindergarten', 'grade r', 'grade 1', 'grade 2', 'grade 3', 'grade 4', 'grade 5', 'grade 6', 'grade 7'].some(phase => jobHistory.includes(phase));
+  const secondaryExperience = ['secondary', 'high school', 'senior', 'grade 8', 'grade 9', 'grade 10', 'grade 11', 'grade 12'].some(phase => jobHistory.includes(phase));
+  
+  // If no specific phase mentioned, consider it valid (general teaching qualification)
+  if (!primaryEducation && !secondaryEducation) return true;
+  
+  // Check if phases match
+  const phasesMatch = (primaryEducation && primaryExperience) || (secondaryEducation && secondaryExperience);
+  
+  console.log('Teaching phase match for:', upload.extracted_json?.candidate_name, 'Education phase:', {primary: primaryEducation, secondary: secondaryEducation}, 'Experience phase:', {primary: primaryExperience, secondary: secondaryExperience}, 'Match:', phasesMatch);
+  return phasesMatch;
+};
+
+// Filter out scanned photocopies
+export const isNotScannedCV = (upload: CVUpload): boolean => {
+  // Heuristics for detecting scanned CVs
+  const filename = upload.original_filename?.toLowerCase() || '';
+  const fileSize = upload.file_size || 0;
+  
+  // File name patterns that suggest scanned documents
+  const scannedPatterns = [
+    'scan', 'scanned', 'copy', 'photocopy', 'img', 'image',
+    'jpeg', 'jpg', 'png', 'tiff', 'bmp'
+  ];
+  
+  const hasScannedName = scannedPatterns.some(pattern => filename.includes(pattern));
+  
+  // Very large file sizes often indicate scanned images
+  const isLargeFile = fileSize > 5000000; // 5MB threshold
+  
+  // Check for poor text extraction quality (low character count vs file size ratio)
+  const extractedText = JSON.stringify(upload.extracted_json || {});
+  const textToSizeRatio = extractedText.length / Math.max(fileSize, 1);
+  const hasLowTextRatio = textToSizeRatio < 0.001 && fileSize > 1000000; // Less than 0.001 ratio for files > 1MB
+  
+  const isScanned = hasScannedName || isLargeFile || hasLowTextRatio;
+  
+  console.log('Scanned CV check for:', upload.extracted_json?.candidate_name, 'Filename:', filename, 'Size:', fileSize, 'Scanned indicators:', {hasScannedName, isLargeFile, hasLowTextRatio}, 'Is NOT scanned:', !isScanned);
+  return !isScanned;
+};
+
+// Date correlation between application and database entry
+export const hasValidDateCorrelation = (upload: CVUpload): boolean => {
+  // Get the effective date (received_date or created_at)
+  const effectiveDate = getEffectiveDateString(upload);
+  const today = formatDateForDB(new Date());
+  
+  // Calculate days difference
+  const effectiveDateObj = new Date(effectiveDate);
+  const todayObj = new Date(today);
+  const daysDifference = Math.abs((todayObj.getTime() - effectiveDateObj.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Allow 1 day tolerance for processing delays
+  const isValid = daysDifference <= 1;
+  
+  console.log('Date correlation check for:', upload.extracted_json?.candidate_name, 'Effective date:', effectiveDate, 'Today:', today, 'Days diff:', daysDifference, 'Valid:', isValid);
+  return isValid;
+};
+
+// Stricter exclusion of non-teaching current roles
+export const hasStrictCurrentTeachingRole = (upload: CVUpload): boolean => {
+  if (!upload.extracted_json?.current_employment) return false;
+  
+  const currentJob = upload.extracted_json.current_employment.toLowerCase();
+  
+  // Strictly exclude administrative and non-teaching roles
+  const strictlyExcludedRoles = [
+    'admin', 'administration', 'administrative', 'assistant', 'teaching assistant',
+    'ta ', ' ta', 'clerk', 'secretary', 'receptionist', 'coordinator',
+    'manager', 'supervisor', 'principal', 'head teacher', 'deputy head',
+    'pastoral care', 'counselor', 'librarian', 'support staff',
+    'non-teaching', 'substitute', 'supply teacher', 'relief teacher'
+  ];
+  
+  // Must have direct teaching indicators
+  const directTeachingIndicators = [
+    'teacher', 'teaching', 'educator', 'lecturer', 'instructor',
+    'classroom teacher', 'subject teacher', 'grade teacher'
+  ];
+  
+  const hasExcludedRole = strictlyExcludedRoles.some(role => currentJob.includes(role));
+  const hasDirectTeaching = directTeachingIndicators.some(indicator => currentJob.includes(indicator));
+  
+  const isValid = hasDirectTeaching && !hasExcludedRole;
+  
+  console.log('Strict current teaching role check for:', upload.extracted_json?.candidate_name, 'Current:', currentJob, 'Has teaching:', hasDirectTeaching, 'Has excluded:', hasExcludedRole, 'Valid:', isValid);
+  return isValid;
+}
+
 // Centralized country allow-list with aliases for case-insensitive matching
 const APPROVED_COUNTRIES = [
   // South Africa
@@ -341,6 +554,13 @@ const APPROVED_COUNTRIES = [
   
   // Kuwait
   'kuwait', 'kuwaiti', 'state of kuwait', 'kuwait city'
+];
+
+// Extended approved citizenships for strict filtering (includes Canada)
+const STRICT_APPROVED_CITIZENSHIPS = [
+  ...APPROVED_COUNTRIES,
+  // Canada
+  'canada', 'canadian', 'ca', 'toronto', 'vancouver', 'montreal', 'ottawa', 'calgary'
 ];
 
 // Helper function to normalize country data for matching
@@ -402,18 +622,34 @@ export const isBestCandidate = (upload: CVUpload): boolean => {
     return false;
   }
   
-  const educationValid = hasValidEducation(upload);
-  const experienceValid = hasValidExperience(upload);
-  const subjectValid = hasValidSubject(upload);
-  const countryValid = isFromApprovedCountry(upload);
+  // Apply all strict filters for Best Candidates
+  const strictEducationValid = hasStrictEducation(upload);
+  const strictCitizenshipValid = hasStrictCitizenship(upload);
+  const postQualExperienceValid = hasPostQualificationTeachingExperience(upload);
+  const currentlyTeachingValid = isCurrentlyTeaching(upload);
+  const teachingPhaseValid = hasMatchingTeachingPhase(upload);
+  const notScannedValid = isNotScannedCV(upload);
+  const dateCorrelationValid = hasValidDateCorrelation(upload);
+  const strictCurrentRoleValid = hasStrictCurrentTeachingRole(upload);
   
-  const isBest = educationValid && experienceValid && subjectValid && countryValid;
+  const isBest = strictEducationValid && 
+                 strictCitizenshipValid && 
+                 postQualExperienceValid && 
+                 currentlyTeachingValid && 
+                 teachingPhaseValid && 
+                 notScannedValid && 
+                 dateCorrelationValid && 
+                 strictCurrentRoleValid;
   
   console.log('Best candidate check for:', upload.extracted_json?.candidate_name, {
-    education: educationValid,
-    experience: experienceValid,
-    subject: subjectValid,
-    country: countryValid,
+    strictEducation: strictEducationValid,
+    strictCitizenship: strictCitizenshipValid,
+    postQualExperience: postQualExperienceValid,
+    currentlyTeaching: currentlyTeachingValid,
+    teachingPhase: teachingPhaseValid,
+    notScanned: notScannedValid,
+    dateCorrelation: dateCorrelationValid,
+    strictCurrentRole: strictCurrentRoleValid,
     isBest
   });
   
