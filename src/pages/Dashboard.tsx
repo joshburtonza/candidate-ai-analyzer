@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CVUpload } from '@/types/candidate';
@@ -13,11 +13,17 @@ import { useExport } from '@/hooks/useExport';
 import HorizontalStats from '@/components/dashboard/HorizontalStats';
 import { SimpleUploadSection } from '@/components/dashboard/SimpleUploadSection';
 import { SimpleApiInfo } from '@/components/dashboard/SimpleApiInfo';
+import { useFeatureFlags } from '@/context/FeatureFlagsContext';
+import { useVertical } from '@/context/VerticalContext';
+import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFilters';
+import { filterValidCandidates, filterAllQualifiedCandidates } from '@/utils/candidateFilters';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { exportToCSV } = useExport();
+  const { flags } = useFeatureFlags();
+  const { currentVertical, currentPreset, strictMode } = useVertical();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showStats, setShowStats] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
@@ -87,6 +93,48 @@ const Dashboard = () => {
     };
   }, [queryClient]);
 
+  // Apply vertical/preset filtering when feature flags are enabled
+  const filteredUploads = useMemo(() => {
+    if (!flags.enableVerticals && !flags.enableFilterPresets) {
+      // Use original filtering logic when feature flags are disabled
+      return filterAllQualifiedCandidates(uploads);
+    }
+
+    if (flags.enableFilterPresets && currentPreset.id === 'education-legacy') {
+      // Use original strict logic for legacy preset
+      return filterAllQualifiedCandidates(uploads);
+    }
+
+    if (flags.enableFilterPresets) {
+      // Use preset-based filtering
+      const seenNames = new Set<string>();
+      return uploads.filter(upload => {
+        if (!isPresetCandidate(upload, currentPreset, currentVertical)) return false;
+        
+        // Deduplicate by normalized name
+        const normalizedName = upload.extracted_json?.candidate_name 
+          ? upload.extracted_json.candidate_name.toLowerCase().trim().replace(/\s+/g, '_')
+          : '';
+          
+        if (normalizedName && seenNames.has(normalizedName)) return false;
+        if (normalizedName) seenNames.add(normalizedName);
+        
+        return true;
+      }).sort((a, b) => {
+        const dateA = a.received_date || a.id;
+        const dateB = b.received_date || b.id;
+        return dateB.localeCompare(dateA);
+      });
+    }
+
+    if (flags.enableVerticals) {
+      // Use vertical-based filtering
+      return filterVerticalCandidates(uploads, currentVertical, strictMode);
+    }
+
+    return filterAllQualifiedCandidates(uploads);
+  }, [uploads, flags, currentVertical, currentPreset, strictMode]);
+
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
     queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
@@ -105,7 +153,7 @@ const Dashboard = () => {
   };
 
   const handleExport = async () => {
-    exportToCSV(uploads, 'cv_uploads');
+    exportToCSV(filteredUploads, 'cv_uploads');
   };
 
   if (isLoading) {
@@ -148,12 +196,12 @@ const Dashboard = () => {
           />
 
           {showStats && (
-            <HorizontalStats uploads={uploads} />
+            <HorizontalStats uploads={filteredUploads} />
           )}
 
 
           <UploadHistoryCalendar 
-            uploads={uploads}
+            uploads={filteredUploads}
             onDateSelect={handleCalendarDateChange}
             selectedDate={selectedCalendarDate}
           />
@@ -163,19 +211,19 @@ const Dashboard = () => {
               <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
                 <TabsTrigger value="all" className="flex items-center gap-2">
                   <span>All Uploads</span>
-                  <Badge variant="secondary">{uploads.length}</Badge>
+                  <Badge variant="secondary">{filteredUploads.length}</Badge>
                 </TabsTrigger>
                 <TabsTrigger value="processed" className="flex items-center gap-2">
-                  <span>Processed</span>
+                  <span>Best Candidates</span>
                   <Badge variant="secondary">
-                    {uploads.filter(u => u.processing_status === 'completed').length}
+                    {filteredUploads.filter(u => u.processing_status === 'completed' && u.extracted_json?.score).length}
                   </Badge>
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="all">
                 <CandidateGrid 
-                  uploads={uploads} 
+                  uploads={filteredUploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   onCandidateDelete={handleCandidateDelete}
@@ -184,7 +232,7 @@ const Dashboard = () => {
 
               <TabsContent value="processed">
                 <CandidateGrid 
-                  uploads={uploads.filter(u => u.processing_status === 'completed')} 
+                  uploads={filteredUploads.filter(u => u.processing_status === 'completed' && u.extracted_json?.score)} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   onCandidateDelete={handleCandidateDelete}

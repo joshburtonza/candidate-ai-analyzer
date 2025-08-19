@@ -1,7 +1,13 @@
 import React from 'react';
 import { Grid, List, BarChart3, Download, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
+import { useFeatureFlags } from '@/context/FeatureFlagsContext';
+import { useVertical } from '@/context/VerticalContext';
+import VerticalSelector from './VerticalSelector';
+import PresetSelector from './PresetSelector';
 
 interface DashboardHeaderProps {
   viewMode: 'grid' | 'list';
@@ -25,6 +31,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   isExporting
 }) => {
   const navigate = useNavigate();
+  const { flags } = useFeatureFlags();
+  const { strictMode, setStrictMode } = useVertical();
 
   return (
     <div className="flex items-center justify-between">
@@ -34,6 +42,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Feature Flag Controls */}
+        {flags.enableVerticals && (
+          <VerticalSelector />
+        )}
+        
+        {flags.enableFilterPresets && (
+          <PresetSelector />
+        )}
+        
+        {(flags.enableVerticals || flags.enableFilterPresets) && (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="strict-mode"
+              checked={strictMode}
+              onCheckedChange={setStrictMode}
+            />
+            <Label htmlFor="strict-mode" className="text-sm text-muted-foreground">
+              Strict
+            </Label>
+          </div>
+        )}
+
         <Button
           variant={showStats ? "default" : "outline"}
           size="sm"

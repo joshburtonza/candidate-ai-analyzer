@@ -14,6 +14,7 @@ import { User, Mail, Shield, Activity, Calendar, FileText, Settings } from 'luci
 import { ProfileSettings } from '@/components/account/ProfileSettings';
 import { UsageStats } from '@/components/account/UsageStats';
 import { SecuritySettings } from '@/components/account/SecuritySettings';
+import FeatureFlagSettings from '@/components/account/FeatureFlagSettings';
 
 const Account = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -32,7 +33,7 @@ const Account = () => {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'usage', label: 'Usage', icon: Activity },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'features', label: 'Features', icon: Settings },
   ];
 
   return (
@@ -99,21 +100,7 @@ const Account = () => {
                 {activeTab === 'profile' && <ProfileSettings profile={profile} />}
                 {activeTab === 'usage' && <UsageStats />}
                 {activeTab === 'security' && <SecuritySettings />}
-                {activeTab === 'settings' && (
-                  <Card className="bg-white/10 backdrop-blur-xl border-white/20">
-                    <CardHeader>
-                      <CardTitle className="text-white">General Settings</CardTitle>
-                      <CardDescription className="text-slate-300">
-                        Configure your application preferences
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="text-slate-300">
-                        Additional settings will be available here in future updates.
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                {activeTab === 'features' && <FeatureFlagSettings />}
               </motion.div>
             </div>
           </div>
