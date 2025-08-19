@@ -5,6 +5,7 @@ import { CVUpload } from '@/types/candidate';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import CandidateGrid from '@/components/dashboard/CandidateGrid';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { UploadHistoryCalendar } from '@/components/dashboard/UploadHistoryCalendar';
@@ -136,6 +137,34 @@ const Dashboard = () => {
     return filterAllQualifiedCandidates(uploads);
   }, [uploads, flags, currentVertical, currentPreset, strictMode]);
 
+  // Calculate counts based on selected date
+  const { allUploadsCount, bestCandidatesCount } = useMemo(() => {
+    if (selectedCalendarDate) {
+      // Show counts for selected date
+      const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
+      const allUploadsForDate = uploads.filter(upload => {
+        const uploadDate = upload.received_date || upload.extracted_json?.date_received;
+        return uploadDate && uploadDate.startsWith(dateStr);
+      }).length;
+      
+      const bestCandidatesForDate = bestCandidates.filter(upload => {
+        const uploadDate = upload.received_date || upload.extracted_json?.date_received;
+        return uploadDate && uploadDate.startsWith(dateStr);
+      }).length;
+      
+      return {
+        allUploadsCount: allUploadsForDate,
+        bestCandidatesCount: bestCandidatesForDate
+      };
+    } else {
+      // Show overall totals
+      return {
+        allUploadsCount: uploads.length,
+        bestCandidatesCount: bestCandidates.length
+      };
+    }
+  }, [uploads, bestCandidates, selectedCalendarDate]);
+
   // Data source based on active tab
   const currentUploads = activeTab === 'all' ? uploads : bestCandidates;
 
@@ -215,11 +244,11 @@ const Dashboard = () => {
               <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
                 <TabsTrigger value="all" className="flex items-center gap-2">
                   <span>All Uploads</span>
-                  <Badge variant="secondary">{uploads.length}</Badge>
+                  <Badge variant="secondary">{allUploadsCount}</Badge>
                 </TabsTrigger>
                 <TabsTrigger value="best" className="flex items-center gap-2">
                   <span>Best Candidates</span>
-                  <Badge variant="secondary">{bestCandidates.length}</Badge>
+                  <Badge variant="secondary">{bestCandidatesCount}</Badge>
                 </TabsTrigger>
               </TabsList>
 
