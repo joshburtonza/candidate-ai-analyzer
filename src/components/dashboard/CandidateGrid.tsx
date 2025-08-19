@@ -13,6 +13,8 @@ interface CandidateGridProps {
   viewMode: 'grid' | 'list';
   selectedDate?: Date | null;
   onCandidateDelete?: (deletedId: string) => void;
+  dedupe?: boolean;
+  requireName?: boolean;
 }
 
 // Function to remove duplicates based on first and last name
@@ -51,7 +53,9 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   uploads,
   viewMode,
   selectedDate,
-  onCandidateDelete
+  onCandidateDelete,
+  dedupe = true,
+  requireName = true
 }) => {
   const [dateFilteredUploads, setDateFilteredUploads] = useState<CVUpload[]>([]);
   const [isLoadingDateFilter, setIsLoadingDateFilter] = useState(false);
@@ -117,14 +121,23 @@ const filtered = uniqueUploads.filter(upload => getEffectiveDateString(upload) =
 
   // Determine which uploads to show
   const uploadsToShow = selectedDate ? dateFilteredUploads : (() => {
-    // For non-date-filtered view, use legacy logic with deduplication
-    const uploadsWithNames = uploads.filter(upload => {
-      if (!upload.extracted_json) return false;
-      const candidateName = upload.extracted_json.candidate_name?.trim();
-      return candidateName && candidateName.length > 0;
-    });
+    let filteredUploads = uploads;
     
-    return removeDuplicates(uploadsWithNames);
+    // Filter by name requirement if enabled
+    if (requireName) {
+      filteredUploads = filteredUploads.filter(upload => {
+        if (!upload.extracted_json) return false;
+        const candidateName = upload.extracted_json.candidate_name?.trim();
+        return candidateName && candidateName.length > 0;
+      });
+    }
+    
+    // Apply deduplication if enabled
+    if (dedupe) {
+      filteredUploads = removeDuplicates(filteredUploads);
+    }
+    
+    return filteredUploads;
   })();
 
 // Sort by date_received string (YYYY-MM-DD), newest first

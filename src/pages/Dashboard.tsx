@@ -28,6 +28,7 @@ const Dashboard = () => {
   const [showStats, setShowStats] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'best'>('best');
 
   // Fetch uploads with pagination for better performance
   const { data: uploads = [], refetch, isLoading, error } = useQuery({
@@ -93,8 +94,8 @@ const Dashboard = () => {
     };
   }, [queryClient]);
 
-  // Apply vertical/preset filtering when feature flags are enabled
-  const filteredUploads = useMemo(() => {
+  // Best candidates - filtered, processed, and scored
+  const bestCandidates = useMemo(() => {
     if (!flags.enableVerticals && !flags.enableFilterPresets) {
       // Use original filtering logic when feature flags are disabled
       return filterAllQualifiedCandidates(uploads);
@@ -135,6 +136,9 @@ const Dashboard = () => {
     return filterAllQualifiedCandidates(uploads);
   }, [uploads, flags, currentVertical, currentPreset, strictMode]);
 
+  // Data source based on active tab
+  const currentUploads = activeTab === 'all' ? uploads : bestCandidates;
+
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
     queryClient.invalidateQueries({ queryKey: ['cv-uploads'] });
@@ -153,7 +157,7 @@ const Dashboard = () => {
   };
 
   const handleExport = async () => {
-    exportToCSV(filteredUploads, 'cv_uploads');
+    exportToCSV(currentUploads, activeTab === 'all' ? 'all_uploads' : 'best_candidates');
   };
 
   if (isLoading) {
@@ -196,46 +200,47 @@ const Dashboard = () => {
           />
 
           {showStats && (
-            <HorizontalStats uploads={filteredUploads} />
+            <HorizontalStats uploads={currentUploads} />
           )}
 
-
           <UploadHistoryCalendar 
-            uploads={filteredUploads}
+            uploads={currentUploads}
             onDateSelect={handleCalendarDateChange}
             selectedDate={selectedCalendarDate}
           />
 
           <div className="space-y-6">
-            <Tabs defaultValue="all" className="space-y-6">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'best')} className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
                 <TabsTrigger value="all" className="flex items-center gap-2">
                   <span>All Uploads</span>
-                  <Badge variant="secondary">{filteredUploads.length}</Badge>
+                  <Badge variant="secondary">{uploads.length}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="processed" className="flex items-center gap-2">
+                <TabsTrigger value="best" className="flex items-center gap-2">
                   <span>Best Candidates</span>
-                  <Badge variant="secondary">
-                    {filteredUploads.filter(u => u.processing_status === 'completed' && u.extracted_json?.score).length}
-                  </Badge>
+                  <Badge variant="secondary">{bestCandidates.length}</Badge>
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="all">
                 <CandidateGrid 
-                  uploads={filteredUploads} 
+                  uploads={uploads} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   onCandidateDelete={handleCandidateDelete}
+                  dedupe={false}
+                  requireName={false}
                 />
               </TabsContent>
 
-              <TabsContent value="processed">
+              <TabsContent value="best">
                 <CandidateGrid 
-                  uploads={filteredUploads.filter(u => u.processing_status === 'completed' && u.extracted_json?.score)} 
+                  uploads={bestCandidates} 
                   viewMode={viewMode} 
                   selectedDate={selectedCalendarDate}
                   onCandidateDelete={handleCandidateDelete}
+                  dedupe={true}
+                  requireName={true}
                 />
               </TabsContent>
             </Tabs>
