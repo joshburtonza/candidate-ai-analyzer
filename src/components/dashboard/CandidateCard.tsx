@@ -11,6 +11,7 @@ import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { isUploadedToday } from '@/utils/candidateFilters';
 import { format } from 'date-fns';
 import { parseCurrentEmployment, parseEducation } from '@/utils/candidateDataParser';
+import { getEffectiveDateString } from '@/utils/dateUtils';
 
 interface CandidateCardProps {
   upload: CVUpload;
@@ -46,9 +47,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   const employment = parseCurrentEmployment(data.current_employment, data.job_history);
   const education = parseEducation(data.educational_qualifications);
 
-  // Check if uploaded today and format date
+  // Check if uploaded today and format date - use consistent date string logic
   const uploadedToday = isUploadedToday(upload);
-  const uploadDate = upload.received_date ? new Date(upload.received_date) : upload.extracted_json?.date_received ? new Date(upload.extracted_json.date_received) : new Date();
+  const effectiveDateString = getEffectiveDateString(upload);
+  const uploadDate = new Date(effectiveDateString + 'T00:00:00'); // Force local timezone
   const formattedDate = format(uploadDate, 'MMM dd, yyyy');
 
   const handleDelete = async (e: React.MouseEvent) => {
