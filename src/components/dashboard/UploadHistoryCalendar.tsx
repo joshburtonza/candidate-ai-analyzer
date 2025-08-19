@@ -9,23 +9,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { getEffectiveDateString } from '@/utils/dateUtils';
 
 interface UploadHistoryCalendarProps {
-  uploads: CVUpload[];
+  allUploads: CVUpload[];
+  bestUploads: CVUpload[];
   onDateSelect: (date: Date) => void;
   selectedDate: Date | null;
 }
 
-export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
+export const UploadHistoryCalendar = ({ allUploads, bestUploads, onDateSelect, selectedDate }: UploadHistoryCalendarProps) => {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
-  const [realtimeUploads, setRealtimeUploads] = useState<CVUpload[]>(uploads);
+  const [realtimeAllUploads, setRealtimeAllUploads] = useState<CVUpload[]>(allUploads);
+  const [realtimeBestUploads, setRealtimeBestUploads] = useState<CVUpload[]>(bestUploads);
   
   // State for calendar counts from the optimized API
   const [calendarCounts, setCalendarCounts] = useState<Record<string, number>>({});
   const [countsLoading, setCountsLoading] = useState(false);
 
-  // Update local uploads when prop changes
+  // Update local uploads when props change
   useEffect(() => {
-    setRealtimeUploads(uploads);
-  }, [uploads]);
+    setRealtimeAllUploads(allUploads);
+  }, [allUploads]);
+
+  useEffect(() => {
+    setRealtimeBestUploads(bestUploads);
+  }, [bestUploads]);
 
   // Fetch counts for the current week using the new optimized API
   useEffect(() => {
@@ -67,18 +73,24 @@ export const UploadHistoryCalendar = ({ uploads, onDateSelect, selectedDate }: U
     fetchWeekCounts();
   }, [currentWeek]);
 
-  // Use optimized counts if available, fallback to legacy counting
-  const getUploadCountForDate = useCallback((date: Date) => {
+  // Get counts for both all uploads and best uploads
+  const getCountsForDate = useCallback((date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     
-    // Use optimized counts if available
+    // For total uploads, use optimized counts if available
+    let totalCount = 0;
     if (Object.keys(calendarCounts).length > 0) {
-      return calendarCounts[dateStr] || 0;
+      totalCount = calendarCounts[dateStr] || 0;
+    } else {
+      // Fallback to legacy counting for all uploads
+      totalCount = realtimeAllUploads.filter(upload => getEffectiveDateString(upload) === dateStr).length;
     }
     
-// Fallback to legacy counting using normalized YYYY-MM-DD
-return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateStr).length;
-  }, [calendarCounts, realtimeUploads]);
+    // For best uploads, always use client-side filtering
+    const bestCount = realtimeBestUploads.filter(upload => getEffectiveDateString(upload) === dateStr).length;
+    
+    return { total: totalCount, best: bestCount };
+  }, [calendarCounts, realtimeAllUploads, realtimeBestUploads]);
 
   // Real-time subscription for calendar updates
   useEffect(() => {
@@ -112,14 +124,22 @@ return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateS
     const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
     const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
     
-    return eachDayOfInterval({ start: weekStart, end: weekEnd }).map(date => ({
-      date,
-      count: getUploadCountForDate(date)
-    }));
-  }, [currentWeek, getUploadCountForDate]);
+    return eachDayOfInterval({ start: weekStart, end: weekEnd }).map(date => {
+      const counts = getCountsForDate(date);
+      return {
+        date,
+        totalCount: counts.total,
+        bestCount: counts.best
+      };
+    });
+  }, [currentWeek, getCountsForDate]);
 
   const totalUploadsThisWeek = useMemo(() => {
-    return weekDays.reduce((sum, day) => sum + day.count, 0);
+    return weekDays.reduce((sum, day) => sum + day.totalCount, 0);
+  }, [weekDays]);
+
+  const bestUploadsThisWeek = useMemo(() => {
+    return weekDays.reduce((sum, day) => sum + day.bestCount, 0);
   }, [weekDays]);
 
   const handleDateSelect = useCallback((date: Date) => {
@@ -164,13 +184,22 @@ return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateS
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-6 mb-6">
+            <div className="flex items-center justify-center gap-8 mb-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-400">
+              <div className="text-2xl font-bold text-blue-400">
                 {totalUploadsThisWeek}
               </div>
               <div className="text-xs text-white/60 font-medium tracking-wider">
-                THIS WEEK
+                TOTAL THIS WEEK
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">
+                {bestUploadsThisWeek}
+              </div>
+              <div className="text-xs text-white/60 font-medium tracking-wider">
+                BEST THIS WEEK
               </div>
             </div>
             
@@ -202,19 +231,31 @@ return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateS
           </div>
         </div>
 
-        {/* Week range */}
-        <div className="text-center mb-6">
+        {/* Week range and legend */}
+        <div className="text-center mb-6 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-500/10 border border-white/10 rounded-full">
             <div className="w-2 h-2 bg-white/60 rounded-full"></div>
             <span className="text-white font-medium">
               {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
             </span>
           </div>
+          
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+              <span className="text-white/70">Total Uploads</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span className="text-white/70">Best Candidates</span>
+            </div>
+          </div>
         </div>
 
         {/* Day tiles - Full width grid */}
         <div className="grid grid-cols-7 gap-4 max-w-4xl mx-auto">
-          {weekDays.map(({ date, count }) => {
+          {weekDays.map(({ date, totalCount, bestCount }) => {
             const isSelected = isDaySelected(date);
             const dayName = format(date, 'EEE');
             const dayNumber = format(date, 'd');
@@ -248,9 +289,9 @@ return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateS
                   {dayNumber}
                 </div>
                 
-                {/* Upload count badge */}
-                {count > 0 && (
-                  <div className="absolute -top-2 -right-2">
+                {/* Upload count badges */}
+                <div className="absolute -top-2 -right-2 flex flex-col gap-1">
+                  {totalCount > 0 && (
                     <Badge 
                       className={`text-xs px-2 py-1 font-semibold border-0 ${
                         isSelected 
@@ -258,10 +299,21 @@ return realtimeUploads.filter(upload => getEffectiveDateString(upload) === dateS
                           : 'bg-blue-400 text-slate-800 shadow-lg'
                       }`}
                     >
-                      {count}
+                      {totalCount}
                     </Badge>
-                  </div>
-                )}
+                  )}
+                  {bestCount > 0 && (
+                    <Badge 
+                      className={`text-xs px-2 py-1 font-semibold border-0 ${
+                        isSelected 
+                          ? 'bg-white text-slate-800' 
+                          : 'bg-green-400 text-slate-800 shadow-lg'
+                      }`}
+                    >
+                      {bestCount}
+                    </Badge>
+                  )}
+                </div>
                 
                 {/* Today indicator */}
                 {isToday && (

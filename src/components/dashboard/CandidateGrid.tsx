@@ -15,6 +15,7 @@ interface CandidateGridProps {
   onCandidateDelete?: (deletedId: string) => void;
   dedupe?: boolean;
   requireName?: boolean;
+  dateFilterMode?: 'api' | 'client'; // 'api' for All Uploads, 'client' for Best Candidates
 }
 
 // Function to remove duplicates based on first and last name
@@ -55,66 +56,67 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   selectedDate,
   onCandidateDelete,
   dedupe = true,
-  requireName = true
+  requireName = true,
+  dateFilterMode = 'api'
 }) => {
   const [dateFilteredUploads, setDateFilteredUploads] = useState<CVUpload[]>([]);
   const [isLoadingDateFilter, setIsLoadingDateFilter] = useState(false);
 
-  // Fetch date-filtered candidates using the optimized API when a date is selected
+  // Handle date filtering based on mode
   useEffect(() => {
     if (selectedDate) {
-      const fetchDateFilteredCandidates = async () => {
-        setIsLoadingDateFilter(true);
-        try {
-          const dateStr = format(selectedDate, 'yyyy-MM-dd');
-          console.log(`CandidateGrid: Fetching candidates for date ${dateStr}`);
-          const response = await fetch(
-            `https://qsvadxpossrsnenvfdsv.supabase.co/functions/v1/candidates-by-date?date=${dateStr}`,
-            {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-                'Content-Type': 'application/json',
-              },
+      if (dateFilterMode === 'api') {
+        // Use optimized API for All Uploads tab
+        const fetchDateFilteredCandidates = async () => {
+          setIsLoadingDateFilter(true);
+          try {
+            const dateStr = format(selectedDate, 'yyyy-MM-dd');
+            console.log(`CandidateGrid: Fetching candidates for date ${dateStr} via API`);
+            const response = await fetch(
+              `https://qsvadxpossrsnenvfdsv.supabase.co/functions/v1/candidates-by-date?date=${dateStr}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
-          );
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            console.log(`CandidateGrid: API returned ${data.candidates?.length || 0} candidates for ${dateStr}:`, data);
+            setDateFilteredUploads(data.candidates || []);
+          } catch (error) {
+            console.error('Error fetching date-filtered candidates:', error);
+            // Fallback to client-side filtering if API fails
+            fallbackToClientSideFiltering();
+          } finally {
+            setIsLoadingDateFilter(false);
           }
+        };
 
-          const data = await response.json();
-          console.log(`CandidateGrid: API returned ${data.candidates?.length || 0} candidates for ${dateStr}:`, data);
-          setDateFilteredUploads(data.candidates || []);
-        } catch (error) {
-          console.error('Error fetching date-filtered candidates:', error);
-          // Fallback to legacy filtering if API fails
-          fallbackToLegacyFiltering();
-        } finally {
-          setIsLoadingDateFilter(false);
-        }
-      };
-
-      fetchDateFilteredCandidates();
+        fetchDateFilteredCandidates();
+      } else {
+        // Use client-side filtering for Best Candidates tab
+        console.log(`CandidateGrid: Filtering ${uploads.length} candidates for date ${format(selectedDate, 'yyyy-MM-dd')} via client`);
+        setIsLoadingDateFilter(true);
+        fallbackToClientSideFiltering();
+        setIsLoadingDateFilter(false);
+      }
     } else {
       setDateFilteredUploads([]);
     }
-  }, [selectedDate]);
+  }, [selectedDate, dateFilterMode, uploads]);
 
-  // Fallback to legacy filtering if optimized API fails
-  const fallbackToLegacyFiltering = () => {
+  // Client-side filtering for fallback or Best Candidates tab
+  const fallbackToClientSideFiltering = () => {
     if (selectedDate) {
-      const uploadsWithNames = uploads.filter(upload => {
-        if (!upload.extracted_json) return false;
-        const candidateName = upload.extracted_json.candidate_name?.trim();
-        return candidateName && candidateName.length > 0;
-      });
-      
-      const uniqueUploads = removeDuplicates(uploadsWithNames);
-      
-const targetStr = formatDateForDB(selectedDate);
-const filtered = uniqueUploads.filter(upload => getEffectiveDateString(upload) === targetStr);
-      
+      const targetStr = formatDateForDB(selectedDate);
+      const filtered = uploads.filter(upload => getEffectiveDateString(upload) === targetStr);
       setDateFilteredUploads(filtered);
     }
   };

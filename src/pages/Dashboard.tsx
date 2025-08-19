@@ -204,7 +204,8 @@ const Dashboard = () => {
           )}
 
           <UploadHistoryCalendar 
-            uploads={currentUploads}
+            allUploads={uploads}
+            bestUploads={bestCandidates}
             onDateSelect={handleCalendarDateChange}
             selectedDate={selectedCalendarDate}
           />
@@ -230,6 +231,7 @@ const Dashboard = () => {
                   onCandidateDelete={handleCandidateDelete}
                   dedupe={false}
                   requireName={false}
+                  dateFilterMode="api"
                 />
               </TabsContent>
 
@@ -241,6 +243,7 @@ const Dashboard = () => {
                   onCandidateDelete={handleCandidateDelete}
                   dedupe={true}
                   requireName={true}
+                  dateFilterMode="client"
                 />
               </TabsContent>
             </Tabs>
