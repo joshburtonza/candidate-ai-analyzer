@@ -241,6 +241,10 @@ const Index = () => {
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
               </Button>
               <Button
+                onClick={() => {
+                  const featuresSection = document.getElementById('features-section');
+                  featuresSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="bg-white/5 backdrop-blur-xl border border-slate-500/30 text-slate-400 hover:bg-slate-500/10 hover:border-slate-500/50 px-8 py-3 sm:px-10 sm:py-4 text-base sm:text-lg tracking-wider shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] w-full sm:w-auto"
               >
                 EXPLORE FEATURES
@@ -250,7 +254,7 @@ const Index = () => {
         </section>
 
         {/* Features Section */}
-        <section className="container mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section id="features-section" className="container mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
