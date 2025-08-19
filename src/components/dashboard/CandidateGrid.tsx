@@ -115,8 +115,14 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   // Client-side filtering for fallback or Best Candidates tab
   const fallbackToClientSideFiltering = () => {
     if (selectedDate) {
-      const targetStr = formatDateForDB(selectedDate);
-      const filtered = uploads.filter(upload => getEffectiveDateString(upload) === targetStr);
+      const targetStr = format(selectedDate, 'yyyy-MM-dd');
+      console.log(`CandidateGrid: Client-side filtering for date ${targetStr}`);
+      const filtered = uploads.filter(upload => {
+        const uploadDateStr = getEffectiveDateString(upload);
+        console.log(`CandidateGrid: Comparing ${uploadDateStr} === ${targetStr}`);
+        return uploadDateStr === targetStr;
+      });
+      console.log(`CandidateGrid: Client-side filtering returned ${filtered.length} candidates`);
       setDateFilteredUploads(filtered);
     }
   };
