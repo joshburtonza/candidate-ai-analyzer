@@ -22,7 +22,7 @@ import { filterValidCandidates, filterAllQualifiedCandidates } from '@/utils/can
 const Dashboard = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { exportToCSV } = useExport();
+  const { exportCandidates } = useExport();
   const { flags } = useFeatureFlags();
   const { currentVertical, currentPreset, strictMode } = useVertical();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -30,6 +30,7 @@ const Dashboard = () => {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
   const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'best'>('best');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch uploads with pagination for better performance
   const { data: uploads = [], refetch, isLoading, error } = useQuery({
@@ -165,8 +166,20 @@ const Dashboard = () => {
     }
   }, [uploads, bestCandidates, selectedCalendarDate]);
 
-  // Data source based on active tab
-  const currentUploads = activeTab === 'all' ? uploads : bestCandidates;
+  // Data source based on active tab and date filter
+  const currentUploads = useMemo(() => {
+    const baseData = activeTab === 'all' ? uploads : bestCandidates;
+    
+    if (selectedCalendarDate) {
+      const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
+      return baseData.filter(upload => {
+        const uploadDate = upload.received_date || upload.extracted_json?.date_received;
+        return uploadDate && uploadDate.startsWith(dateStr);
+      });
+    }
+    
+    return baseData;
+  }, [activeTab, uploads, bestCandidates, selectedCalendarDate]);
 
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
@@ -185,8 +198,30 @@ const Dashboard = () => {
     setSelectedCalendarDate(date);
   };
 
-  const handleExport = async () => {
-    exportToCSV(currentUploads, activeTab === 'all' ? 'all_uploads' : 'best_candidates');
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const filename = selectedCalendarDate 
+        ? `${activeTab}_${format(selectedCalendarDate, 'yyyy-MM-dd')}`
+        : (activeTab === 'all' ? 'all_uploads' : 'best_candidates');
+      
+      exportCandidates(currentUploads, { format: 'csv', filenameBase: filename });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const filename = selectedCalendarDate 
+        ? `${activeTab}_${format(selectedCalendarDate, 'yyyy-MM-dd')}`
+        : (activeTab === 'all' ? 'all_uploads' : 'best_candidates');
+      
+      exportCandidates(currentUploads, { format: 'pdf', filenameBase: filename });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isLoading) {
@@ -224,8 +259,9 @@ const Dashboard = () => {
             setShowStats={setShowStats}
             selectedUploads={selectedUploads}
             setSelectedUploads={setSelectedUploads}
-            onExport={handleExport}
-            isExporting={false}
+            onExportCSV={handleExportCSV}
+            onExportPDF={handleExportPDF}
+            isExporting={isExporting}
           />
 
           {showStats && (

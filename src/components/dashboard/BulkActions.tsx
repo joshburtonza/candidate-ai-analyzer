@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Download, Users } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Trash2, Download, Users, FileText, File } from 'lucide-react';
 import { CVUpload } from '@/types/candidate';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { useExport } from '@/hooks/useExport';
@@ -17,7 +18,7 @@ interface BulkActionsProps {
 export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { deleteCandidate, isDeleting } = useDeleteCandidate();
-  const { exportToCSV } = useExport();
+  const { exportCandidates } = useExport();
   const { toast } = useToast();
 
   const toggleSelection = (id: string) => {
@@ -63,11 +64,18 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
     }
   };
 
-  const handleBulkExport = () => {
+  const handleBulkExportCSV = () => {
     if (selectedIds.size === 0) return;
     
     const selectedUploads = uploads.filter(u => selectedIds.has(u.id));
-    exportToCSV(selectedUploads, 'selected_candidates');
+    exportCandidates(selectedUploads, { format: 'csv', filenameBase: 'selected_candidates' });
+  };
+
+  const handleBulkExportPDF = () => {
+    if (selectedIds.size === 0) return;
+    
+    const selectedUploads = uploads.filter(u => selectedIds.has(u.id));
+    exportCandidates(selectedUploads, { format: 'pdf', filenameBase: 'selected_candidates' });
   };
 
   if (uploads.length === 0) return null;
@@ -97,15 +105,28 @@ export const BulkActions = ({ uploads, onBulkDelete }: BulkActionsProps) => {
 
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handleBulkExport}
-              variant="outline"
-              size="sm"
-              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover-lift"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export Selected
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover-lift"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Selected
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleBulkExportCSV}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleBulkExportPDF}>
+                  <File className="w-4 h-4 mr-2" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <Button
               onClick={handleBulkDelete}

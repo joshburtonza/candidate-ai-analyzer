@@ -1,6 +1,7 @@
 import React from 'react';
-import { Grid, List, BarChart3, Download, Settings } from 'lucide-react';
+import { Grid, List, BarChart3, Download, Settings, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +17,8 @@ interface DashboardHeaderProps {
   setShowStats: (show: boolean) => void;
   selectedUploads: string[];
   setSelectedUploads: (uploads: string[]) => void;
-  onExport: () => void;
+  onExportCSV: () => void;
+  onExportPDF: () => void;
   isExporting: boolean;
 }
 
@@ -27,7 +29,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   setShowStats,
   selectedUploads,
   setSelectedUploads,
-  onExport,
+  onExportCSV,
+  onExportPDF,
   isExporting
 }) => {
   const navigate = useNavigate();
@@ -90,15 +93,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </Button>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onExport}
-          disabled={isExporting}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          {isExporting ? 'Exporting...' : 'Export'}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isExporting}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {isExporting ? 'Exporting...' : 'Export'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onExportCSV} disabled={isExporting}>
+              <FileText className="w-4 h-4 mr-2" />
+              Export as CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onExportPDF} disabled={isExporting}>
+              <File className="w-4 h-4 mr-2" />
+              Export as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           variant="outline"
