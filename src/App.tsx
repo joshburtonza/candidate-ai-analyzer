@@ -6,13 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { FeatureFlagsProvider } from "@/context/FeatureFlagsContext";
 import { VerticalProvider } from "@/context/VerticalContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
-import DashboardV2 from "./pages/DashboardV2";
-import RecruiterDashboard from "./pages/RecruiterDashboard";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import CandidateProfile from "./pages/CandidateProfile";
@@ -45,37 +42,14 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
-                  
-                  {/* Recruiter Dashboard - only recruiters can access */}
                   <Route 
                     path="/dashboard" 
                     element={
                       <AuthGuard>
-                        <RoleGuard allowedRoles={['recruiter']} fallbackPath="/dashboard-v2">
-                          <Dashboard />
-                        </RoleGuard>
+                        <Dashboard />
                       </AuthGuard>
                     } 
                   />
-                  
-                  {/* Manager Dashboard - only managers can access */}
-                  <Route 
-                    path="/dashboard-v2" 
-                    element={
-                      <AuthGuard>
-                        <RoleGuard allowedRoles={['manager']} fallbackPath="/dashboard">
-                          <DashboardV2 />
-                        </RoleGuard>
-                      </AuthGuard>
-                    } 
-                  />
-                  
-                  {/* Legacy recruiter route - redirect to main dashboard */}
-                  <Route 
-                    path="/recruiter" 
-                    element={<Navigate to="/dashboard" replace />}
-                  />
-                  
                   <Route 
                     path="/account" 
                     element={

@@ -249,7 +249,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="space-y-8">
           <DashboardHeader 
@@ -276,45 +276,17 @@ const Dashboard = () => {
           />
 
           <div className="space-y-6">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'best')} className="space-y-6">
-            <div className="flex justify-center">
-              <div className="flex bg-gray-900 border border-gray-700 rounded-xl p-1 max-w-md">
-                <button
-                  onClick={() => setActiveTab('all')}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 flex-1 ${
-                    activeTab === 'all'
-                      ? 'bg-pastel-cyan text-black shadow-lg font-semibold'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'best')} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+                <TabsTrigger value="all" className="flex items-center gap-2">
                   <span>All Uploads</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                    activeTab === 'all'
-                      ? 'bg-black text-white'
-                      : 'bg-gray-700 text-gray-300'
-                  }`}>
-                    {allUploadsCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('best')}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 flex-1 ${
-                    activeTab === 'best'
-                      ? 'bg-pastel-pink text-black shadow-lg font-semibold'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
+                  <Badge variant="secondary">{allUploadsCount}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="best" className="flex items-center gap-2">
                   <span>Best Candidates</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                    activeTab === 'best'
-                      ? 'bg-black text-white'
-                      : 'bg-gray-700 text-gray-300'
-                  }`}>
-                    {bestCandidatesCount}
-                  </span>
-                </button>
-              </div>
-            </div>
+                  <Badge variant="secondary">{bestCandidatesCount}</Badge>
+                </TabsTrigger>
+              </TabsList>
 
               <TabsContent value="all">
                 <CandidateGrid 

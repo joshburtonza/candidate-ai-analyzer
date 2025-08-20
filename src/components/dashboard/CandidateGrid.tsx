@@ -166,10 +166,10 @@ const sortedUploads = [...uploadsToShow].sort((a, b) => {
       : 'No uploads found';
 
     return (
-      <div className="bg-black text-center py-12 border border-gray-800 rounded-2xl">
-        <div className="text-gray-300 text-lg font-medium">{emptyMessage}</div>
+      <div className="text-center py-12">
+        <div className="text-muted-foreground text-lg">{emptyMessage}</div>
         {selectedDate && (
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Try selecting a different date or upload some CVs
           </p>
         )}

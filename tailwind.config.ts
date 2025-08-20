@@ -46,22 +46,6 @@ export default {
           dark: '#8399A2'
         },
         glass: 'rgba(255,255,255,0.08)',
-        pastel: {
-          purple: 'hsl(var(--pastel-purple))',
-          cyan: 'hsl(var(--pastel-cyan))',
-          pink: 'hsl(var(--pastel-pink))', 
-          green: 'hsl(var(--pastel-green))',
-          yellow: 'hsl(var(--pastel-yellow))',
-          orange: 'hsl(var(--pastel-orange))',
-        },
-        v2: {
-          bg: 'hsl(var(--v2-bg))',
-          surface: 'hsl(var(--v2-surface))',
-          'surface-hover': 'hsl(var(--v2-surface-hover))',
-          border: 'hsl(var(--v2-border))',
-          'text-primary': 'hsl(var(--v2-text-primary))',
-          'text-secondary': 'hsl(var(--v2-text-secondary))',
-        },
       },
       borderRadius: {
         lg: 'var(--radius)',

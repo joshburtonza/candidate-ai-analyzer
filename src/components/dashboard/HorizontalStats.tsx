@@ -24,21 +24,21 @@ const todayUploads = uploads.filter(upload => getEffectiveDateString(upload) ===
   }, [uploads]);
 
   return (
-    <div className="bg-black border border-gray-800 rounded-2xl p-6">
+    <div className="bg-card border rounded-lg p-4">
       <div className="flex items-center justify-center gap-8 text-sm">
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">All Uploads:</span>
-          <span className="font-semibold text-pastel-cyan">{stats.total}</span>
+          <span className="text-muted-foreground">All Uploads:</span>
+          <span className="font-semibold text-foreground">{stats.total}</span>
         </div>
-        <div className="h-4 w-px bg-gray-700"></div>
+        <div className="h-4 w-px bg-border"></div>
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">Processed:</span>
-          <span className="font-semibold text-pastel-green">{stats.processed}</span>
+          <span className="text-muted-foreground">Processed:</span>
+          <span className="font-semibold text-foreground">{stats.processed}</span>
         </div>
-        <div className="h-4 w-px bg-gray-700"></div>
+        <div className="h-4 w-px bg-border"></div>
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">Uploaded Today:</span>
-          <span className="font-semibold text-pastel-pink">{stats.uploadedToday}</span>
+          <span className="text-muted-foreground">Uploaded Today:</span>
+          <span className="font-semibold text-foreground">{stats.uploadedToday}</span>
         </div>
       </div>
     </div>

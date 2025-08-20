@@ -3,7 +3,6 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/candidate';
-import { cleanupAuthState } from '@/utils/authCleanup';
 
 interface AuthContextType {
   user: User | null;
@@ -26,29 +25,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     let mounted = true;
 
-    // Set up auth state listener - CRITICAL: Keep this synchronous to prevent deadlocks
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('useAuth: Auth state changed:', event, session?.user?.id || 'No session');
         
         if (!mounted) return;
 
-        // Only do synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
         
-        // Defer any Supabase calls to prevent deadlocks
         if (session?.user) {
-          console.log('useAuth: User found, scheduling profile fetch');
-          setTimeout(() => {
-            if (mounted) {
-              fetchProfile(session.user.id);
-            }
-          }, 0);
+          console.log('useAuth: User found, will fetch profile async');
+          // Don't block loading on profile fetch
+          setLoading(false);
+          fetchProfile(session.user.id);
         } else {
           console.log('useAuth: No user, clearing profile');
           setProfile(null);
+          setLoading(false);
         }
       }
     );
@@ -145,23 +140,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     console.log('useAuth: Signing out');
     try {
-      // Clean up any residual auth state first
-      cleanupAuthState();
-      try {
-        await supabase.auth.signOut({ scope: 'global' as any });
-      } catch (e) {
-        console.warn('useAuth: Global signOut failed, continuing', e);
-      }
+      await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setProfile(null);
-
-      // Force a hard redirect to ensure a clean app state
-      window.location.href = '/auth';
     } catch (error) {
       console.error('useAuth: Error signing out:', error);
     }
   };
+
   console.log('useAuth: Current state - loading:', loading, 'user:', user?.id || 'null', 'profile:', profile?.email || 'null');
 
   return (

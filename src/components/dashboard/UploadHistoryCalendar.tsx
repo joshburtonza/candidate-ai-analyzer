@@ -163,53 +163,57 @@ export const UploadHistoryCalendar = ({ allUploads, bestUploads, onDateSelect, s
   const weekEnd = endOfWeek(currentWeek, { weekStartsOn: 0 });
 
   return (
-    <div className="bg-black w-full border border-gray-800 rounded-2xl p-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <div className="p-3 bg-pastel-purple/20 rounded-xl border border-pastel-purple/30">
-            <CalendarIcon className="w-6 h-6 text-pastel-purple" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white tracking-wider">
-              UPLOAD CALENDAR
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">
-              Click on a day to filter uploads by date
-            </p>
-          </div>
-        </div>
-          
-        <div className="flex items-center justify-center gap-8 mb-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-pastel-cyan">
-              {totalUploadsThisWeek}
+    <div className="relative overflow-hidden w-full">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
+      
+      <div className="relative z-10 p-8 border border-white/10 rounded-2xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="p-3 glass-card rounded-xl border border-white/10 bg-slate-500/10">
+              <CalendarIcon className="w-6 h-6 text-white/80" />
             </div>
-            <div className="text-xs text-gray-400 font-medium tracking-wider">
-              TOTAL THIS WEEK
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-wider">
+                UPLOAD CALENDAR
+              </h2>
+              <p className="text-sm text-white/60 mt-1">
+                Click on a day to filter uploads by date
+              </p>
             </div>
           </div>
           
-          <div className="text-center">
-            <div className="text-2xl font-bold text-pastel-green">
-              {bestUploadsThisWeek}
+            <div className="flex items-center justify-center gap-8 mb-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {totalUploadsThisWeek}
+              </div>
+              <div className="text-xs text-white/60 font-medium tracking-wider">
+                TOTAL THIS WEEK
+              </div>
             </div>
-            <div className="text-xs text-gray-400 font-medium tracking-wider">
-              BEST THIS WEEK
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">
+                {bestUploadsThisWeek}
+              </div>
+              <div className="text-xs text-white/60 font-medium tracking-wider">
+                BEST THIS WEEK
+              </div>
             </div>
-          </div>
             
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={navigateToPrevWeek}
-                className="text-gray-300 hover:text-white hover:bg-gray-800 rounded-xl transition-all duration-200"
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               
-              <div className="px-4 py-2 bg-gray-900 border border-gray-700 rounded-xl">
+              <div className="px-4 py-2 bg-slate-500/10 border border-white/10 rounded-xl">
                 <span className="text-white font-semibold tracking-wide">
                   {format(currentWeek, 'MMMM yyyy').toUpperCase()}
                 </span>
@@ -219,7 +223,7 @@ export const UploadHistoryCalendar = ({ allUploads, bestUploads, onDateSelect, s
                 variant="ghost"
                 size="sm"
                 onClick={navigateToNextWeek}
-                className="text-gray-300 hover:text-white hover:bg-gray-800 rounded-xl transition-all duration-200"
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>
@@ -229,8 +233,8 @@ export const UploadHistoryCalendar = ({ allUploads, bestUploads, onDateSelect, s
 
         {/* Week range and legend */}
         <div className="text-center mb-6 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-700 rounded-full">
-            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-500/10 border border-white/10 rounded-full">
+            <div className="w-2 h-2 bg-white/60 rounded-full"></div>
             <span className="text-white font-medium">
               {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
             </span>
@@ -239,87 +243,88 @@ export const UploadHistoryCalendar = ({ allUploads, bestUploads, onDateSelect, s
           {/* Legend */}
           <div className="flex items-center justify-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-pastel-cyan rounded-full"></div>
-              <span className="text-gray-400">Total Uploads</span>
+              <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+              <span className="text-white/70">Total Uploads</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-pastel-green rounded-full"></div>
-              <span className="text-gray-400">Best Candidates</span>
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span className="text-white/70">Best Candidates</span>
             </div>
           </div>
         </div>
 
-      {/* Day tiles - Full width grid */}
-      <div className="grid grid-cols-7 gap-4 max-w-4xl mx-auto">
-        {weekDays.map(({ date, totalCount, bestCount }) => {
-          const isSelected = isDaySelected(date);
-          const dayName = format(date, 'EEE');
-          const dayNumber = format(date, 'd');
-          const isToday = isSameDay(date, new Date());
-          
-          return (
-            <Button
-              key={date.toISOString()}
-              variant="ghost"
-              onClick={() => handleDateSelect(date)}
-              className={`
-                relative flex flex-col items-center gap-3 p-6 rounded-xl transition-all duration-300 min-h-[120px] group
-                ${isSelected 
-                  ? 'bg-pastel-purple/20 text-white shadow-lg border border-pastel-purple/50' 
-                  : 'bg-gray-900 border border-gray-700 text-white hover:bg-gray-800 hover:border-gray-600'
-                }
-                ${isToday && !isSelected ? 'ring-2 ring-pastel-cyan/50' : ''}
-              `}
-            >
-              {/* Day name */}
-              <div className={`text-xs font-semibold tracking-wider uppercase ${
-                isSelected ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'
-              }`}>
-                {dayName}
-              </div>
-              
-              {/* Day number */}
-              <div className={`text-2xl font-bold ${
-                isSelected ? 'text-white' : 'text-white group-hover:text-white'
-              }`}>
-                {dayNumber}
-              </div>
-              
-              {/* Upload count badges */}
-              <div className="absolute -top-2 -right-2 flex flex-col gap-1">
-                {totalCount > 0 && (
-                  <Badge 
-                    className={`text-xs px-2 py-1 font-semibold border-0 ${
-                      isSelected 
-                        ? 'bg-white text-gray-800' 
-                        : 'bg-pastel-cyan text-black shadow-lg'
-                    }`}
-                  >
-                    {totalCount}
-                  </Badge>
+        {/* Day tiles - Full width grid */}
+        <div className="grid grid-cols-7 gap-4 max-w-4xl mx-auto">
+          {weekDays.map(({ date, totalCount, bestCount }) => {
+            const isSelected = isDaySelected(date);
+            const dayName = format(date, 'EEE');
+            const dayNumber = format(date, 'd');
+            const isToday = isSameDay(date, new Date());
+            
+            return (
+              <Button
+                key={date.toISOString()}
+                variant="ghost"
+                onClick={() => handleDateSelect(date)}
+                className={`
+                  relative flex flex-col items-center gap-3 p-6 rounded-2xl transition-all duration-300 min-h-[120px] group
+                  ${isSelected 
+                    ? 'bg-blue-400/20 text-white shadow-lg shadow-blue-400/25 scale-105 border border-blue-400/30' 
+                    : 'bg-slate-500/10 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:scale-105'
+                  }
+                  ${isToday && !isSelected ? 'ring-2 ring-blue-400/50' : ''}
+                `}
+              >
+                {/* Day name */}
+                <div className={`text-xs font-semibold tracking-wider uppercase ${
+                  isSelected ? 'text-white' : 'text-white/60 group-hover:text-white/80'
+                }`}>
+                  {dayName}
+                </div>
+                
+                {/* Day number */}
+                <div className={`text-2xl font-bold ${
+                  isSelected ? 'text-white' : 'text-white group-hover:text-white'
+                }`}>
+                  {dayNumber}
+                </div>
+                
+                {/* Upload count badges */}
+                <div className="absolute -top-2 -right-2 flex flex-col gap-1">
+                  {totalCount > 0 && (
+                    <Badge 
+                      className={`text-xs px-2 py-1 font-semibold border-0 ${
+                        isSelected 
+                          ? 'bg-white text-slate-800' 
+                          : 'bg-blue-400 text-slate-800 shadow-lg'
+                      }`}
+                    >
+                      {totalCount}
+                    </Badge>
+                  )}
+                  {bestCount > 0 && (
+                    <Badge 
+                      className={`text-xs px-2 py-1 font-semibold border-0 ${
+                        isSelected 
+                          ? 'bg-white text-slate-800' 
+                          : 'bg-green-400 text-slate-800 shadow-lg'
+                      }`}
+                    >
+                      {bestCount}
+                    </Badge>
+                  )}
+                </div>
+                
+                {/* Today indicator */}
+                {isToday && (
+                  <div className={`absolute bottom-2 w-2 h-2 rounded-full ${
+                    isSelected ? 'bg-white' : 'bg-blue-400'
+                  }`}></div>
                 )}
-                {bestCount > 0 && (
-                  <Badge 
-                    className={`text-xs px-2 py-1 font-semibold border-0 ${
-                      isSelected 
-                        ? 'bg-white text-gray-800' 
-                        : 'bg-pastel-green text-black shadow-lg'
-                    }`}
-                  >
-                    {bestCount}
-                  </Badge>
-                )}
-              </div>
-              
-              {/* Today indicator */}
-              {isToday && (
-                <div className={`absolute bottom-2 w-2 h-2 rounded-full ${
-                  isSelected ? 'bg-white' : 'bg-pastel-cyan'
-                }`}></div>
-              )}
-            </Button>
-          );
-        })}
+              </Button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
