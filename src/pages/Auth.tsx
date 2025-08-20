@@ -133,15 +133,16 @@ const Auth = () => {
   };
 
   const handleOrganizationSetup = async (orgData: { action: 'create' | 'join'; name?: string; slug?: string }) => {
-    if (!selectedRole) return;
+    const currentRole = selectedRole || role;
+    if (!currentRole) return;
     
     setLoading(true);
     try {
       let result;
       if (orgData.action === 'create' && orgData.name && orgData.slug) {
-        result = await createOrganization(orgData.name, orgData.slug, selectedRole);
+        result = await createOrganization(orgData.name, orgData.slug, currentRole);
       } else if (orgData.action === 'join' && orgData.slug) {
-        result = await joinOrganization(orgData.slug, selectedRole);
+        result = await joinOrganization(orgData.slug, currentRole);
       } else {
         toast({
           title: "Error",
@@ -158,7 +159,7 @@ const Auth = () => {
         });
         
         // Navigate to appropriate dashboard based on role
-        if (selectedRole === 'manager') {
+        if (currentRole === 'manager') {
           navigate('/dashboard-v2');
         } else {
           navigate('/dashboard');
@@ -181,7 +182,7 @@ const Auth = () => {
     }
   };
 
-  if (step === 'organization' && user && selectedRole) {
+  if (step === 'organization' && user && (selectedRole || role)) {
     return (
       <div className="min-h-screen bg-v2-bg">
         {/* Floating elements */}
@@ -240,7 +241,7 @@ const Auth = () => {
               <CardHeader className="text-center">
                 <CardTitle className="text-v2-text-primary">Organization Setup</CardTitle>
                 <CardDescription className="text-v2-text-secondary">
-                  {selectedRole === 'manager' 
+                  {(selectedRole || role) === 'manager' 
                     ? "Create your organization or join an existing one"
                     : "Join your organization"
                   }
@@ -248,7 +249,7 @@ const Auth = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <OrganizationSelector
-                  selectedRole={selectedRole}
+                  selectedRole={selectedRole || role}
                   onOrganizationSelect={handleOrganizationSetup}
                 />
               </CardContent>

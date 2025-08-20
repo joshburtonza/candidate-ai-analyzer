@@ -10,24 +10,24 @@ interface RoleSelectorProps {
 export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRoleSelect }) => {
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-gray-300 block">Select your role</label>
+      <label className="text-sm font-medium text-v2-muted-foreground block">Select your role</label>
       
       <div className="space-y-2">
         <div 
           onClick={() => onRoleSelect('manager')}
           className={`p-3 rounded-lg border cursor-pointer transition-all ${
             selectedRole === 'manager' 
-              ? 'border-brand-primary bg-brand-primary/10' 
-              : 'border-slate-500/30 bg-white/5 hover:bg-white/10'
+              ? 'border-v2-primary bg-v2-primary/10' 
+              : 'border-v2-border bg-v2-card/50 hover:bg-v2-card'
           }`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white font-medium">Manager</div>
-              <div className="text-gray-400 text-sm">Access analytics and team insights</div>
+              <div className="text-v2-foreground font-medium">Manager</div>
+              <div className="text-v2-muted-foreground text-sm">Access analytics and team insights</div>
             </div>
             {selectedRole === 'manager' && (
-              <Check className="w-5 h-5 text-brand-primary" />
+              <Check className="w-5 h-5 text-v2-primary" />
             )}
           </div>
         </div>
@@ -36,17 +36,17 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onRole
           onClick={() => onRoleSelect('recruiter')}
           className={`p-3 rounded-lg border cursor-pointer transition-all ${
             selectedRole === 'recruiter' 
-              ? 'border-brand-primary bg-brand-primary/10' 
-              : 'border-slate-500/30 bg-white/5 hover:bg-white/10'
+              ? 'border-v2-primary bg-v2-primary/10' 
+              : 'border-v2-border bg-v2-card/50 hover:bg-v2-card'
           }`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white font-medium">Recruiter</div>
-              <div className="text-gray-400 text-sm">Manage candidates and applications</div>
+              <div className="text-v2-foreground font-medium">Recruiter</div>
+              <div className="text-v2-muted-foreground text-sm">Manage candidates and applications</div>
             </div>
             {selectedRole === 'recruiter' && (
-              <Check className="w-5 h-5 text-brand-primary" />
+              <Check className="w-5 h-5 text-v2-primary" />
             )}
           </div>
         </div>
