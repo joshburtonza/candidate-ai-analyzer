@@ -20,31 +20,20 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'manager' | 'recruiter' | null>(null);
   const [step, setStep] = useState<'auth' | 'role' | 'organization'>('auth');
-  const [initialized, setInitialized] = useState(false);
   
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { hasRole, setUserRole, role, loading: roleLoading } = useUserRole();
-  const { hasOrganization, createOrganization, joinOrganization, loading: orgLoading } = useOrganization();
+  const { hasRole, setUserRole, role } = useUserRole();
+  const { hasOrganization, createOrganization, joinOrganization } = useOrganization();
 
-  // Single useEffect to handle all routing logic and prevent jumping
   useEffect(() => {
-    // Don't do anything while loading or not initialized
-    if (authLoading || roleLoading || orgLoading) return;
-    
-    // Mark as initialized after first complete load
-    if (!initialized && !authLoading && !roleLoading && !orgLoading) {
-      setInitialized(true);
-    }
-    
-    // Only proceed if we have complete state information
-    if (!initialized) return;
+    // Don't redirect while auth is loading
+    if (authLoading) return;
     
     const stepParam = searchParams.get('step');
     
-    // Determine the correct step based on user state
     if (user && hasRole && hasOrganization && role) {
       // User is fully set up - redirect to dashboard
       if (role === 'manager') {
@@ -58,17 +47,17 @@ const Auth = () => {
     } else if (user && !hasRole) {
       // User logged in but needs role
       setStep('role');
-    } else if (stepParam === 'role' && user && !hasRole) {
+    } else if (stepParam === 'role' && user) {
       // URL parameter suggests role step
       setStep('role');
-    } else if (stepParam === 'organization' && user && hasRole && !hasOrganization) {
+    } else if (stepParam === 'organization' && user && hasRole) {
       // URL parameter suggests organization step
       setStep('organization');
     } else if (!user) {
       // Not logged in - show auth form
       setStep('auth');
     }
-  }, [user, hasRole, hasOrganization, role, searchParams, navigate, authLoading, roleLoading, orgLoading, initialized]);
+  }, [user, hasRole, hasOrganization, role, searchParams, navigate, authLoading]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,25 +267,6 @@ const Auth = () => {
     );
   }
 
-  // Show loading state while initializing to prevent jumping
-  if (!initialized || authLoading || roleLoading || orgLoading) {
-    return (
-      <div className="min-h-screen bg-v2-bg flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring" }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-brand-gradient rounded-2xl mb-4 mx-auto shadow-lg"
-          >
-            <Brain className="w-8 h-8 text-slate-800" />
-          </motion.div>
-          <p className="text-v2-text-secondary">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (step === 'role' && user && !hasRole) {
     return (
       <div className="min-h-screen bg-v2-bg">
@@ -367,10 +337,10 @@ const Auth = () => {
                 
                 <Button
                   onClick={handleRoleSelection}
-                  disabled={loading || !selectedRole || roleLoading}
+                  disabled={loading || !selectedRole}
                   className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-medium py-2.5 shadow-lg border-0"
                 >
-                  {loading || roleLoading ? 'Setting Role...' : 'Continue'}
+                  {loading ? 'Setting Role...' : 'Continue'}
                 </Button>
               </CardContent>
             </Card>
