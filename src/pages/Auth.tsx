@@ -1,479 +1,508 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Brain,
-  Upload,
-  BarChart3,
-  Users,
-  ArrowRight,
-  CheckCircle,
-  Sparkles,
-  Quote,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-
-/* --- Hook: safe viewport width (client only) --- */
-function useViewportWidth() {
-  const [w, setW] = useState<number | null>(null);
-  useEffect(() => {
-    const set = () => setW(window.innerWidth);
-    set(); // on mount
-    window.addEventListener("resize", set);
-    return () => window.removeEventListener("resize", set);
-  }, []);
-  return w;
-}
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
+import { Brain, Sparkles } from 'lucide-react';
+import { RoleSelector } from '@/components/auth/RoleSelector';
+import { OrganizationSelector } from '@/components/auth/OrganizationSelector';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
 
 const Auth = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'manager' | 'recruiter' | null>(null);
+  const [step, setStep] = useState<'auth' | 'role' | 'organization'>('auth');
+  
   const navigate = useNavigate();
-  const vw = useViewportWidth();
-  const W = vw ?? 1280; // fallback; overlays only render when vw !== null
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
+  const { hasRole, setUserRole, role } = useUserRole();
+  const { hasOrganization, createOrganization, joinOrganization } = useOrganization();
 
-  const features = [
-    {
-      icon: Upload,
-      title: "Smart CV Analysis",
-      description: "AI-powered document processing with deep insights",
-    },
-    {
-      icon: Brain,
-      title: "Smart Assessment",
-      description: "Advanced algorithms for precise candidate evaluation",
-    },
-    {
-      icon: BarChart3,
-      title: "Rich Analytics",
-      description: "Comprehensive scoring and detailed reports",
-    },
-    {
-      icon: Users,
-      title: "Pro Dashboard",
-      description: "Elegant interface for modern professionals",
-    },
-  ];
+  useEffect(() => {
+    // Don't redirect while auth is loading
+    if (authLoading) return;
+    
+    const stepParam = searchParams.get('step');
+    
+    if (user && hasRole && hasOrganization && role) {
+      // User is fully set up - redirect to dashboard
+      if (role === 'manager') {
+        navigate('/dashboard-v2');
+      } else if (role === 'recruiter') {
+        navigate('/dashboard');
+      }
+    } else if (user && hasRole && !hasOrganization) {
+      // User has role but needs organization
+      setStep('organization');
+    } else if (user && !hasRole) {
+      // User logged in but needs role
+      setStep('role');
+    } else if (stepParam === 'role' && user) {
+      // URL parameter suggests role step
+      setStep('role');
+    } else if (stepParam === 'organization' && user && hasRole) {
+      // URL parameter suggests organization step
+      setStep('organization');
+    } else if (!user) {
+      // Not logged in - show auth form
+      setStep('auth');
+    }
+  }, [user, hasRole, hasOrganization, role, searchParams, navigate, authLoading]);
 
-  const benefits = [
-    "Precision candidate analysis",
-    "AI-driven assessment intelligence",
-    "Enterprise-grade security",
-    "Real-time processing",
-    "Advanced filtering tools",
-    "Refined user experience",
-  ];
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth?step=role`
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        // Will be handled by useEffect for redirection
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleSelection = async () => {
+    if (!selectedRole) {
+      toast({
+        title: "Role Required",
+        description: "Please select your role to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const success = await setUserRole(selectedRole);
+      if (success) {
+        toast({
+          title: "Role Set Successfully",
+          description: `You are now registered as a ${selectedRole}.`,
+        });
+        
+        // Move to organization step
+        setStep('organization');
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to set your role. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOrganizationSetup = async (orgData: { action: 'create' | 'join'; name?: string; slug?: string }) => {
+    const currentRole = selectedRole || role;
+    if (!currentRole) return;
+    
+    setLoading(true);
+    try {
+      let result;
+      if (orgData.action === 'create' && orgData.name && orgData.slug) {
+        result = await createOrganization(orgData.name, orgData.slug, currentRole);
+      } else if (orgData.action === 'join' && orgData.slug) {
+        result = await joinOrganization(orgData.slug, currentRole);
+      } else {
+        toast({
+          title: "Error",
+          description: "Invalid organization data.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: orgData.action === 'create' ? 'Organization created successfully!' : 'Joined organization successfully!',
+        });
+        
+        // Navigate to appropriate dashboard based on role
+        if (currentRole === 'manager') {
+          navigate('/dashboard-v2');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || 'Failed to setup organization.',
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'organization' && user && (selectedRole || role)) {
+    return (
+      <div className="min-h-screen bg-v2-bg">
+        {/* Floating elements */}
+        <motion.div
+          animate={{
+            x: [-30, window.innerWidth * 0.2],
+            y: [0, -5, 0],
+          }}
+          transition={{
+            x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+            y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
+          }}
+          className="absolute top-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+        >
+          🔍 Extracting skills...
+        </motion.div>
+        
+        <motion.div
+          animate={{
+            x: [window.innerWidth * 0.8, -30],
+            y: [0, -4, 0],
+          }}
+          transition={{
+            x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
+            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
+          }}
+          className="absolute top-32 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+        >
+          📊 Processing CVs...
+        </motion.div>
+        
+        <div className="flex items-center justify-center min-h-screen p-4 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="w-full max-w-md relative z-20"
+          >
+            <div className="text-center mb-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="inline-flex items-center justify-center w-16 h-16 bg-brand-gradient rounded-2xl mb-4 mx-auto shadow-lg"
+              >
+                <Brain className="w-8 h-8 text-slate-800" />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-v2-text-primary mb-2 flex items-center justify-center gap-2">
+                APPLICHUB
+                <Sparkles className="w-6 h-6 text-v2-text-secondary" />
+              </h1>
+              <p className="text-v2-text-secondary">Set up your organization</p>
+            </div>
+
+            <Card className="bg-v2-surface border-v2-border shadow-2xl">
+              <CardHeader className="text-center">
+                <CardTitle className="text-v2-text-primary">Organization Setup</CardTitle>
+                <CardDescription className="text-v2-text-secondary">
+                  {(selectedRole || role) === 'manager' 
+                    ? "Create your organization or join an existing one"
+                    : "Join your organization"
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <OrganizationSelector
+                  selectedRole={selectedRole || role}
+                  onOrganizationSelect={handleOrganizationSetup}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'role' && user && !hasRole) {
+    return (
+      <div className="min-h-screen bg-v2-bg">
+        {/* Floating elements */}
+        <motion.div
+          animate={{
+            x: [-30, window.innerWidth * 0.2],
+            y: [0, -5, 0],
+          }}
+          transition={{
+            x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+            y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
+          }}
+          className="absolute top-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+        >
+          🔍 Extracting skills...
+        </motion.div>
+        
+        <motion.div
+          animate={{
+            x: [window.innerWidth * 0.8, -30],
+            y: [0, -4, 0],
+          }}
+          transition={{
+            x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
+            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
+          }}
+          className="absolute top-32 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+        >
+          💼 Senior Developer
+        </motion.div>
+        
+        <div className="flex items-center justify-center min-h-screen p-4 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="w-full max-w-md relative z-20"
+          >
+            <div className="text-center mb-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="inline-flex items-center justify-center w-16 h-16 bg-brand-gradient rounded-2xl mb-4 mx-auto shadow-lg"
+              >
+                <Brain className="w-8 h-8 text-slate-800" />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-v2-text-primary mb-2 flex items-center justify-center gap-2">
+                APPLICHUB
+                <Sparkles className="w-6 h-6 text-v2-text-secondary" />
+              </h1>
+              <p className="text-v2-text-secondary">Choose your role to get started</p>
+            </div>
+
+            <Card className="bg-v2-surface border-v2-border shadow-2xl">
+              <CardHeader className="text-center">
+                <CardTitle className="text-v2-text-primary">Select Your Role</CardTitle>
+                <CardDescription className="text-v2-text-secondary">
+                  This determines which dashboard you'll see
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <RoleSelector 
+                  selectedRole={selectedRole}
+                  onRoleSelect={setSelectedRole}
+                />
+                
+                <Button
+                  onClick={handleRoleSelection}
+                  disabled={loading || !selectedRole}
+                  className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-medium py-2.5 shadow-lg border-0"
+                >
+                  {loading ? 'Setting Role...' : 'Continue'}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen relative overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(90deg, hsla(213, 77%, 14%, 1) 0%, hsla(202, 27%, 45%, 1) 100%)",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      {/* Subtle pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23475569' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    <div className="min-h-screen bg-v2-bg">
+      {/* Floating extraction elements that move across screen */}
+      <motion.div
+        animate={{
+          x: [-30, window.innerWidth * 0.2],
+          y: [0, -5, 0],
         }}
-      />
+        transition={{
+          x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
+        }}
+        className="absolute top-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+      >
+        🔍 Extracting skills...
+      </motion.div>
+      
+      <motion.div
+        animate={{
+          x: [window.innerWidth * 0.8, -30],
+          y: [0, -4, 0],
+        }}
+        transition={{
+          x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
+          y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
+        }}
+        className="absolute top-32 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+      >
+        📊 Processing CVs...
+      </motion.div>
+      
+      <motion.div
+        animate={{
+          x: [-35, window.innerWidth * 0.25],
+          y: [0, -6, 0],
+        }}
+        transition={{
+          x: { duration: 35, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 6 },
+          y: { duration: 4.5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 }
+        }}
+        className="absolute bottom-40 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+      >
+        🎯 Analyzing experience...
+      </motion.div>
+      
+      <motion.div
+        animate={{
+          x: [window.innerWidth * 0.7, -35],
+          y: [0, -4.5, 0],
+        }}
+        transition={{
+          x: { duration: 28, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 9 },
+          y: { duration: 3.8, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.8 }
+        }}
+        className="absolute bottom-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+      >
+        🚀 5+ years experience
+      </motion.div>
 
-      {/* Floating extraction elements - hidden on mobile; only render after vw is known */}
-      {vw !== null && (
-        <div className="hidden md:block" aria-hidden>
-          <motion.div
-            animate={{ x: [-60, W * 0.4], y: [0, -8, 0] }}
-            transition={{
-              x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-              y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            }}
-            className="absolute top-16 text-slate-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
-          >
-            → extracting: candidate_profile.json
-          </motion.div>
+      <motion.div
+        animate={{
+          x: [-25, window.innerWidth * 0.3],
+          y: [0, -5.5, 0],
+        }}
+        transition={{
+          x: { duration: 32, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 12 },
+          y: { duration: 4.2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
+        }}
+        className="absolute top-1/2 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
+      >
+        💼 Senior Developer
+      </motion.div>
 
-          <motion.div
-            animate={{ x: [W * 0.6, -50], y: [0, -9, 0] }}
-            transition={{
-              x: {
-                duration: 28,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 4,
-              },
-              y: {
-                duration: 5.5,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 2,
-              },
-            }}
-            className="absolute top-28 text-slate-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
-          >
-            → parsing: work_experience.xml
-          </motion.div>
-
-          <motion.div
-            animate={{ x: [-40, W * 0.35], y: [0, -6, 0] }}
-            transition={{
-              x: {
-                duration: 32,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 2,
-              },
-              y: {
-                duration: 5,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 1,
-              },
-            }}
-            className="absolute top-1/2 text-slate-400/40 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
-          >
-            → analyzing: technical_skills.csv
-          </motion.div>
-
-          <motion.div
-            animate={{ x: [W * 0.75, -70], y: [0, -10, 0] }}
-            transition={{
-              x: {
-                duration: 35,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 6,
-              },
-              y: {
-                duration: 5,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 3,
-              },
-            }}
-            className="absolute bottom-32 text-slate-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
-          >
-            → processing: education_history.json
-          </motion.div>
-
-          <motion.div
-            animate={{ x: [-45, W * 0.3], y: [0, -8, 0] }}
-            transition={{
-              x: {
-                duration: 30,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 1,
-              },
-              y: {
-                duration: 5.2,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 0.5,
-              },
-            }}
-            className="absolute bottom-16 text-slate-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
-          >
-            → validating: certifications.xml
-          </motion.div>
-
-          {/* Floating geometric elements */}
-          <motion.div
-            animate={{
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.1, 1],
-              x: [-15, W * 0.2],
-            }}
-            transition={{
-              opacity: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-              scale: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-              x: { duration: 40, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            }}
-            className="absolute top-1/4 w-2 h-2 bg-slate-500/20 rounded-full z-10"
-          />
-
-          <motion.div
-            animate={{
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.1, 1],
-              x: [W * 0.8, -10],
-            }}
-            transition={{
-              opacity: {
-                duration: 4,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 2,
-              },
-              scale: {
-                duration: 4,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 2,
-              },
-              x: {
-                duration: 36,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 6,
-              },
-            }}
-            className="absolute top-1/3 w-1 h-1 bg-slate-400/25 rounded-full z-10"
-          />
-
-          <motion.div
-            animate={{
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.1, 1],
-              x: [-20, W * 0.25],
-            }}
-            transition={{
-              opacity: {
-                duration: 4,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 4,
-              },
-              scale: {
-                duration: 4,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 4,
-              },
-              x: {
-                duration: 45,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 12,
-              },
-            }}
-            className="absolute bottom-1/3 w-3 h-3 bg-slate-600/15 rounded-full z-10"
-          />
-
-          <motion.div
-            animate={{
-              opacity: [0.3, 0.8, 0.3],
-              scale: [1, 1.1, 1],
-              x: [W * 0.7, -12],
-            }}
-            transition={{
-              opacity: {
-                duration: 4,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 1.5,
-              },
-              scale: {
-                duration: 4,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 1.5,
-              },
-              x: {
-                duration: 42,
-                repeat: Infinity,
-                ease: [0.4, 0, 0.6, 1],
-                delay: 9,
-              },
-            }}
-            className="absolute top-2/3 w-1.5 h-1.5 bg-slate-500/30 rounded-full z-10"
-          />
-        </div>
-      )}
-
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-2 sm:p-3 bg-brand-gradient rounded-xl shadow-lg shadow-slate-500/25">
-                <Brain className="w-5 h-5 sm:w-7 sm:h-7 text-slate-800" />
-              </div>
-              <span className="text-lg sm:text-2xl font-bold text-white tracking-wider">
-                APPLICHUB
-              </span>
-            </div>
-            <Button
-              onClick={() => navigate("/auth")}
-              className="bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold px-4 py-2 sm:px-8 sm:py-3 text-sm sm:text-base tracking-wider shadow-xl shadow-slate-500/25 border-0"
-            >
-              ENTER
-            </Button>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-24 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <div className="inline-flex items-center gap-2 sm:gap-3 bg-white/5 backdrop-blur-xl border border-slate-500/30 rounded-full px-4 py-2 sm:px-6 sm:py-3 mb-6 sm:mb-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
-              <span className="text-xs sm:text-sm text-white/90 tracking-wider">
-                ELITE TALENT ASSESSMENT
-              </span>
-            </div>
-
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold text-white mb-6 sm:mb-8 leading-tight px-2">
-              BORN TO BE
-              <br />
-              <span
-                className="inline-block"
-                style={{
-                  background:
-                    "linear-gradient(90deg, hsla(197, 14%, 57%, 1) 0%, hsla(192, 17%, 94%, 1) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                CURIOUS
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-xl text-white/80 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
-              Elevate your recruitment with AI-powered resume analysis. Designed
-              for organizations that demand excellence.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4">
-              <Button
-                onClick={() => navigate("/auth")}
-                className="bg-brand-gradient hover:opacity-90 text-slate-800 px-8 py-3 sm:px-10 sm:py-4 text-base sm:text-lg font-semibold tracking-wider shadow-xl shadow-slate-500/25 w-full sm:w-auto"
-              >
-                BEGIN ASSESSMENT
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
-              </Button>
-              <Button
-                onClick={() => {
-                  const featuresSection =
-                    document.getElementById("features-section");
-                  featuresSection?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="bg-white/5 backdrop-blur-xl border border-slate-500/30 text-slate-400 hover:bg-slate-500/10 hover:border-slate-500/50 px-8 py-3 sm:px-10 sm:py-4 text-base sm:text-lg tracking-wider shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] w-full sm:w-auto"
-              >
-                EXPLORE FEATURES
-              </Button>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Features Section */}
-        <section
-          id="features-section"
-          className="container mx-auto px-4 sm:px-6 py-16 sm:py-24"
+      <div className="flex items-center justify-center min-h-screen p-4 relative">      
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md relative z-20"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-12 sm:mb-20"
-          >
-            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-6 px-4">
-              SMART CAPABILITIES
-            </h2>
-            <p className="text-lg sm:text-xl text-white/70 max-w-3xl mx-auto px-4">
-              Engineered for modern recruitment professionals
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * index }}
-              >
-                <Card className="bg-white/5 backdrop-blur-xl border border-slate-500/30 p-6 sm:p-8 h-full hover:bg-slate-500/5 hover:border-slate-500/50 transition-all duration-500 group shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
-                  <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-slate-500/20 to-slate-600/20 border border-slate-500/30 w-fit mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
-                    {feature.title}
-                  </h3>
-                  <p className="text-white/70 leading-relaxed text-sm sm:text-base">
-                    {feature.description}
-                  </p>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* Benefits Section */}
-        <section className="container mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center">
+          <div className="text-center mb-8">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-brand-gradient rounded-2xl mb-4 mx-auto shadow-lg"
             >
-              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 sm:mb-8">
-                EXCELLENCE BY DESIGN
-              </h2>
-              <p className="text-lg sm:text-xl text-white/80 mb-8 sm:mb-10 leading-relaxed">
-                Crafted for organizations that understand precision in talent
-                acquisition.
-              </p>
-
-              <div className="space-y-4 sm:space-y-6">
-                {benefits.map((benefit, index) => (
-                  <motion.div
-                    key={benefit}
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 * index }}
-                    className="flex items-center gap-3 sm:gap-4"
-                  >
-                    <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 flex-shrink-0" />
-                    <span className="text-white/90 text-base sm:text-lg">
-                      {benefit}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
+              <Brain className="w-8 h-8 text-slate-800" />
             </motion.div>
+            <h1 className="text-3xl font-bold text-v2-text-primary mb-2 flex items-center justify-center gap-2">
+              APPLICHUB
+              <Sparkles className="w-6 h-6 text-v2-text-secondary" />
+            </h1>
+            <p className="text-v2-text-secondary">Enterprise-grade CV analysis powered by AI</p>
+          </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <Card className="bg-white/5 backdrop-blur-xl border border-slate-500/30 p-8 sm:p-10 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
-                <div className="text-center">
-                  <Quote className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400 mx-auto mb-4 sm:mb-6" />
-                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">
-                    READY TO ELEVATE?
-                  </h3>
-                  <p className="text-white/80 mb-6 sm:mb-8 text-base sm:text-lg leading-relaxed">
-                    Join elite organizations leveraging AI for superior
-                    recruitment outcomes.
-                  </p>
-                  <Button
-                    onClick={() => navigate("/auth")}
-                    className="bg-brand-gradient hover:opacity-90 text-slate-800 px-6 py-3 sm:px-8 sm:py-3 font-semibold tracking-wider shadow-xl shadow-slate-500/25 w-full sm:w-auto"
-                  >
-                    COMMENCE JOURNEY
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
-                  </Button>
+          <Card className="bg-v2-surface border-v2-border shadow-2xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-v2-text-primary">
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              </CardTitle>
+              <CardDescription className="text-v2-text-secondary">
+                {isSignUp 
+                  ? 'Start analyzing resumes with AI-powered insights'
+                  : 'Sign in to access your dashboard'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleAuth} className="space-y-4">
+                <div>
+                  <Input
+                    type="email"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-v2-bg border-v2-border text-v2-text-primary placeholder:text-v2-text-secondary focus:border-primary"
+                  />
                 </div>
-              </Card>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 border-t border-white/10">
-          <div className="text-center text-white/60">
-            <p className="tracking-wider text-sm sm:text-base">
-              &copy; 2024 APPLICHUB. CRAFTED WITH PRECISION.
-            </p>
-          </div>
-        </footer>
+                <div>
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-v2-bg border-v2-border text-v2-text-primary placeholder:text-v2-text-secondary focus:border-primary"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-medium py-2.5 shadow-lg border-0"
+                >
+                  {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
+                </Button>
+              </form>
+              
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-v2-text-secondary hover:text-v2-text-primary transition-colors font-medium"
+                >
+                  {isSignUp 
+                    ? 'Already have an account? Sign in' 
+                    : "Don't have an account? Sign up"
+                  }
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

@@ -1,12 +1,36 @@
 
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Brain, Upload, BarChart3, Users, ArrowRight, CheckCircle, Sparkles, Quote } from "lucide-react";
+import {
+  Brain,
+  Upload,
+  BarChart3,
+  Users,
+  ArrowRight,
+  CheckCircle,
+  Sparkles,
+  Quote,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+/* --- Hook: safe viewport width (client only) --- */
+function useViewportWidth() {
+  const [w, setW] = useState<number | null>(null);
+  useEffect(() => {
+    const set = () => setW(window.innerWidth);
+    set(); // on mount
+    window.addEventListener("resize", set);
+    return () => window.removeEventListener("resize", set);
+  }, []);
+  return w;
+}
+
 const Index = () => {
   const navigate = useNavigate();
+  const vw = useViewportWidth();
+  const W = vw ?? 1280; // fallback; overlays only render when vw !== null
 
   const features = [
     {
@@ -50,135 +74,207 @@ const Index = () => {
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23475569' fill-opacity='0.1'%3E%3Cpath d='M30 30l15-15v30l-15-15zm-15-15v30l15-15-15-15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }}></div>
       
-      {/* Floating extraction elements - hidden on mobile for cleaner look */}
-      <div className="hidden md:block">
-        <motion.div
-          animate={{
-            x: [-60, window.innerWidth * 0.4],
-            y: [0, -8, 0],
-          }}
-          transition={{
-            x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
-          }}
-          className="absolute top-16 text-slate-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-5"
-        >
-          → extracting: candidate_profile.json
-        </motion.div>
-        
-        <motion.div
-          animate={{
-            x: [window.innerWidth * 0.6, -50],
-            y: [0, -9, 0],
-          }}
-          transition={{
-            x: { duration: 28, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 4 },
-            y: { duration: 5.5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
-          }}
-          className="absolute top-28 text-slate-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-5"
-        >
-          → parsing: work_experience.xml
-        </motion.div>
-        
-        <motion.div
-          animate={{
-            x: [-40, window.innerWidth * 0.35],
-            y: [0, -6, 0],
-          }}
-          transition={{
-            x: { duration: 32, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 },
-            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 }
-          }}
-          className="absolute top-1/2 text-slate-400/40 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-5"
-        >
-          → analyzing: technical_skills.csv
-        </motion.div>
-        
-        <motion.div
-          animate={{
-            x: [window.innerWidth * 0.75, -70],
-            y: [0, -10, 0],
-          }}
-          transition={{
-            x: { duration: 35, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 6 },
-            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 }
-          }}
-          className="absolute bottom-32 text-slate-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-5"
-        >
-          → processing: education_history.json
-        </motion.div>
-        
-        <motion.div
-          animate={{
-            x: [-45, window.innerWidth * 0.3],
-            y: [0, -8, 0],
-          }}
-          transition={{
-            x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1 },
-            y: { duration: 5.2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.5 }
-          }}
-          className="absolute bottom-16 text-slate-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-5"
-        >
-          → validating: certifications.xml
-        </motion.div>
+      {/* Floating extraction elements - hidden on mobile; only render after vw is known */}
+      {vw !== null && (
+        <div className="hidden md:block" aria-hidden>
+          <motion.div
+            animate={{ x: [-60, W * 0.4], y: [0, -8, 0] }}
+            transition={{
+              x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+              y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+            }}
+            className="absolute top-16 text-slate-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
+          >
+            → extracting: candidate_profile.json
+          </motion.div>
 
-        {/* Floating geometric elements */}
-        <motion.div
-          animate={{
-            opacity: [0.3, 0.8, 0.3],
-            scale: [1, 1.1, 1],
-            x: [-15, window.innerWidth * 0.2],
-          }}
-          transition={{
-            opacity: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            scale: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            x: { duration: 40, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
-          }}
-          className="absolute top-1/4 w-2 h-2 bg-slate-500/20 rounded-full z-5"
-        />
-        
-        <motion.div
-          animate={{
-            opacity: [0.3, 0.8, 0.3],
-            scale: [1, 1.1, 1],
-            x: [window.innerWidth * 0.8, -10],
-          }}
-          transition={{
-            opacity: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 },
-            scale: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 },
-            x: { duration: 36, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 6 }
-          }}
-          className="absolute top-1/3 w-1 h-1 bg-slate-400/25 rounded-full z-5"
-        />
-        
-        <motion.div
-          animate={{
-            opacity: [0.3, 0.8, 0.3],
-            scale: [1, 1.1, 1],
-            x: [-20, window.innerWidth * 0.25],
-          }}
-          transition={{
-            opacity: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 4 },
-            scale: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 4 },
-            x: { duration: 45, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 12 }
-          }}
-          className="absolute bottom-1/3 w-3 h-3 bg-slate-600/15 rounded-full z-5"
-        />
-        
-        <motion.div
-          animate={{
-            opacity: [0.3, 0.8, 0.3],
-            scale: [1, 1.1, 1],
-            x: [window.innerWidth * 0.7, -12],
-          }}
-          transition={{
-            opacity: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
-            scale: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 },
-            x: { duration: 42, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 9 }
-          }}
-          className="absolute top-2/3 w-1.5 h-1.5 bg-slate-500/30 rounded-full z-5"
-        />
-      </div>
+          <motion.div
+            animate={{ x: [W * 0.6, -50], y: [0, -9, 0] }}
+            transition={{
+              x: {
+                duration: 28,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 4,
+              },
+              y: {
+                duration: 5.5,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 2,
+              },
+            }}
+            className="absolute top-28 text-slate-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
+          >
+            → parsing: work_experience.xml
+          </motion.div>
+
+          <motion.div
+            animate={{ x: [-40, W * 0.35], y: [0, -6, 0] }}
+            transition={{
+              x: {
+                duration: 32,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 2,
+              },
+              y: {
+                duration: 5,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 1,
+              },
+            }}
+            className="absolute top-1/2 text-slate-400/40 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
+          >
+            → analyzing: technical_skills.csv
+          </motion.div>
+
+          <motion.div
+            animate={{ x: [W * 0.75, -70], y: [0, -10, 0] }}
+            transition={{
+              x: {
+                duration: 35,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 6,
+              },
+              y: {
+                duration: 5,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 3,
+              },
+            }}
+            className="absolute bottom-32 text-slate-400/50 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
+          >
+            → processing: education_history.json
+          </motion.div>
+
+          <motion.div
+            animate={{ x: [-45, W * 0.3], y: [0, -8, 0] }}
+            transition={{
+              x: {
+                duration: 30,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 1,
+              },
+              y: {
+                duration: 5.2,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 0.5,
+              },
+            }}
+            className="absolute bottom-16 text-slate-400/45 text-xs font-mono bg-black/40 px-3 py-1 rounded border border-slate-500/30 z-10"
+          >
+            → validating: certifications.xml
+          </motion.div>
+
+          {/* Floating geometric elements */}
+          <motion.div
+            animate={{
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.1, 1],
+              x: [-15, W * 0.2],
+            }}
+            transition={{
+              opacity: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+              scale: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+              x: { duration: 40, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
+            }}
+            className="absolute top-1/4 w-2 h-2 bg-slate-500/20 rounded-full z-10"
+          />
+
+          <motion.div
+            animate={{
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.1, 1],
+              x: [W * 0.8, -10],
+            }}
+            transition={{
+              opacity: {
+                duration: 4,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 2,
+              },
+              scale: {
+                duration: 4,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 2,
+              },
+              x: {
+                duration: 36,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 6,
+              },
+            }}
+            className="absolute top-1/3 w-1 h-1 bg-slate-400/25 rounded-full z-10"
+          />
+
+          <motion.div
+            animate={{
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.1, 1],
+              x: [-20, W * 0.25],
+            }}
+            transition={{
+              opacity: {
+                duration: 4,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 4,
+              },
+              scale: {
+                duration: 4,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 4,
+              },
+              x: {
+                duration: 45,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 12,
+              },
+            }}
+            className="absolute bottom-1/3 w-3 h-3 bg-slate-600/15 rounded-full z-10"
+          />
+
+          <motion.div
+            animate={{
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.1, 1],
+              x: [W * 0.7, -12],
+            }}
+            transition={{
+              opacity: {
+                duration: 4,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 1.5,
+              },
+              scale: {
+                duration: 4,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 1.5,
+              },
+              x: {
+                duration: 42,
+                repeat: Infinity,
+                ease: [0.4, 0, 0.6, 1],
+                delay: 9,
+              },
+            }}
+            className="absolute top-2/3 w-1.5 h-1.5 bg-slate-500/30 rounded-full z-10"
+          />
+        </div>
+      )}
       
       <div className="relative z-10">
         {/* Header */}
