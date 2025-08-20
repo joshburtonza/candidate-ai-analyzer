@@ -14,7 +14,7 @@ export function Dots({ series = [1,2,3,2,4,6,5,8,7,9,3,2] }: { series?: number[]
             <span 
               key={j} 
               className={`mb-1 block h-2.5 w-2.5 rounded-full transition-colors ${
-                j < v ? 'bg-slate-900 dark:bg-slate-100' : 'bg-slate-200 dark:bg-slate-700'
+                j < v ? 'bg-white' : 'bg-white/20'
               }`} 
             />
           ))}
@@ -33,7 +33,7 @@ export function Bars({ series = [2,5,9,7,4,2] }: { series?: number[] }) {
       {series.map((v, i) => (
         <div key={i} className="flex w-full items-end">
           <div 
-            className="w-full rounded-md bg-slate-900 dark:bg-slate-100 transition-all duration-300" 
+            className="w-full rounded-md bg-white transition-all duration-300" 
             style={{ height: `${(v/max)*100}%` }} 
           />
         </div>
@@ -48,9 +48,9 @@ export function RowStat({ label, value }: { label: string; value: string }) {
   
   return (
     <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-      <div className="h-2 w-full rounded-full bg-secondary">
+      <div className="h-2 w-full rounded-full bg-white/10">
         <div 
-          className="h-2 rounded-full bg-muted-foreground transition-all duration-300" 
+          className="h-2 rounded-full bg-white/70 transition-all duration-300" 
           style={{ width: `${percentage}%` }} 
         />
       </div>

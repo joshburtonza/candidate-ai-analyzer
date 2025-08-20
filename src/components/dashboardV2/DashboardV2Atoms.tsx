@@ -23,19 +23,19 @@ export const DashCard = ({ children, className = "" }: { children: React.ReactNo
   </div>
 );
 
-// Widget using semantic design system colors
+// Widget using black/dark design system colors
 export const Widget = ({ 
-  tone = "blue", 
+  tone = "dark", 
   children, 
   className = "" 
 }: { 
-  tone?: 'pink' | 'blue'; 
+  tone?: 'accent' | 'dark'; 
   children: React.ReactNode; 
   className?: string; 
 }) => {
-  const bgClass = tone === 'pink' 
-    ? 'bg-gradient-to-br from-pink-100 to-pink-200 text-slate-900 dark:from-pink-900/30 dark:to-pink-800/30 dark:text-pink-100'
-    : 'bg-gradient-to-br from-primary/10 to-primary/20 text-primary-foreground';
+  const bgClass = tone === 'accent' 
+    ? 'bg-gradient-to-br from-white/10 to-white/5 text-white border border-white/10'
+    : 'bg-gradient-to-br from-black/80 to-black/60 text-white border border-white/10';
     
   return (
     <div className={cn("rounded-3xl p-5", bgClass, className)}>

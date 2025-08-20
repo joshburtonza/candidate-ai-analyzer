@@ -287,9 +287,9 @@ export default function DashboardV2() {
             {/* Left column — stats & widgets */}
             <div className="space-y-6 lg:col-span-2">
               <div className="grid gap-6 md:grid-cols-3">
-                <Widget tone="pink" className="md:col-span-2">
+                <Widget tone="accent" className="md:col-span-2">
                   <div className="mb-2 text-sm opacity-70">CV Applications</div>
-                  <div className="text-4xl font-bold text-slate-900 dark:text-slate-100">
+                  <div className="text-4xl font-bold text-white">
                     +{Math.round((uploads.length / 100) * 100)}%
                   </div>
                   <Dots series={[2,3,2,4,6,5,2,3,6,7,5,3]} />
@@ -313,9 +313,9 @@ export default function DashboardV2() {
                   </div>
                 </DashCard>
 
-                <Widget tone="blue" className="md:col-span-1">
+                <Widget tone="dark" className="md:col-span-1">
                   <div className="mb-2 text-sm opacity-70">Applications</div>
-                  <div className="text-4xl font-bold text-slate-900 dark:text-slate-100">
+                  <div className="text-4xl font-bold text-white">
                     {uploads.length}
                   </div>
                   <Bars series={[uploads.length > 50 ? 6 : 2, uploads.length > 30 ? 5 : 3, uploads.length > 20 ? 9 : 4, uploads.length > 10 ? 7 : 2, 4, 2]} />
