@@ -1,5 +1,4 @@
 
-import { useEffect, useState } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
@@ -14,32 +13,19 @@ interface RoleGuardProps {
 export const RoleGuard = ({ children, allowedRoles, fallbackPath }: RoleGuardProps) => {
   const { user, loading: authLoading } = useAuth();
   const { role, hasRole, loading: roleLoading } = useUserRole();
-  const [shouldRedirect, setShouldRedirect] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !roleLoading) {
-      if (!user) {
-        setShouldRedirect(true);
-        return;
-      }
+  console.log('RoleGuard: State check', {
+    user: !!user,
+    authLoading,
+    roleLoading,
+    hasRole,
+    role,
+    allowedRoles
+  });
 
-      if (!hasRole) {
-        // User needs to set their role
-        setShouldRedirect(true);
-        return;
-      }
-
-      if (role && !allowedRoles.includes(role)) {
-        // User doesn't have permission for this route
-        setShouldRedirect(true);
-        return;
-      }
-
-      setShouldRedirect(false);
-    }
-  }, [user, role, hasRole, authLoading, roleLoading, allowedRoles]);
-
+  // Show loading while auth is being resolved
   if (authLoading || roleLoading) {
+    console.log('RoleGuard: Loading state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="flex flex-col items-center gap-4">
@@ -50,26 +36,34 @@ export const RoleGuard = ({ children, allowedRoles, fallbackPath }: RoleGuardPro
     );
   }
 
+  // Not authenticated - redirect to auth
   if (!user) {
+    console.log('RoleGuard: No user, redirecting to /auth');
     return <Navigate to="/auth" replace />;
   }
 
+  // User exists but has no role - redirect to role selection
   if (!hasRole) {
+    console.log('RoleGuard: User has no role, redirecting to /auth?step=role');
     return <Navigate to="/auth?step=role" replace />;
   }
 
-  if (shouldRedirect) {
+  // User has wrong role for this route
+  if (role && !allowedRoles.includes(role)) {
+    console.log('RoleGuard: User role not allowed', { role, allowedRoles });
+    
     if (fallbackPath) {
+      console.log('RoleGuard: Using fallback path', fallbackPath);
       return <Navigate to={fallbackPath} replace />;
     }
     
     // Default redirects based on role
-    if (role === 'manager') {
-      return <Navigate to="/dashboard-v2" replace />;
-    } else if (role === 'recruiter') {
-      return <Navigate to="/dashboard" replace />;
-    }
+    const defaultPath = role === 'manager' ? '/dashboard-v2' : '/dashboard';
+    console.log('RoleGuard: Using default redirect', defaultPath);
+    return <Navigate to={defaultPath} replace />;
   }
 
+  // All checks passed
+  console.log('RoleGuard: All checks passed, rendering children');
   return <>{children}</>;
 };
