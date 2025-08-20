@@ -1,132 +1,97 @@
+
 import React from 'react';
-import { Grid, List, BarChart3, Download, Settings, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { LogOut, Settings, Users, BarChart3 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useFeatureFlags } from '@/context/FeatureFlagsContext';
-import { useVertical } from '@/context/VerticalContext';
-import { DashboardV2Toggle } from './DashboardV2Toggle';
-import VerticalSelector from './VerticalSelector';
-import PresetSelector from './PresetSelector';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface DashboardHeaderProps {
-  viewMode: 'grid' | 'list';
-  setViewMode: (mode: 'grid' | 'list') => void;
-  showStats: boolean;
-  setShowStats: (show: boolean) => void;
-  selectedUploads: string[];
-  setSelectedUploads: (uploads: string[]) => void;
-  onExportCSV: () => void;
-  onExportPDF: () => void;
-  isExporting: boolean;
+  title: string;
+  subtitle?: string;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-  viewMode,
-  setViewMode,
-  showStats,
-  setShowStats,
-  selectedUploads,
-  setSelectedUploads,
-  onExportCSV,
-  onExportPDF,
-  isExporting
-}) => {
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ title, subtitle }) => {
+  const { signOut, profile } = useAuth();
+  const { role, isManager } = useUserRole();
   const navigate = useNavigate();
-  const { flags } = useFeatureFlags();
-  const { strictMode, setStrictMode } = useVertical();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const handleRoleSwitch = () => {
+    if (isManager) {
+      navigate('/dashboard-v2');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">CV Uploads Dashboard</h1>
-        <p className="text-muted-foreground">Manage and review all uploaded CVs</p>
-      </div>
-
-      <div className="flex items-center gap-4">
-        {/* Feature Flag Controls */}
-        {flags.enableVerticals && (
-          <VerticalSelector />
-        )}
-        
-        {flags.enableFilterPresets && (
-          <PresetSelector />
-        )}
-        
-        {(flags.enableVerticals || flags.enableFilterPresets) && (
-          <div className="flex items-center gap-2">
-            <Switch
-              id="strict-mode"
-              checked={strictMode}
-              onCheckedChange={setStrictMode}
-            />
-            <Label htmlFor="strict-mode" className="text-sm text-muted-foreground">
-              Strict
-            </Label>
-          </div>
-        )}
-
-        <Button
-          variant={showStats ? "default" : "outline"}
-          size="sm"
-          onClick={() => setShowStats(!showStats)}
-        >
-          <BarChart3 className="w-4 h-4 mr-2" />
-          Stats
-        </Button>
-
-        <div className="flex bg-muted rounded-lg p-1">
-          <Button
-            variant={viewMode === 'grid' ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode('list')}
-          >
-            <List className="w-4 h-4" />
-          </Button>
+    <div className="bg-card border-b border-border px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          )}
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        
+        <div className="flex items-center gap-3">
+          {role && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Role:</span>
+              <span className="text-sm font-medium text-foreground capitalize">
+                {role}
+              </span>
+            </div>
+          )}
+          
+          {/* Role-based navigation button */}
+          {isManager ? (
             <Button
               variant="outline"
               size="sm"
-              disabled={isExporting}
+              onClick={() => navigate('/dashboard-v2')}
+              className="flex items-center gap-2"
             >
-              <Download className="w-4 h-4 mr-2" />
-              {isExporting ? 'Exporting...' : 'Export'}
+              <BarChart3 className="h-4 w-4" />
+              Manager View
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onExportCSV} disabled={isExporting}>
-              <FileText className="w-4 h-4 mr-2" />
-              Export as CSV
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPDF} disabled={isExporting}>
-              <File className="w-4 h-4 mr-2" />
-              Export as PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/account')}
-        >
-          <Settings className="w-4 h-4 mr-2" />
-          Settings
-        </Button>
-        
-        <DashboardV2Toggle />
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Recruiter View
+            </Button>
+          )}
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/account')}
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Account
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSignOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </div>
     </div>
   );

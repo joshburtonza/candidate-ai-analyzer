@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,14 +8,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Brain, Sparkles } from 'lucide-react';
+import { RoleSelector } from '@/components/auth/RoleSelector';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'manager' | 'recruiter' | null>(null);
+  const [step, setStep] = useState<'auth' | 'role'>('auth');
+  
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const { hasRole, setUserRole, role } = useUserRole();
+
+  useEffect(() => {
+    // Check if we need to show the role selection step
+    const stepParam = searchParams.get('step');
+    if (stepParam === 'role' && user && !hasRole) {
+      setStep('role');
+    }
+  }, [searchParams, user, hasRole]);
+
+  useEffect(() => {
+    // Redirect authenticated users with roles to appropriate dashboard
+    if (user && hasRole && role) {
+      if (role === 'manager') {
+        navigate('/dashboard-v2');
+      } else if (role === 'recruiter') {
+        navigate('/dashboard');
+      }
+    }
+  }, [user, hasRole, role, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +55,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`
+            emailRedirectTo: `${window.location.origin}/auth?step=role`
           }
         });
         
@@ -44,7 +73,7 @@ const Auth = () => {
         
         if (error) throw error;
         
-        navigate('/dashboard');
+        // Will be handled by useEffect for redirection
       }
     } catch (error: any) {
       toast({
@@ -56,6 +85,110 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleRoleSelection = async () => {
+    if (!selectedRole) {
+      toast({
+        title: "Role Required",
+        description: "Please select your role to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const success = await setUserRole(selectedRole);
+      if (success) {
+        toast({
+          title: "Role Set Successfully",
+          description: `You are now registered as a ${selectedRole}.`,
+        });
+        
+        // Redirect based on role
+        if (selectedRole === 'manager') {
+          navigate('/dashboard-v2');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to set your role. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'role' && user && !hasRole) {
+    return (
+      <div className="min-h-screen text-white flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
+        {/* Background elements */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, #374151 1px, transparent 0)`,
+            backgroundSize: '20px 20px'
+          }}
+        />
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md relative z-10"
+        >
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-brand-gradient rounded-2xl mb-4 mx-auto shadow-lg shadow-slate-500/25"
+            >
+              <Brain className="w-8 h-8 text-slate-800" />
+            </motion.div>
+            <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+              APPLICHUB
+              <Sparkles className="w-6 h-6 text-slate-400" />
+            </h1>
+            <p className="text-gray-300">Choose your role to get started</p>
+          </div>
+
+          <Card className="bg-white/5 backdrop-blur-xl border border-slate-500/30 shadow-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+            <CardHeader className="text-center">
+              <CardTitle className="text-white">Select Your Role</CardTitle>
+              <CardDescription className="text-gray-300">
+                This determines which dashboard you'll see
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <RoleSelector 
+                selectedRole={selectedRole}
+                onRoleSelect={setSelectedRole}
+              />
+              
+              <Button
+                onClick={handleRoleSelection}
+                disabled={loading || !selectedRole}
+                className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-medium py-2.5 shadow-lg shadow-slate-500/25 border-0"
+              >
+                {loading ? 'Setting Role...' : 'Continue'}
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen text-white flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">

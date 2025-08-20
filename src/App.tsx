@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { FeatureFlagsProvider } from "@/context/FeatureFlagsContext";
 import { VerticalProvider } from "@/context/VerticalContext";
 import Index from "./pages/Index";
@@ -44,30 +45,37 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  
+                  {/* Recruiter Dashboard - only recruiters can access */}
                   <Route 
                     path="/dashboard" 
                     element={
                       <AuthGuard>
-                        <Dashboard />
+                        <RoleGuard allowedRoles={['recruiter']} fallbackPath="/dashboard-v2">
+                          <Dashboard />
+                        </RoleGuard>
                       </AuthGuard>
                     } 
                   />
+                  
+                  {/* Manager Dashboard - only managers can access */}
                   <Route 
                     path="/dashboard-v2" 
                     element={
                       <AuthGuard>
-                        <DashboardV2 />
+                        <RoleGuard allowedRoles={['manager']} fallbackPath="/dashboard">
+                          <DashboardV2 />
+                        </RoleGuard>
                       </AuthGuard>
                     } 
                   />
+                  
+                  {/* Legacy recruiter route - redirect to main dashboard */}
                   <Route 
                     path="/recruiter" 
-                    element={
-                      <AuthGuard>
-                        <RecruiterDashboard />
-                      </AuthGuard>
-                    } 
+                    element={<Navigate to="/dashboard" replace />}
                   />
+                  
                   <Route 
                     path="/account" 
                     element={
