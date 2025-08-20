@@ -3,6 +3,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/candidate';
+import { cleanupAuthState } from '@/utils/authCleanup';
 
 interface AuthContextType {
   user: User | null;
@@ -144,15 +145,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     console.log('useAuth: Signing out');
     try {
-      await supabase.auth.signOut();
+      // Clean up any residual auth state first
+      cleanupAuthState();
+      try {
+        await supabase.auth.signOut({ scope: 'global' as any });
+      } catch (e) {
+        console.warn('useAuth: Global signOut failed, continuing', e);
+      }
       setUser(null);
       setSession(null);
       setProfile(null);
+
+      // Force a hard redirect to ensure a clean app state
+      window.location.href = '/auth';
     } catch (error) {
       console.error('useAuth: Error signing out:', error);
     }
   };
-
   console.log('useAuth: Current state - loading:', loading, 'user:', user?.id || 'null', 'profile:', profile?.email || 'null');
 
   return (

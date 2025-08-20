@@ -16,11 +16,17 @@ interface UserRoleData {
 export const useUserRole = () => {
   const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<UserRole>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [hasRole, setHasRole] = useState(false);
 
   useEffect(() => {
-    if (!user || authLoading) return;
+    if (!user) {
+      setRole(null);
+      setHasRole(false);
+      setLoading(false);
+      return;
+    }
+    if (authLoading) return;
 
     const fetchUserRole = async () => {
       setLoading(true);

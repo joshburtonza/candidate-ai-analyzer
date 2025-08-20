@@ -12,6 +12,7 @@ import { OrganizationSelector } from '@/components/auth/OrganizationSelector';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
+import { cleanupAuthState } from '@/utils/authCleanup';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -94,6 +95,14 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Ensure a clean state before any auth operation
+      cleanupAuthState();
+      try {
+        await supabase.auth.signOut({ scope: 'global' as any });
+      } catch {
+        // Ignore errors here; continue with auth flow
+      }
+
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
@@ -111,15 +120,16 @@ const Auth = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // Redirection is handled by the effect once context updates
+        // Hard reload to avoid any limbo states and let guards route correctly
+        window.location.href = '/';
+        return; // Prevent further state updates after navigation
       }
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: error.message || 'Authentication failed', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
-
   const handleRoleSelection = async () => {
     if (!selectedRole) {
       toast({
