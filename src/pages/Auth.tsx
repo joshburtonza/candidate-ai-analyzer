@@ -34,8 +34,18 @@ const Auth = () => {
     
     const stepParam = searchParams.get('step');
     
+    console.log('Auth useEffect - Current state:', {
+      user: !!user,
+      hasRole,
+      hasOrganization,
+      role,
+      stepParam,
+      currentStep: step
+    });
+    
     if (user && hasRole && hasOrganization && role) {
       // User is fully set up - redirect to dashboard
+      console.log('User fully set up, redirecting to dashboard');
       if (role === 'manager') {
         navigate('/dashboard-v2');
       } else if (role === 'recruiter') {
@@ -43,18 +53,23 @@ const Auth = () => {
       }
     } else if (user && hasRole && !hasOrganization) {
       // User has role but needs organization
+      console.log('User has role, needs organization');
       setStep('organization');
     } else if (user && !hasRole) {
       // User logged in but needs role
+      console.log('User needs role');
       setStep('role');
     } else if (stepParam === 'role' && user) {
       // URL parameter suggests role step
+      console.log('Step param suggests role step');
       setStep('role');
     } else if (stepParam === 'organization' && user && hasRole) {
       // URL parameter suggests organization step
+      console.log('Step param suggests organization step');
       setStep('organization');
     } else if (!user) {
       // Not logged in - show auth form
+      console.log('No user, showing auth form');
       setStep('auth');
     }
   }, [user, hasRole, hasOrganization, role, searchParams, navigate, authLoading]);
@@ -101,6 +116,8 @@ const Auth = () => {
   };
 
   const handleRoleSelection = async () => {
+    console.log('handleRoleSelection called with selectedRole:', selectedRole);
+    
     if (!selectedRole) {
       toast({
         title: "Role Required",
@@ -112,16 +129,21 @@ const Auth = () => {
 
     setLoading(true);
     try {
+      console.log('Attempting to set user role:', selectedRole);
       const success = await setUserRole(selectedRole);
+      console.log('setUserRole result:', success);
+      
       if (success) {
         toast({
           title: "Role Set Successfully",
           description: `You are now registered as a ${selectedRole}.`,
         });
         
+        console.log('Role set successfully, moving to organization step');
         // Move to organization step
         setStep('organization');
       } else {
+        console.error('Failed to set user role');
         toast({
           title: "Error",
           description: "Failed to set your role. Please try again.",
@@ -129,6 +151,7 @@ const Auth = () => {
         });
       }
     } catch (error) {
+      console.error('Error in handleRoleSelection:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred.",
