@@ -57,7 +57,7 @@ export const useOrganization = () => {
           )
         `)
         .eq('user_id', user!.id)
-        .single();
+        .maybeSingle();
 
       if (membershipError) {
         console.error('Error fetching organization membership:', membershipError);
@@ -90,28 +90,15 @@ export const useOrganization = () => {
 
   const createOrganization = async (name: string, slug: string, userRole: 'manager' | 'recruiter') => {
     try {
-      // Create the organization
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          name: name,
-          slug: slug
-        })
-        .select()
-        .single();
-
-      if (orgError) throw orgError;
-
-      // Add the user as a member
-      const { error: memberError } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: orgData.id,
-          user_id: user!.id,
-          role: userRole
+      // Use the atomic RPC to create organization and membership in one transaction
+      const { data: orgId, error: rpcError } = await supabase
+        .rpc('create_organization_with_membership', {
+          _name: name,
+          _slug: slug,
+          _role: userRole
         });
 
-      if (memberError) throw memberError;
+      if (rpcError) throw rpcError;
 
       // Refresh the organization data
       await fetchOrganization();
@@ -130,9 +117,14 @@ export const useOrganization = () => {
         .from('organizations')
         .select('id, name, slug')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
-      if (orgError || !orgData) {
+      if (orgError) {
+        console.error('Error finding organization:', orgError);
+        return { success: false, error: 'Failed to find organization' };
+      }
+
+      if (!orgData) {
         return { success: false, error: 'Organization not found' };
       }
 
@@ -142,7 +134,7 @@ export const useOrganization = () => {
         .select('id')
         .eq('organization_id', orgData.id)
         .eq('user_id', user!.id)
-        .single();
+        .maybeSingle();
 
       if (existingMember) {
         return { success: false, error: 'You are already a member of this organization' };
