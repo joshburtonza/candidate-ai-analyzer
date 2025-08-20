@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -20,6 +20,7 @@ export type Database = {
           endpoint: string
           id: string
           method: string
+          org_id: string | null
           processing_time_ms: number | null
           request_size: number | null
           response_size: number | null
@@ -31,6 +32,7 @@ export type Database = {
           endpoint: string
           id?: string
           method: string
+          org_id?: string | null
           processing_time_ms?: number | null
           request_size?: number | null
           response_size?: number | null
@@ -42,13 +44,22 @@ export type Database = {
           endpoint?: string
           id?: string
           method?: string
+          org_id?: string | null
           processing_time_ms?: number | null
           request_size?: number | null
           response_size?: number | null
           response_status?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       batch_uploads: {
         Row: {
@@ -56,6 +67,7 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           id: string
+          org_id: string | null
           processed_files: number | null
           status: string | null
           total_files: number
@@ -66,6 +78,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           id?: string
+          org_id?: string | null
           processed_files?: number | null
           status?: string | null
           total_files: number
@@ -76,12 +89,21 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           id?: string
+          org_id?: string | null
           processed_files?: number | null
           status?: string | null
           total_files?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "batch_uploads_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       candidate_notes: {
         Row: {
@@ -89,6 +111,7 @@ export type Database = {
           created_at: string | null
           id: string
           note_text: string
+          org_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -97,6 +120,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           note_text: string
+          org_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -105,6 +129,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           note_text?: string
+          org_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -116,6 +141,13 @@ export type Database = {
             referencedRelation: "cv_uploads"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "candidate_notes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       cv_uploads: {
@@ -124,6 +156,7 @@ export type Database = {
           file_size: number | null
           file_url: string
           id: string
+          org_id: string | null
           original_filename: string
           processing_status: string | null
           received_date: string | null
@@ -135,6 +168,7 @@ export type Database = {
           file_size?: number | null
           file_url: string
           id?: string
+          org_id?: string | null
           original_filename: string
           processing_status?: string | null
           received_date?: string | null
@@ -146,11 +180,79 @@ export type Database = {
           file_size?: number | null
           file_url?: string
           id?: string
+          org_id?: string | null
           original_filename?: string
           processing_status?: string | null
           received_date?: string | null
           source_email?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_uploads_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -159,6 +261,7 @@ export type Database = {
           attachments_count: number | null
           email_id: string
           id: string
+          org_id: string | null
           processed_at: string | null
           source_email: string
           user_id: string
@@ -167,6 +270,7 @@ export type Database = {
           attachments_count?: number | null
           email_id: string
           id?: string
+          org_id?: string | null
           processed_at?: string | null
           source_email: string
           user_id: string
@@ -175,11 +279,20 @@ export type Database = {
           attachments_count?: number | null
           email_id?: string
           id?: string
+          org_id?: string | null
           processed_at?: string | null
           source_email?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "processed_emails_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -212,6 +325,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          org_id: string | null
           search_criteria: Json
           search_name: string
           user_id: string
@@ -219,6 +333,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          org_id?: string | null
           search_criteria: Json
           search_name: string
           user_id: string
@@ -226,8 +341,41 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          org_id?: string | null
           search_criteria?: Json
           search_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_searches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -236,6 +384,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          org_id: string | null
           setting_key: string
           setting_value: Json | null
           updated_at: string | null
@@ -244,6 +393,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          org_id?: string | null
           setting_key: string
           setting_value?: Json | null
           updated_at?: string | null
@@ -252,18 +402,50 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          org_id?: string | null
           setting_key?: string
           setting_value?: Json | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      create_organization_with_membership: {
+        Args: {
+          _name: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _slug: string
+        }
+        Returns: string
+      }
+      get_user_org_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_organization_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -272,9 +454,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_manager: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_organization_manager: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
+      is_organization_member: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
+      is_recruiter: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "manager" | "recruiter"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -401,6 +599,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["manager", "recruiter"],
+    },
   },
 } as const
