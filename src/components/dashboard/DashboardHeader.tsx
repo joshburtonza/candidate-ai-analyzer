@@ -43,7 +43,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   return (
-    <div style={{ backgroundColor: '#253649' }} className="px-6 py-4 border-b border-gray-600/30">
+    <div className="bg-black border-b border-gray-800 px-6 py-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-wide">{title}</h1>
@@ -54,8 +54,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         
         <div className="flex items-center gap-3">
           {role && (
-            <div className="px-3 py-1.5 bg-gray-700/50 border border-gray-600 rounded-full">
-              <span className="text-sm font-medium text-white capitalize tracking-wide">
+            <div className="px-3 py-1.5 bg-pastel-purple/20 border border-pastel-purple/30 rounded-full">
+              <span className="text-sm font-medium text-pastel-purple capitalize tracking-wide">
                 {role}
               </span>
             </div>
@@ -63,12 +63,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           
           {/* View Mode Toggle */}
           {setViewMode && (
-            <div className="flex items-center gap-1 bg-gray-700/50 border border-gray-600 rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-gray-900 border border-gray-700 rounded-lg p-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-white text-gray-900' : 'text-gray-300 hover:text-white hover:bg-gray-600/50'}
+                className={viewMode === 'grid' ? 'bg-pastel-cyan text-black' : 'text-gray-300 hover:text-white hover:bg-gray-800'}
               >
                 <Grid className="h-4 w-4" />
               </Button>
@@ -76,7 +76,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-white text-gray-900' : 'text-gray-300 hover:text-white hover:bg-gray-600/50'}
+                className={viewMode === 'list' ? 'bg-pastel-cyan text-black' : 'text-gray-300 hover:text-white hover:bg-gray-800'}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -90,8 +90,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               size="sm"
               onClick={() => setShowStats(!showStats)}
               className={showStats 
-                ? 'bg-white text-gray-900 hover:bg-gray-100' 
-                : 'text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600'
+                ? 'bg-pastel-pink text-black hover:bg-pastel-pink/80' 
+                : 'text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700'
               }
             >
               <BarChart className="h-4 w-4 mr-2" />
@@ -107,7 +107,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 size="sm"
                 onClick={onExportCSV}
                 disabled={isExporting}
-                className="text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600"
+                className="text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
               >
                 <Download className="h-4 w-4 mr-2" />
                 CSV
@@ -117,7 +117,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 size="sm"
                 onClick={onExportPDF}
                 disabled={isExporting}
-                className="text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600"
+                className="text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
               >
                 <Download className="h-4 w-4 mr-2" />
                 PDF
@@ -131,7 +131,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard-v2')}
-              className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600"
+              className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
             >
               <BarChart3 className="h-4 w-4" />
               Manager View
@@ -141,7 +141,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600"
+              className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
             >
               <Users className="h-4 w-4" />
               Recruiter View
@@ -152,7 +152,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => navigate('/account')}
-            className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600"
+            className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
           >
             <Settings className="h-4 w-4" />
             Account
@@ -162,7 +162,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             variant="ghost"
             size="sm"
             onClick={handleSignOut}
-            className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-600/50 border border-gray-600"
+            className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
           >
             <LogOut className="h-4 w-4" />
             Sign Out

@@ -166,7 +166,7 @@ const sortedUploads = [...uploadsToShow].sort((a, b) => {
       : 'No uploads found';
 
     return (
-      <div style={{ backgroundColor: '#2d3e50' }} className="text-center py-12 border border-gray-600/30 rounded-2xl">
+      <div className="bg-black text-center py-12 border border-gray-800 rounded-2xl">
         <div className="text-gray-300 text-lg font-medium">{emptyMessage}</div>
         {selectedDate && (
           <p className="text-sm text-gray-400 mt-2">

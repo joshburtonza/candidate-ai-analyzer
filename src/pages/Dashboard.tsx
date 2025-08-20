@@ -249,7 +249,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1e2a3a' }}>
+    <div className="min-h-screen bg-black">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="space-y-8">
           <DashboardHeader 
@@ -278,20 +278,20 @@ const Dashboard = () => {
           <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'best')} className="space-y-6">
             <div className="flex justify-center">
-              <div className="flex bg-gray-700/30 border border-gray-600 rounded-xl p-1 max-w-md">
+              <div className="flex bg-gray-900 border border-gray-700 rounded-xl p-1 max-w-md">
                 <button
                   onClick={() => setActiveTab('all')}
                   className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 flex-1 ${
                     activeTab === 'all'
-                      ? 'bg-white text-gray-900 shadow-lg font-semibold'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-600/50'
+                      ? 'bg-pastel-cyan text-black shadow-lg font-semibold'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
                   }`}
                 >
                   <span>All Uploads</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                     activeTab === 'all'
-                      ? 'bg-gray-800 text-white'
-                      : 'bg-gray-600 text-gray-300'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-700 text-gray-300'
                   }`}>
                     {allUploadsCount}
                   </span>
@@ -300,15 +300,15 @@ const Dashboard = () => {
                   onClick={() => setActiveTab('best')}
                   className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 flex-1 ${
                     activeTab === 'best'
-                      ? 'bg-white text-gray-900 shadow-lg font-semibold'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-600/50'
+                      ? 'bg-pastel-pink text-black shadow-lg font-semibold'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-800'
                   }`}
                 >
                   <span>Best Candidates</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                     activeTab === 'best'
-                      ? 'bg-gray-800 text-white'
-                      : 'bg-gray-600 text-gray-300'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-700 text-gray-300'
                   }`}>
                     {bestCandidatesCount}
                   </span>
