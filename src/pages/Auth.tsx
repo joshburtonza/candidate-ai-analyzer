@@ -192,34 +192,6 @@ const Auth = () => {
   if (step === 'organization' && user && (selectedRole || role)) {
     return (
       <div className="min-h-screen bg-v2-bg">
-        {/* Floating elements */}
-        <motion.div
-          animate={{
-            x: [-30, window.innerWidth * 0.2],
-            y: [0, -5, 0],
-          }}
-          transition={{
-            x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
-          }}
-          className="absolute top-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-        >
-          🔍 Extracting skills...
-        </motion.div>
-        
-        <motion.div
-          animate={{
-            x: [window.innerWidth * 0.8, -30],
-            y: [0, -4, 0],
-          }}
-          transition={{
-            x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
-            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
-          }}
-          className="absolute top-32 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-        >
-          📊 Processing CVs...
-        </motion.div>
         
         <div className="flex items-center justify-center min-h-screen p-4 relative">
           <motion.div
@@ -270,34 +242,6 @@ const Auth = () => {
   if (step === 'role' && user && !hasRole) {
     return (
       <div className="min-h-screen bg-v2-bg">
-        {/* Floating elements */}
-        <motion.div
-          animate={{
-            x: [-30, window.innerWidth * 0.2],
-            y: [0, -5, 0],
-          }}
-          transition={{
-            x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-            y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
-          }}
-          className="absolute top-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-        >
-          🔍 Extracting skills...
-        </motion.div>
-        
-        <motion.div
-          animate={{
-            x: [window.innerWidth * 0.8, -30],
-            y: [0, -4, 0],
-          }}
-          transition={{
-            x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
-            y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
-          }}
-          className="absolute top-32 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-        >
-          💼 Senior Developer
-        </motion.div>
         
         <div className="flex items-center justify-center min-h-screen p-4 relative">
           <motion.div
@@ -352,76 +296,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-v2-bg">
-      {/* Floating extraction elements that move across screen */}
-      <motion.div
-        animate={{
-          x: [-30, window.innerWidth * 0.2],
-          y: [0, -5, 0],
-        }}
-        transition={{
-          x: { duration: 25, repeat: Infinity, ease: [0.4, 0, 0.6, 1] },
-          y: { duration: 4, repeat: Infinity, ease: [0.4, 0, 0.6, 1] }
-        }}
-        className="absolute top-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-      >
-        🔍 Extracting skills...
-      </motion.div>
-      
-      <motion.div
-        animate={{
-          x: [window.innerWidth * 0.8, -30],
-          y: [0, -4, 0],
-        }}
-        transition={{
-          x: { duration: 30, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 3 },
-          y: { duration: 5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 1.5 }
-        }}
-        className="absolute top-32 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-      >
-        📊 Processing CVs...
-      </motion.div>
-      
-      <motion.div
-        animate={{
-          x: [-35, window.innerWidth * 0.25],
-          y: [0, -6, 0],
-        }}
-        transition={{
-          x: { duration: 35, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 6 },
-          y: { duration: 4.5, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2.5 }
-        }}
-        className="absolute bottom-40 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-      >
-        🎯 Analyzing experience...
-      </motion.div>
-      
-      <motion.div
-        animate={{
-          x: [window.innerWidth * 0.7, -35],
-          y: [0, -4.5, 0],
-        }}
-        transition={{
-          x: { duration: 28, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 9 },
-          y: { duration: 3.8, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 0.8 }
-        }}
-        className="absolute bottom-20 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-      >
-        🚀 5+ years experience
-      </motion.div>
 
-      <motion.div
-        animate={{
-          x: [-25, window.innerWidth * 0.3],
-          y: [0, -5.5, 0],
-        }}
-        transition={{
-          x: { duration: 32, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 12 },
-          y: { duration: 4.2, repeat: Infinity, ease: [0.4, 0, 0.6, 1], delay: 2 }
-        }}
-        className="absolute top-1/2 text-v2-text-secondary text-sm font-mono bg-v2-surface px-3 py-1 rounded-lg border border-v2-border z-10"
-      >
-        💼 Senior Developer
-      </motion.div>
 
       <div className="flex items-center justify-center min-h-screen p-4 relative">      
         <motion.div
