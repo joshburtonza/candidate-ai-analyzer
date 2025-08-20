@@ -201,62 +201,7 @@ serve(async (req) => {
         console.log('Processing candidate data:', candidateData?.candidate_name || candidateData?.original_filename);
         console.log('Current employment field raw:', candidateData?.current_employment);
 
-        // Centralized country validation - replicate the logic from candidateFilters.ts
-        const APPROVED_COUNTRIES = [
-          // South Africa
-          'south africa', 'south african', 'sa', 'rsa', 'republic of south africa',
-          
-          // UAE
-          'uae', 'united arab emirates', 'emirates', 'dubai', 'abu dhabi', 'sharjah', 'ajman', 'fujairah', 'ras al khaimah', 'umm al quwain',
-          
-          // UK
-          'uk', 'united kingdom', 'britain', 'great britain', 'england', 'scotland', 'wales', 'northern ireland', 'british',
-          
-          // Ireland  
-          'ireland', 'irish', 'republic of ireland', 'eire',
-          
-          // USA
-          'usa', 'united states', 'united states of america', 'america', 'us', 'american', 'states',
-          
-          // New Zealand
-          'nz', 'new zealand', 'zealand', 'new zealander', 'kiwi',
-          
-          // Australia
-          'aus', 'australia', 'australian', 'aussie', 'oz',
-          
-          // Oman
-          'oman', 'omani', 'sultanate of oman', 'muscat',
-          
-          // Saudi Arabia
-          'saudi arabia', 'saudi', 'ksa', 'kingdom of saudi arabia', 'saudis', 'riyadh', 'jeddah', 'mecca', 'medina',
-          
-          // Kuwait
-          'kuwait', 'kuwaiti', 'state of kuwait', 'kuwait city'
-        ];
-
-        const normalizeCountryData = (countriesData: string | string[] | null | undefined): string => {
-          if (!countriesData) return '';
-          
-          if (typeof countriesData === 'string') {
-            return countriesData.toLowerCase().trim();
-          } else if (Array.isArray(countriesData)) {
-            return (countriesData as string[]).join(' ').toLowerCase().trim();
-          }
-          
-          return '';
-        };
-
-        const isCountryAllowed = (countriesData: string | string[] | null | undefined): boolean => {
-          const normalizedCountries = normalizeCountryData(countriesData);
-          
-          if (!normalizedCountries) {
-            return false; // Block empty/missing country data
-          }
-          
-          return APPROVED_COUNTRIES.some(approvedCountry => 
-            normalizedCountries.includes(approvedCountry)
-          );
-        };
+        // No country validation - accept all uploads from any country
 
         // Validate required fields - only source_email is truly required now
         const requiredFields = ['source_email'] as const;
@@ -274,7 +219,7 @@ serve(async (req) => {
         }
 
         // Accept all uploads - no country restrictions
-        console.log('Processing candidate from any country:', candidateData.candidate_name || 'Unknown name', 'Country:', normalizeCountryData(candidateData.countries) || 'NONE');
+        console.log('Processing candidate from any country:', candidateData.candidate_name || 'Unknown name', 'Country:', candidateData.countries || 'NONE');
 
         // Find the user that matches the source email
         console.log('Looking for user with email:', candidateData.source_email);
