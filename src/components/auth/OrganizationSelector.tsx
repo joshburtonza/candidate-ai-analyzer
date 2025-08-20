@@ -37,10 +37,10 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-white mb-2">
+          <h3 className="text-xl font-semibold text-v2-text-primary mb-2">
             Organization Setup
           </h3>
-          <p className="text-white/70">
+          <p className="text-v2-text-secondary">
             {selectedRole === 'manager' 
               ? "Create your organization or join an existing one"
               : "Join your organization"
@@ -52,15 +52,15 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
           {selectedRole === 'manager' && (
             <button
               onClick={() => setMode('create')}
-              className="w-full p-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-200 text-left group"
+              className="w-full p-6 bg-v2-surface hover:bg-v2-surface-hover border border-v2-border rounded-lg transition-all duration-200 text-left group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary/30 transition-colors">
                   <Building2 className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h4 className="text-white font-medium">Create Organization</h4>
-                  <p className="text-white/70 text-sm">Start a new organization and invite team members</p>
+                  <h4 className="text-v2-text-primary font-medium">Create Organization</h4>
+                  <p className="text-v2-text-secondary text-sm">Start a new organization and invite team members</p>
                 </div>
               </div>
             </button>
@@ -68,15 +68,15 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
 
           <button
             onClick={() => setMode('join')}
-            className="w-full p-6 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-200 text-left group"
+            className="w-full p-6 bg-v2-surface hover:bg-v2-surface-hover border border-v2-border rounded-lg transition-all duration-200 text-left group"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center group-hover:bg-secondary/30 transition-colors">
-                <Users className="w-6 h-6 text-secondary" />
+              <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center group-hover:bg-accent/30 transition-colors">
+                <Users className="w-6 h-6 text-accent" />
               </div>
               <div>
-                <h4 className="text-white font-medium">Join Organization</h4>
-                <p className="text-white/70 text-sm">Join an existing organization with an invite code</p>
+                <h4 className="text-v2-text-primary font-medium">Join Organization</h4>
+                <p className="text-v2-text-secondary text-sm">Join an existing organization with an invite code</p>
               </div>
             </div>
           </button>
@@ -89,24 +89,24 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-white mb-2">
+          <h3 className="text-xl font-semibold text-v2-text-primary mb-2">
             Create Organization
           </h3>
-          <p className="text-white/70">
+          <p className="text-v2-text-secondary">
             Give your organization a name to get started
           </p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="orgName" className="text-white">Organization Name</Label>
+            <Label htmlFor="orgName" className="text-v2-text-primary">Organization Name</Label>
             <Input
               id="orgName"
               type="text"
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
               placeholder="Enter organization name"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+              className="bg-v2-bg border-v2-border text-v2-text-primary placeholder:text-v2-text-secondary"
             />
           </div>
 
@@ -114,14 +114,14 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
             <Button
               onClick={() => setMode('select')}
               variant="outline"
-              className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/10"
+              className="flex-1 bg-v2-surface border-v2-border text-v2-text-primary hover:bg-v2-surface-hover"
             >
               Back
             </Button>
             <Button
               onClick={handleCreateOrg}
               disabled={!orgName.trim()}
-              className="flex-1 bg-primary hover:bg-primary/90"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create
@@ -135,24 +135,24 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-xl font-semibold text-white mb-2">
+        <h3 className="text-xl font-semibold text-v2-text-primary mb-2">
           Join Organization
         </h3>
-        <p className="text-white/70">
+        <p className="text-v2-text-secondary">
           Enter your organization's invite code or slug
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <Label htmlFor="orgSlug" className="text-white">Organization Code</Label>
+          <Label htmlFor="orgSlug" className="text-v2-text-primary">Organization Code</Label>
           <Input
             id="orgSlug"
             type="text"
             value={orgSlug}
             onChange={(e) => setOrgSlug(e.target.value)}
             placeholder="Enter organization code"
-            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+            className="bg-v2-bg border-v2-border text-v2-text-primary placeholder:text-v2-text-secondary"
           />
         </div>
 
@@ -160,14 +160,14 @@ export const OrganizationSelector = ({ selectedRole, onOrganizationSelect }: Org
           <Button
             onClick={() => setMode('select')}
             variant="outline"
-            className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/10"
+            className="flex-1 bg-v2-surface border-v2-border text-v2-text-primary hover:bg-v2-surface-hover"
           >
             Back
           </Button>
           <Button
             onClick={handleJoinOrg}
             disabled={!orgSlug.trim()}
-            className="flex-1 bg-secondary hover:bg-secondary/90"
+            className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground"
           >
             <Users className="w-4 h-4 mr-2" />
             Join

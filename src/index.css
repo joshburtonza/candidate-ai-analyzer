@@ -33,6 +33,14 @@
     --pastel-green: 120 100% 85%;
     --pastel-yellow: 60 100% 85%;
     --pastel-orange: 30 100% 85%;
+    
+    /* V2 Dashboard tokens */
+    --v2-bg: 0 0% 4%;
+    --v2-surface: 0 0% 8%;
+    --v2-surface-hover: 0 0% 12%;
+    --v2-border: 0 0% 15%;
+    --v2-text-primary: 0 0% 95%;
+    --v2-text-secondary: 0 0% 65%;
   }
 }
 

@@ -54,6 +54,14 @@ export default {
           yellow: 'hsl(var(--pastel-yellow))',
           orange: 'hsl(var(--pastel-orange))',
         },
+        v2: {
+          bg: 'hsl(var(--v2-bg))',
+          surface: 'hsl(var(--v2-surface))',
+          'surface-hover': 'hsl(var(--v2-surface-hover))',
+          border: 'hsl(var(--v2-border))',
+          'text-primary': 'hsl(var(--v2-text-primary))',
+          'text-secondary': 'hsl(var(--v2-text-secondary))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
