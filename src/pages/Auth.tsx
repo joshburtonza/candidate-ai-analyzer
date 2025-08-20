@@ -120,8 +120,8 @@ const Auth = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // Hard reload to avoid any limbo states and let guards route correctly
-        window.location.href = '/';
+        // Hard reload to avoid any limbo states and route via guards
+        window.location.href = '/dashboard';
         return; // Prevent further state updates after navigation
       }
     } catch (error: any) {
