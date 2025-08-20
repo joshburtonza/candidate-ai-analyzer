@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { useFeatureFlags } from '@/context/FeatureFlagsContext';
 import { useVertical } from '@/context/VerticalContext';
+import { DashboardV2Toggle } from './DashboardV2Toggle';
 import VerticalSelector from './VerticalSelector';
 import PresetSelector from './PresetSelector';
 
@@ -124,6 +125,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <Settings className="w-4 h-4 mr-2" />
           Settings
         </Button>
+        
+        <DashboardV2Toggle />
       </div>
     </div>
   );

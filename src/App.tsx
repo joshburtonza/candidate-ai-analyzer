@@ -10,6 +10,7 @@ import { FeatureFlagsProvider } from "@/context/FeatureFlagsContext";
 import { VerticalProvider } from "@/context/VerticalContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import DashboardV2 from "./pages/DashboardV2";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import CandidateProfile from "./pages/CandidateProfile";
@@ -47,6 +48,14 @@ const App = () => {
                     element={
                       <AuthGuard>
                         <Dashboard />
+                      </AuthGuard>
+                    } 
+                  />
+                  <Route 
+                    path="/dashboard-v2" 
+                    element={
+                      <AuthGuard>
+                        <DashboardV2 />
                       </AuthGuard>
                     } 
                   />
