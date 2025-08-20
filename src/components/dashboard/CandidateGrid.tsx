@@ -166,18 +166,13 @@ const sortedUploads = [...uploadsToShow].sort((a, b) => {
       : 'No uploads found';
 
     return (
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl rounded-2xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
-        
-        <div className="relative z-10 text-center py-12 border border-white/10 rounded-2xl">
-          <div className="text-white/80 text-lg font-medium">{emptyMessage}</div>
-          {selectedDate && (
-            <p className="text-sm text-white/60 mt-2">
-              Try selecting a different date or upload some CVs
-            </p>
-          )}
-        </div>
+      <div style={{ backgroundColor: '#2d3e50' }} className="text-center py-12 border border-gray-600/30 rounded-2xl">
+        <div className="text-gray-300 text-lg font-medium">{emptyMessage}</div>
+        {selectedDate && (
+          <p className="text-sm text-gray-400 mt-2">
+            Try selecting a different date or upload some CVs
+          </p>
+        )}
       </div>
     );
   }
