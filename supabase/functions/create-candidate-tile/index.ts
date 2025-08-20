@@ -258,8 +258,8 @@ serve(async (req) => {
           );
         };
 
-        // Validate required fields
-        const requiredFields = ['candidate_name', 'source_email'] as const;
+        // Validate required fields - only source_email is truly required now
+        const requiredFields = ['source_email'] as const;
         const missingFields = requiredFields.filter((field) => !(candidateData as any)[field]);
         if (missingFields.length > 0) {
           console.error('Missing required fields:', missingFields);
@@ -273,21 +273,8 @@ serve(async (req) => {
           };
         }
 
-        // Validate country restriction at ingestion
-        if (!isCountryAllowed(candidateData.countries)) {
-          const normalizedCountry = normalizeCountryData(candidateData.countries);
-          console.log('Blocking candidate due to country restriction:', candidateData.candidate_name, 'Country:', normalizedCountry || 'NONE');
-          return {
-            status: 400,
-            body: {
-              success: false,
-              error: 'Candidate from non-approved country',
-              candidate_name: candidateData.candidate_name,
-              country: normalizedCountry || 'No country provided',
-              message: 'Only candidates from approved countries (South Africa, UAE, UK, Ireland, USA, New Zealand, Australia, Oman, Saudi Arabia, Kuwait) are accepted',
-            },
-          };
-        }
+        // Accept all uploads - no country restrictions
+        console.log('Processing candidate from any country:', candidateData.candidate_name || 'Unknown name', 'Country:', normalizeCountryData(candidateData.countries) || 'NONE');
 
         // Find the user that matches the source email
         console.log('Looking for user with email:', candidateData.source_email);
@@ -310,22 +297,38 @@ serve(async (req) => {
         }
 
         if (!profile) {
-          console.error('No user found for email:', candidateData.source_email);
-          return {
-            status: 404,
-            body: {
-              success: false,
-              error: 'No user found for the provided source email',
-              source_email: candidateData.source_email,
-              message: 'Make sure a user with this email has signed up to the system',
-            },
-          };
+          console.log('No user found for email:', candidateData.source_email, 'attempting to assign to admin user');
+          // Try to find an admin user to assign the upload to
+          const { data: adminProfile, error: adminError } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .eq('is_admin', true)
+            .limit(1)
+            .maybeSingle();
+
+          if (adminError || !adminProfile) {
+            console.error('No admin user found to assign upload to:', adminError);
+            return {
+              status: 404,
+              body: {
+                success: false,
+                error: 'No user found for the provided source email and no admin available',
+                source_email: candidateData.source_email,
+                message: 'Make sure a user with this email has signed up to the system or an admin user exists',
+              },
+            };
+          }
+
+          // Use admin profile for the upload
+          profile = adminProfile;
+          console.log('Assigned upload to admin user:', adminProfile.email);
         }
 
         console.log('Found user profile:', profile.id, 'for email:', profile.email);
 
         // Check for existing candidate with same name or email (within same user)
-        console.log('Checking for existing candidate with name:', candidateData.candidate_name, 'or email:', candidateData.email_address);
+        const candidateName = candidateData.candidate_name || 'Unknown';
+        console.log('Checking for existing candidate with name:', candidateName, 'or email:', candidateData.email_address);
         let duplicateCandidate: any | null = null;
         try {
           const { data: existingCandidates, error: duplicateCheckError } = await supabase
@@ -384,7 +387,7 @@ serve(async (req) => {
 
         // If duplicate, merge
         if (duplicateCandidate) {
-          console.log('Found existing candidate, merging data for:', candidateData.candidate_name);
+          console.log('Found existing candidate, merging data for:', candidateName);
           const mergedData = mergeCandidateData(duplicateCandidate.extracted_json, candidateData);
 
           // Parse and validate the received date for merging
@@ -465,12 +468,13 @@ serve(async (req) => {
         }
 
         // Create the CV upload record with the mapped user ID - normalize data before storing
+        const candidateDisplayName = candidateData.candidate_name || 'Unknown Candidate';
         const cvUploadData = {
           user_id: profile.id,
           file_url: '',
-          original_filename: candidateData.original_filename || `${candidateData.candidate_name}_processed.json`,
+          original_filename: candidateData.original_filename || `${candidateDisplayName}_processed.json`,
           extracted_json: {
-            candidate_name: candidateData.candidate_name,
+            candidate_name: candidateDisplayName,
             email_address: candidateData.email_address || '',
             contact_number: candidateData.contact_number || '',
             educational_qualifications: candidateData.educational_qualifications || '',
@@ -515,7 +519,7 @@ serve(async (req) => {
             message: 'Candidate tile created successfully',
             action: 'created',
             id: (data as any)?.id,
-            candidate_name: candidateData.candidate_name,
+            candidate_name: candidateDisplayName,
             assigned_to_user: profile.email,
             user_id: profile.id,
           },
