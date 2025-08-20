@@ -427,6 +427,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_organization_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -444,6 +448,14 @@ export type Database = {
       }
       is_manager: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_organization_manager: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
+      is_organization_member: {
+        Args: { _org_id: string }
         Returns: boolean
       }
       is_recruiter: {
