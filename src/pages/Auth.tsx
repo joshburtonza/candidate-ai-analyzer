@@ -9,8 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Brain, Sparkles } from 'lucide-react';
 import { RoleSelector } from '@/components/auth/RoleSelector';
+import { OrganizationSelector } from '@/components/auth/OrganizationSelector';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/hooks/useOrganization';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -18,32 +20,38 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'manager' | 'recruiter' | null>(null);
-  const [step, setStep] = useState<'auth' | 'role'>('auth');
+  const [step, setStep] = useState<'auth' | 'role' | 'organization'>('auth');
   
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { hasRole, setUserRole, role } = useUserRole();
+  const { hasOrganization, createOrganization, joinOrganization } = useOrganization();
 
   useEffect(() => {
-    // Check if we need to show the role selection step
+    // Check if we need to show the role selection or organization step
     const stepParam = searchParams.get('step');
     if (stepParam === 'role' && user && !hasRole) {
       setStep('role');
+    } else if (stepParam === 'organization' && user && hasRole && !hasOrganization) {
+      setStep('organization');
     }
-  }, [searchParams, user, hasRole]);
+  }, [searchParams, user, hasRole, hasOrganization]);
 
   useEffect(() => {
-    // Redirect authenticated users with roles to appropriate dashboard
-    if (user && hasRole && role) {
+    // Redirect authenticated users with roles and organization to appropriate dashboard
+    if (user && hasRole && hasOrganization && role) {
       if (role === 'manager') {
         navigate('/dashboard-v2');
       } else if (role === 'recruiter') {
         navigate('/dashboard');
       }
+    } else if (user && hasRole && !hasOrganization) {
+      // User has role but needs organization
+      setStep('organization');
     }
-  }, [user, hasRole, role, navigate]);
+  }, [user, hasRole, hasOrganization, role, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,12 +113,8 @@ const Auth = () => {
           description: `You are now registered as a ${selectedRole}.`,
         });
         
-        // Redirect based on role
-        if (selectedRole === 'manager') {
-          navigate('/dashboard-v2');
-        } else {
-          navigate('/dashboard');
-        }
+        // Move to organization step
+        setStep('organization');
       } else {
         toast({
           title: "Error",
@@ -128,6 +132,111 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleOrganizationSetup = async (orgData: { action: 'create' | 'join'; name?: string; slug?: string }) => {
+    if (!selectedRole) return;
+    
+    setLoading(true);
+    try {
+      let result;
+      if (orgData.action === 'create' && orgData.name && orgData.slug) {
+        result = await createOrganization(orgData.name, orgData.slug, selectedRole);
+      } else if (orgData.action === 'join' && orgData.slug) {
+        result = await joinOrganization(orgData.slug, selectedRole);
+      } else {
+        toast({
+          title: "Error",
+          description: "Invalid organization data.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: orgData.action === 'create' ? 'Organization created successfully!' : 'Joined organization successfully!',
+        });
+        
+        // Navigate to appropriate dashboard based on role
+        if (selectedRole === 'manager') {
+          navigate('/dashboard-v2');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || 'Failed to setup organization.',
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'organization' && user && selectedRole) {
+    return (
+      <div className="min-h-screen text-white flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
+        {/* Background elements */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, #374151 1px, transparent 0)`,
+            backgroundSize: '20px 20px'
+          }}
+        />
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md relative z-10"
+        >
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-brand-gradient rounded-2xl mb-4 mx-auto shadow-lg shadow-slate-500/25"
+            >
+              <Brain className="w-8 h-8 text-slate-800" />
+            </motion.div>
+            <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+              APPLICHUB
+              <Sparkles className="w-6 h-6 text-slate-400" />
+            </h1>
+            <p className="text-gray-300">Set up your organization</p>
+          </div>
+
+          <Card className="bg-white/5 backdrop-blur-xl border border-slate-500/30 shadow-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+            <CardHeader className="text-center">
+              <CardTitle className="text-white">Organization Setup</CardTitle>
+              <CardDescription className="text-gray-300">
+                {selectedRole === 'manager' 
+                  ? "Create your organization or join an existing one"
+                  : "Join your organization"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <OrganizationSelector
+                selectedRole={selectedRole}
+                onOrganizationSelect={handleOrganizationSetup}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (step === 'role' && user && !hasRole) {
     return (
