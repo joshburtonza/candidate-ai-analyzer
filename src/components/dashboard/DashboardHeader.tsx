@@ -43,123 +43,135 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   return (
-    <div className="bg-card border-b border-border px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          {subtitle && (
-            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {role && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Role:</span>
-              <span className="text-sm font-medium text-foreground capitalize">
-                {role}
-              </span>
-            </div>
-          )}
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5"></div>
+      
+      <div className="relative z-10 px-6 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-wide">{title}</h1>
+            {subtitle && (
+              <p className="text-sm text-white/60 mt-1">{subtitle}</p>
+            )}
+          </div>
           
-          {/* View Mode Toggle */}
-          {setViewMode && (
-            <div className="flex items-center gap-1 border border-border rounded-lg p-1">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {role && (
+              <div className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-full backdrop-blur-sm">
+                <span className="text-sm font-medium text-white capitalize tracking-wide">
+                  {role}
+                </span>
+              </div>
+            )}
           
-          {/* Stats Toggle */}
-          {setShowStats && (
+            {/* View Mode Toggle */}
+            {setViewMode && (
+              <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-xl p-1 backdrop-blur-sm">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-white text-slate-800' : 'text-white/80 hover:text-white hover:bg-white/10'}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-white text-slate-800' : 'text-white/80 hover:text-white hover:bg-white/10'}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          
+            {/* Stats Toggle */}
+            {setShowStats && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowStats(!showStats)}
+                className={showStats 
+                  ? 'bg-white text-slate-800 hover:bg-white/90' 
+                  : 'text-white/80 hover:text-white hover:bg-white/10 border border-white/20'
+                }
+              >
+                <BarChart className="h-4 w-4 mr-2" />
+                Stats
+              </Button>
+            )}
+          
+            {/* Export Buttons */}
+            {onExportCSV && onExportPDF && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onExportCSV}
+                  disabled={isExporting}
+                  className="text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  CSV
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onExportPDF}
+                  disabled={isExporting}
+                  className="text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
+              </div>
+            )}
+          
+            {/* Role-based navigation button */}
+            {isManager ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard-v2')}
+                className="flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Manager View
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
+              >
+                <Users className="h-4 w-4" />
+                Recruiter View
+              </Button>
+            )}
+            
             <Button
-              variant={showStats ? 'default' : 'outline'}
+              variant="ghost"
               size="sm"
-              onClick={() => setShowStats(!showStats)}
+              onClick={() => navigate('/account')}
+              className="flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
             >
-              <BarChart className="h-4 w-4 mr-2" />
-              Stats
+              <Settings className="h-4 w-4" />
+              Account
             </Button>
-          )}
-          
-          {/* Export Buttons */}
-          {onExportCSV && onExportPDF && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onExportCSV}
-                disabled={isExporting}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                CSV
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onExportPDF}
-                disabled={isExporting}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                PDF
-              </Button>
-            </div>
-          )}
-          
-          {/* Role-based navigation button */}
-          {isManager ? (
+            
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={() => navigate('/dashboard-v2')}
-              className="flex items-center gap-2"
+              onClick={handleSignOut}
+              className="flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
             >
-              <BarChart3 className="h-4 w-4" />
-              Manager View
+              <LogOut className="h-4 w-4" />
+              Sign Out
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Recruiter View
-            </Button>
-          )}
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/account')}
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Account
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSignOut}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
+          </div>
         </div>
       </div>
     </div>
