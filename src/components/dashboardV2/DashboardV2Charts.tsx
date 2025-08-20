@@ -42,15 +42,22 @@ export function Bars({ series = [2,5,9,7,4,2] }: { series?: number[] }) {
   );
 }
 
-// Row stat component for country stats
-export function RowStat({ label, value }: { label: string; value: string }) {
+// Row stat component with pastel color support
+export function RowStat({ label, value, color = "white" }: { label: string; value: string; color?: string }) {
   const percentage = Math.min(100, parseFloat(value) / 400 * 100);
+  
+  const colorMap = {
+    "pastel-pink": "bg-pastel-pink/30",
+    "pastel-cyan": "bg-pastel-cyan/30", 
+    "pastel-yellow": "bg-pastel-yellow/30",
+    "white": "bg-white/20"
+  };
   
   return (
     <div className="grid grid-cols-[1fr_auto] items-center gap-3">
       <div className="h-2 w-full rounded-full bg-white/10">
         <div 
-          className="h-2 rounded-full bg-white/70 transition-all duration-300" 
+          className={`h-2 rounded-full transition-all duration-300 ${colorMap[color] || colorMap.white}`}
           style={{ width: `${percentage}%` }} 
         />
       </div>

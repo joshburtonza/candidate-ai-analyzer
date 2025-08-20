@@ -22,6 +22,7 @@ import { CVUpload } from '@/types/candidate';
 import { useAuth } from '@/hooks/useAuth';
 import { useFeatureFlags } from '@/context/FeatureFlagsContext';
 import { useVertical } from '@/context/VerticalContext';
+import { useNavigate } from 'react-router-dom';
 import { adaptCVUploadsToDashboardCandidates } from '@/utils/dashboardV2Adapter';
 import { filterValidCandidates, filterAllQualifiedCandidates } from '@/utils/candidateFilters';
 import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFilters';
@@ -40,6 +41,7 @@ import { ChatBubble } from '@/components/dashboardV2/ChatBubble';
 import { toast } from 'sonner';
 
 export default function DashboardV2() {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const { flags } = useFeatureFlags();
@@ -229,10 +231,10 @@ export default function DashboardV2() {
       <header className="sticky top-0 z-20 backdrop-blur-sm border-b border-border bg-background/90">
         <Container className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-2xl bg-foreground text-background font-bold">
-              CV
+            <div className="grid h-9 w-9 place-items-center rounded-2xl bg-pastel-cyan text-black font-bold">
+              M
             </div>
-            <div className="text-sm font-semibold">CV Dashboard</div>
+            <div className="text-sm font-semibold">Manager Dashboard</div>
             <DashBadge>Recruiting</DashBadge>
           </div>
           
@@ -245,6 +247,9 @@ export default function DashboardV2() {
           </div>
           
           <div className="flex items-center gap-3">
+            <DashButton variant="ghost" onClick={() => navigate('/recruiter')}>
+              Recruiter View
+            </DashButton>
             <button className="grid h-9 w-9 place-items-center rounded-full border border-border bg-secondary hover:bg-accent transition-colors">
               <Bell className="h-4 w-4" />
             </button>
@@ -287,47 +292,54 @@ export default function DashboardV2() {
             {/* Left column — stats & widgets */}
             <div className="space-y-6 lg:col-span-2">
               <div className="grid gap-6 md:grid-cols-3">
-                <Widget tone="accent" className="md:col-span-2">
-                  <div className="mb-2 text-sm opacity-70">CV Applications</div>
-                  <div className="text-4xl font-bold text-white">
+                <Widget tone="purple" className="md:col-span-2">
+                  <div className="mb-2 text-sm opacity-70">CV Applications Growth</div>
+                  <div className="text-4xl font-bold text-pastel-purple">
                     +{Math.round((uploads.length / 100) * 100)}%
                   </div>
                   <Dots series={[2,3,2,4,6,5,2,3,6,7,5,3]} />
                 </Widget>
                 
                 <DashCard className="md:col-span-1">
-                  <div className="mb-2 text-sm text-muted-foreground">This month</div>
-                  <div className="text-3xl font-semibold">+{Math.round((bestCandidates.length / uploads.length) * 100)}%</div>
+                  <div className="mb-2 text-sm text-muted-foreground">Conversion Rate</div>
+                  <div className="text-3xl font-semibold text-pastel-cyan">+{Math.round((bestCandidates.length / uploads.length) * 100)}%</div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-lg p-4 text-center bg-secondary">All</div>
-                    <div className="rounded-lg p-4 text-center bg-accent">Best</div>
+                    <div className="rounded-lg p-4 text-center bg-pastel-cyan/10 border border-pastel-cyan/20">
+                      <div className="text-xs text-pastel-cyan">All</div>
+                      <div className="font-bold text-white">{uploads.length}</div>
+                    </div>
+                    <div className="rounded-lg p-4 text-center bg-pastel-green/10 border border-pastel-green/20">
+                      <div className="text-xs text-pastel-green">Best</div>
+                      <div className="font-bold text-white">{bestCandidates.length}</div>
+                    </div>
                   </div>
                 </DashCard>
 
                 <DashCard className="md:col-span-1">
-                  <div className="mb-3 text-sm text-muted-foreground">Top locations</div>
+                  <div className="mb-3 text-sm text-muted-foreground">Top Locations</div>
                   <div className="space-y-3 text-sm">
-                    <RowStat label="South Africa" value={`${Math.floor(uploads.length * 0.4)}`} />
-                    <RowStat label="Remote" value={`${Math.floor(uploads.length * 0.3)}`} />
-                    <RowStat label="Other" value={`${Math.floor(uploads.length * 0.3)}`} />
+                    <RowStat label="South Africa" value={`${Math.floor(uploads.length * 0.4)}`} color="pastel-pink" />
+                    <RowStat label="Remote" value={`${Math.floor(uploads.length * 0.3)}`} color="pastel-cyan" />
+                    <RowStat label="Other" value={`${Math.floor(uploads.length * 0.3)}`} color="pastel-yellow" />
                   </div>
                 </DashCard>
 
-                <Widget tone="dark" className="md:col-span-1">
-                  <div className="mb-2 text-sm opacity-70">Applications</div>
-                  <div className="text-4xl font-bold text-white">
+                <Widget tone="cyan" className="md:col-span-1">
+                  <div className="mb-2 text-sm opacity-70">Total Applications</div>
+                  <div className="text-4xl font-bold text-pastel-cyan">
                     {uploads.length}
                   </div>
                   <Bars series={[uploads.length > 50 ? 6 : 2, uploads.length > 30 ? 5 : 3, uploads.length > 20 ? 9 : 4, uploads.length > 10 ? 7 : 2, 4, 2]} />
                 </Widget>
 
-                <DashCard className="md:col-span-1">
-                  <div className="mb-2 text-sm text-muted-foreground">Conversion rate</div>
+                <Widget tone="green" className="md:col-span-1">
+                  <div className="mb-2 text-sm opacity-70">Quality Score</div>
                   <div className="flex items-center justify-between">
-                    <div className="text-3xl font-semibold">{bestCandidates.length}</div>
-                    <ArrowUpRight className="h-5 w-5 text-green-500" />
+                    <div className="text-3xl font-semibold text-pastel-green">{bestCandidates.length}</div>
+                    <ArrowUpRight className="h-5 w-5 text-pastel-green" />
                   </div>
-                </DashCard>
+                  <div className="mt-2 text-xs text-white/70">Qualified candidates</div>
+                </Widget>
               </div>
 
               <DashCard>
@@ -369,15 +381,17 @@ export default function DashboardV2() {
                 
                 <div className="grid gap-3 md:grid-cols-4">
                   {[
-                    { label: 'Applied', v: uploads.length },
-                    { label: 'Screened', v: Math.floor(uploads.length * 0.6) },
-                    { label: 'Interviewing', v: Math.floor(bestCandidates.length * 0.5) },
-                    { label: 'Offer', v: Math.floor(bestCandidates.length * 0.2) },
+                    { label: 'Applied', v: uploads.length, color: 'pastel-purple' },
+                    { label: 'Screened', v: Math.floor(uploads.length * 0.6), color: 'pastel-cyan' },
+                    { label: 'Interviewing', v: Math.floor(bestCandidates.length * 0.5), color: 'pastel-pink' },
+                    { label: 'Offer', v: Math.floor(bestCandidates.length * 0.2), color: 'pastel-green' },
                   ].map(x => (
-                    <div key={x.label} className="rounded-2xl p-4 border border-border bg-secondary/50">
-                      <div className="text-sm text-muted-foreground">{x.label}</div>
-                      <div className="mt-1 text-2xl font-semibold">{x.v}</div>
-                      <Progress value={Math.min(100, x.v * 2)} />
+                    <div key={x.label} className={`rounded-2xl p-4 border bg-${x.color}/10 border-${x.color}/20`}>
+                      <div className={`text-sm text-${x.color}`}>{x.label}</div>
+                      <div className="mt-1 text-2xl font-semibold text-white">{x.v}</div>
+                      <div className="h-2 w-full mt-2 rounded-full bg-white/10">
+                        <div className={`h-2 rounded-full bg-${x.color}/60`} style={{ width: `${Math.min(100, x.v * 2)}%` }} />
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -23,22 +23,28 @@ export const DashCard = ({ children, className = "" }: { children: React.ReactNo
   </div>
 );
 
-// Widget using black/dark design system colors
+// Widget using black base with pastel accents
 export const Widget = ({ 
   tone = "dark", 
   children, 
   className = "" 
 }: { 
-  tone?: 'accent' | 'dark'; 
+  tone?: 'purple' | 'cyan' | 'pink' | 'green' | 'yellow' | 'orange' | 'dark'; 
   children: React.ReactNode; 
   className?: string; 
 }) => {
-  const bgClass = tone === 'accent' 
-    ? 'bg-gradient-to-br from-white/10 to-white/5 text-white border border-white/10'
-    : 'bg-gradient-to-br from-black/80 to-black/60 text-white border border-white/10';
+  const bgClasses = {
+    purple: 'bg-gradient-to-br from-pastel-purple/20 to-pastel-purple/10 text-white border border-pastel-purple/30',
+    cyan: 'bg-gradient-to-br from-pastel-cyan/20 to-pastel-cyan/10 text-white border border-pastel-cyan/30',
+    pink: 'bg-gradient-to-br from-pastel-pink/20 to-pastel-pink/10 text-white border border-pastel-pink/30',
+    green: 'bg-gradient-to-br from-pastel-green/20 to-pastel-green/10 text-white border border-pastel-green/30',
+    yellow: 'bg-gradient-to-br from-pastel-yellow/20 to-pastel-yellow/10 text-white border border-pastel-yellow/30',
+    orange: 'bg-gradient-to-br from-pastel-orange/20 to-pastel-orange/10 text-white border border-pastel-orange/30',
+    dark: 'bg-gradient-to-br from-black/80 to-black/60 text-white border border-white/10'
+  };
     
   return (
-    <div className={cn("rounded-3xl p-5", bgClass, className)}>
+    <div className={cn("rounded-3xl p-5", bgClasses[tone], className)}>
       {children}
     </div>
   );

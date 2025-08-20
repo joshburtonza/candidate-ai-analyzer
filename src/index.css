@@ -11,20 +11,28 @@
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 95%;
-    --primary: 0 0% 15%;
-    --primary-foreground: 0 0% 95%;
+    --primary: 280 100% 85%;
+    --primary-foreground: 0 0% 10%;
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 95%;
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 60%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 180 100% 85%;
+    --accent-foreground: 0 0% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 18%;
     --input: 0 0% 12%;
-    --ring: 0 0% 25%;
+    --ring: 280 100% 85%;
     --radius: 0.5rem;
+    
+    /* Pastel accent colors */
+    --pastel-purple: 280 100% 85%;
+    --pastel-cyan: 180 100% 85%;
+    --pastel-pink: 330 100% 85%;
+    --pastel-green: 120 100% 85%;
+    --pastel-yellow: 60 100% 85%;
+    --pastel-orange: 30 100% 85%;
   }
 }
 
