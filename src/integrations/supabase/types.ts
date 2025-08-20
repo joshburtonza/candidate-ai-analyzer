@@ -423,6 +423,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_organization_with_membership: {
+        Args: {
+          _name: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _slug: string
+        }
+        Returns: string
+      }
       get_user_org_id: {
         Args: Record<PropertyKey, never>
         Returns: string
