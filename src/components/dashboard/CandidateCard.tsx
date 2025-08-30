@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
 import { isUploadedToday } from '@/utils/candidateFilters';
 import { format } from 'date-fns';
-import { parseCurrentEmployment, parseEducation } from '@/utils/candidateDataParser';
+import { parseCurrentEmployment, parseEducation, parseJobHistoryList } from '@/utils/candidateDataParser';
 import { getEffectiveDateString } from '@/utils/dateUtils';
 
 interface CandidateCardProps {
@@ -43,9 +43,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
 
-  // Parse employment and education data
+  // Parse employment, education, and job history data
   const employment = parseCurrentEmployment(data.current_employment, data.job_history);
   const education = parseEducation(data.educational_qualifications);
+  const jobHistoryBullets = parseJobHistoryList(data.job_history);
 
   // Check if uploaded today and format date - use consistent date string logic
   const uploadedToday = isUploadedToday(upload);
@@ -144,28 +145,6 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               )}
             </div>
 
-            {/* Contact Info */}
-            <div className="space-y-3">
-              {data.email_address && (
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Mail className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{data.email_address}</span>
-                </div>
-              )}
-              {data.contact_number && (
-                <div className="flex items-center gap-3 text-gray-300">
-                  <Phone className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{data.contact_number}</span>
-                </div>
-              )}
-              {countries && (
-                <div className="flex items-center gap-3 text-gray-300">
-                  <MapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{countries}</span>
-                </div>
-              )}
-            </div>
-
             {/* Current Employment Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -194,6 +173,24 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 </div>
               </div>
             </div>
+
+            {/* Job History Section */}
+            {jobHistoryBullets.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">JOB HISTORY</h4>
+                </div>
+                <div className="space-y-2 ml-3">
+                  {jobHistoryBullets.slice(0, 3).map((bullet, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
+                      <span className="text-sm text-gray-300 leading-relaxed">{bullet}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Education Section */}
             <div className="space-y-3">

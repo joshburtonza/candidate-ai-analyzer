@@ -106,6 +106,38 @@ const parseEmploymentText = (text: string): { jobTitle: string; company: string;
   };
 };
 
+export const parseJobHistoryList = (jobHistory?: string): string[] => {
+  if (!jobHistory || !jobHistory.trim()) {
+    return [];
+  }
+  
+  const text = jobHistory.trim();
+  
+  // Split by common separators and clean up
+  const lines = text.split(/\n|•|\*|-|\|/).filter(line => line.trim());
+  
+  // Process each line to create clean bullet points
+  const bullets = lines.map(line => {
+    let cleanLine = line.trim();
+    
+    // Remove leading bullets, numbers, or separators
+    cleanLine = cleanLine.replace(/^[\s•\*\-\d\.\)]+/, '').trim();
+    
+    // Skip empty lines or very short lines (less than 10 characters)
+    if (cleanLine.length < 10) return null;
+    
+    // Capitalize first letter if needed
+    if (cleanLine.length > 0) {
+      cleanLine = cleanLine.charAt(0).toUpperCase() + cleanLine.slice(1);
+    }
+    
+    return cleanLine;
+  }).filter((line): line is string => line !== null);
+  
+  // Return unique bullets (remove duplicates)
+  return [...new Set(bullets)];
+};
+
 export const parseEducation = (educationalQualifications: string): ParsedEducation => {
   if (!educationalQualifications || !educationalQualifications.trim()) {
     return {

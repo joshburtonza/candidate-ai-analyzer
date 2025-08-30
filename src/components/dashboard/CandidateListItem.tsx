@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, MapPin, Eye, Trash2, Briefcase, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteCandidate } from '@/hooks/useDeleteCandidate';
-import { parseCurrentEmployment, parseEducation } from '@/utils/candidateDataParser';
+import { parseCurrentEmployment, parseEducation, parseJobHistoryList } from '@/utils/candidateDataParser';
 
 interface CandidateListItemProps {
   upload: CVUpload;
@@ -32,9 +32,10 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
   const rawScore = parseFloat(data.score || '0');
   const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
 
-  // Parse employment and education data
+  // Parse employment, education, and job history data
   const employment = parseCurrentEmployment(data.current_employment, data.job_history);
   const education = parseEducation(data.educational_qualifications);
+  const jobHistoryBullets = parseJobHistoryList(data.job_history);
   
   // Handle countries as both string and array
   const countries = normalizeToString(data.countries);
@@ -89,27 +90,17 @@ export const CandidateListItem = ({ upload, onDelete }: CandidateListItemProps) 
               {data.candidate_name || 'Unknown'}
             </h3>
             
-            {/* Contact Info - Vertical Stack */}
-            <div className="space-y-0.5 text-xs text-gray-400">
-              {data.email_address && (
-                <div className="flex items-center gap-1.5">
-                  <Mail className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{data.email_address}</span>
-                </div>
-              )}
-              {data.contact_number && (
-                <div className="flex items-center gap-1.5">
-                  <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{data.contact_number}</span>
-                </div>
-              )}
-              {countries && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                  <span className="truncate">{countries}</span>
-                </div>
-              )}
-            </div>
+            {/* Job History Bullets - Show 1-2 bullets */}
+            {jobHistoryBullets.length > 0 && (
+              <div className="space-y-1 mt-2">
+                {jobHistoryBullets.slice(0, 2).map((bullet, index) => (
+                  <div key={index} className="flex items-start gap-1.5">
+                    <div className="w-1 h-1 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <span className="text-xs text-gray-400 leading-relaxed truncate">{bullet}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
