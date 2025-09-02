@@ -86,18 +86,18 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 via-transparent to-slate-500/5 rounded-2xl"></div>
         
         {/* Content */}
-        <div className="relative z-10 p-8 border border-white/10 rounded-2xl h-full flex flex-col">
+        <div className="relative z-10 p-6 border border-white/10 rounded-2xl h-full flex flex-col">
           {/* Upload Date Badge */}
           <div className="absolute top-4 left-4 z-20">
             <Badge
               variant="secondary"
-              className={`text-xs px-2 py-1 rounded-xl ${
+              className={`text-xs px-3 py-1.5 rounded-lg ${
                 uploadedToday 
                   ? 'bg-green-500/20 text-green-400 border-green-500/30' 
                   : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
               }`}
             >
-              <Clock className="w-3 h-3 mr-1" />
+              <Clock className="w-3 h-3 mr-1.5" />
               {uploadedToday ? 'Today' : formattedDate}
             </Badge>
           </div>
@@ -108,7 +108,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             disabled={isDeleting}
             variant="ghost"
             size="sm"
-            className="absolute top-4 right-4 z-20 w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 rounded-xl transition-all duration-200 hover:scale-110"
+            className="absolute top-4 right-4 z-20 w-9 h-9 p-0 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 rounded-lg transition-all duration-200 hover:scale-105"
             title={`Delete ${data.candidate_name || 'candidate'}`}
           >
             {isDeleting ? (
@@ -118,15 +118,15 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             )}
           </Button>
 
-          <div className="space-y-6 flex-1 flex flex-col mt-8">
+          <div className="space-y-5 flex-1 flex flex-col mt-12">
             {/* Header with Avatar and Score */}
-            <div className="flex items-center justify-between pr-12">
+            <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-4 bg-slate-500/10 rounded-xl w-16 h-16 flex items-center justify-center border border-slate-500/20">
-                  <User className="w-8 h-8 text-slate-400" />
+                <div className="p-3 bg-slate-500/10 rounded-lg w-14 h-14 flex items-center justify-center border border-slate-500/20">
+                  <User className="w-7 h-7 text-slate-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white group-hover:text-slate-400 transition-colors">
+                  <h3 className="text-lg font-bold text-white group-hover:text-slate-400 transition-colors">
                     {data.candidate_name || 'Unknown'}
                   </h3>
                 </div>
@@ -135,10 +135,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               {/* Score Circle - only show if score exists */}
               {data.score && (
                 <div className="relative flex-shrink-0">
-                  <div className="w-16 h-16 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
-                    <span className="font-bold text-xl text-slate-800">{score}</span>
+                  <div className="w-14 h-14 rounded-full bg-brand-gradient flex items-center justify-center shadow-lg">
+                    <span className="font-bold text-lg text-slate-800">{score}</span>
                   </div>
-                  <div className="text-center mt-2">
+                  <div className="text-center mt-1.5">
                     <span className="text-xs text-gray-400 font-medium tracking-wider">SCORE</span>
                   </div>
                 </div>
@@ -148,18 +148,18 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             {/* Current Employment Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                <h4 className="text-sm font-bold text-gray-300 tracking-wider">CURRENT EMPLOYMENT</h4>
+                <div className="w-1 h-5 bg-slate-400 rounded"></div>
+                <h4 className="text-sm font-bold text-gray-300 tracking-wider">EMPLOYMENT</h4>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
+              <div className="pl-3">
+                <div className="flex items-start gap-3">
                   <Briefcase className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-white truncate">
                       {employment.jobTitle}
                     </div>
                     {employment.company && (
-                      <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
                         <Building2 className="w-3 h-3" />
                         <span className="truncate">{employment.company}</span>
                       </div>
@@ -178,10 +178,10 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             {jobHistoryBullets.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1 h-6 bg-slate-400 rounded"></div>
-                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">JOB HISTORY</h4>
+                  <div className="w-1 h-5 bg-slate-400 rounded"></div>
+                  <h4 className="text-sm font-bold text-gray-300 tracking-wider">EXPERIENCE</h4>
                 </div>
-                <div className="space-y-2 ml-3">
+                <div className="space-y-2 pl-3">
                   {jobHistoryBullets.slice(0, 3).map((bullet, index) => (
                     <div key={index} className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
@@ -195,18 +195,18 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             {/* Education Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-1 h-6 bg-slate-400 rounded"></div>
+                <div className="w-1 h-5 bg-slate-400 rounded"></div>
                 <h4 className="text-sm font-bold text-gray-300 tracking-wider">EDUCATION</h4>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
+              <div className="pl-3">
+                <div className="flex items-start gap-3">
                   <GraduationCap className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium text-white truncate">
                       {education.degree}
                     </div>
                     {education.institution && (
-                      <div className="text-xs text-gray-400 truncate">
+                      <div className="text-xs text-gray-400 truncate mt-1">
                         {education.institution}
                       </div>
                     )}
@@ -236,11 +236,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: isHovered ? 1 : 0 }}
               transition={{ duration: 0.2 }}
-              className="mt-auto"
+              className="mt-4"
             >
               <Button
                 onClick={() => navigate(`/candidate/${upload.id}`)}
-                className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold shadow-lg shadow-slate-400/25 rounded-xl"
+                className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold shadow-lg shadow-slate-400/25 rounded-lg"
               >
                 <Eye className="w-4 h-4 mr-2" />
                 VIEW PROFILE
