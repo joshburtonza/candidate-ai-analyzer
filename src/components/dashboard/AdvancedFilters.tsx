@@ -1,143 +1,62 @@
-
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, X, MapPin, Award, Briefcase } from 'lucide-react';
-import { CVUpload } from '@/types/candidate';
-import { filterValidCandidates } from '@/utils/candidateFilters';
+import { Search, Filter, X, MapPin, Award, Briefcase, Mail, Calendar } from 'lucide-react';
+import { AdvancedFilterState } from '@/utils/applyDashboardFilters';
 
 interface AdvancedFiltersProps {
-  uploads: CVUpload[];
-  onFilterChange: (filtered: CVUpload[]) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  value: AdvancedFilterState;
+  onChange: (next: AdvancedFilterState) => void;
+  sourceEmailOptions: string[];
+  availableCountries: string[];
+  availableSkills: string[];
 }
 
-// Helper functions to safely handle array or string data
-const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
-  if (!value) return [];
-  if (Array.isArray(value)) {
-    return value.filter(item => item && item.trim()).map(item => item.trim());
-  }
-  if (typeof value === 'string') {
-    return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
-  }
-  return [];
-};
-
-export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearchChange }: AdvancedFiltersProps) => {
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [scoreRange, setScoreRange] = useState<[number, number]>([5, 10]);
+export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ 
+  value, 
+  onChange, 
+  sourceEmailOptions,
+  availableCountries,
+  availableSkills
+}) => {
   const [showFilters, setShowFilters] = useState(false);
 
-  // Memoize the valid uploads to prevent recalculation
-  const validUploads = useMemo(() => {
-    return filterValidCandidates(uploads);
-  }, [uploads]);
-
-  // Extract unique countries with proper handling of both arrays and strings - memoized
-  const availableCountries = useMemo(() => {
-    const countrySet = new Set<string>();
-    validUploads.forEach(upload => {
-      const countries = upload.extracted_json?.countries;
-      const countryArray = normalizeToArray(countries);
-      countryArray.forEach(country => {
-        if (country) countrySet.add(country);
-      });
-    });
-    return Array.from(countrySet).sort();
-  }, [validUploads]);
-
-  // Extract unique skills with proper handling of both arrays and strings - memoized
-  const availableSkills = useMemo(() => {
-    const skillSet = new Set<string>();
-    validUploads.forEach(upload => {
-      const skills = upload.extracted_json?.current_employment;
-      const skillArray = normalizeToArray(skills);
-      skillArray.forEach(skill => {
-        if (skill) skillSet.add(skill);
-      });
-    });
-    return Array.from(skillSet).sort();
-  }, [validUploads]);
-
-  // Debounced filter application
-  const applyFilters = useCallback(() => {
-    let filtered = validUploads;
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(upload => {
-        const data = upload.extracted_json!;
-        return (
-          data.candidate_name?.toLowerCase().includes(query) ||
-          data.email_address?.toLowerCase().includes(query) ||
-          normalizeToArray(data.current_employment).some(skill => skill.toLowerCase().includes(query)) ||
-          normalizeToArray(data.countries).some(country => country.toLowerCase().includes(query))
-        );
-      });
-    }
-
-    // Country filter
-    if (selectedCountries.length > 0) {
-      filtered = filtered.filter(upload => {
-        const countries = normalizeToArray(upload.extracted_json?.countries);
-        return selectedCountries.some(selectedCountry =>
-          countries.some(country => country.toLowerCase().includes(selectedCountry.toLowerCase()))
-        );
-      });
-    }
-
-    // Skills filter
-    if (selectedSkills.length > 0) {
-      filtered = filtered.filter(upload => {
-        const skills = normalizeToArray(upload.extracted_json?.current_employment);
-        return selectedSkills.some(selectedSkill =>
-          skills.some(skill => skill.toLowerCase().includes(selectedSkill.toLowerCase()))
-        );
-      });
-    }
-
-    // Score filter
-    filtered = filtered.filter(upload => {
-      const rawScore = parseFloat(upload.extracted_json?.score || '0');
-      const score = rawScore > 10 ? Math.round(rawScore / 10) : Math.round(rawScore);
-      return score >= scoreRange[0] && score <= scoreRange[1];
-    });
-
-    onFilterChange(filtered);
-  }, [validUploads, searchQuery, selectedCountries, selectedSkills, scoreRange, onFilterChange]);
-
-  // Apply filters with debouncing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      applyFilters();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [applyFilters]);
+  const updateFilter = useCallback((updates: Partial<AdvancedFilterState>) => {
+    onChange({ ...value, ...updates });
+  }, [value, onChange]);
 
   const clearFilters = useCallback(() => {
-    setSelectedCountries([]);
-    setSelectedSkills([]);
-    setScoreRange([5, 10]);
-    onSearchChange('');
-  }, [onSearchChange]);
+    onChange({});
+  }, [onChange]);
 
   const removeCountry = useCallback((country: string) => {
-    setSelectedCountries(prev => prev.filter(c => c !== country));
-  }, []);
+    const newCountries = (value.countries || []).filter(c => c !== country);
+    updateFilter({ countries: newCountries.length > 0 ? newCountries : undefined });
+  }, [value.countries, updateFilter]);
 
   const removeSkill = useCallback((skill: string) => {
-    setSelectedSkills(prev => prev.filter(s => s !== skill));
-  }, []);
+    const newSkills = (value.skills || []).filter(s => s !== skill);
+    updateFilter({ skills: newSkills.length > 0 ? newSkills : undefined });
+  }, [value.skills, updateFilter]);
 
-  const activeFiltersCount = selectedCountries.length + selectedSkills.length + (scoreRange[0] > 5 || scoreRange[1] < 10 ? 1 : 0);
+  const removeSourceEmail = useCallback((email: string) => {
+    const newEmails = (value.sourceEmails || []).filter(e => e !== email);
+    updateFilter({ sourceEmails: newEmails.length > 0 ? newEmails : undefined });
+  }, [value.sourceEmails, updateFilter]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (value.search && value.search.length >= 2) count++;
+    if (value.countries?.length) count++;
+    if (value.skills?.length) count++;
+    if (value.sourceEmails?.length) count++;
+    if (value.dateFrom || value.dateTo) count++;
+    if ((value.scoreMin !== undefined && value.scoreMin > 5) || (value.scoreMax !== undefined && value.scoreMax < 10)) count++;
+    return count;
+  }, [value]);
 
   return (
     <div className="glass-card elegant-border p-6 rounded-xl space-y-4">
@@ -148,8 +67,8 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
             <Input
               type="text"
               placeholder="Search candidates..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={value.search || ''}
+              onChange={(e) => updateFilter({ search: e.target.value || undefined })}
               className="pl-10 bg-white/5 backdrop-blur-xl border-brand/30 text-white placeholder:text-white/50"
             />
           </div>
@@ -178,6 +97,78 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
 
       {showFilters && (
         <div className="space-y-6 border-t border-white/10 pt-4">
+          {/* Date Range Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-brand" />
+              <label className="text-sm font-medium text-white">Date Range</label>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-white/70 mb-1 block">From</label>
+                <Input
+                  type="date"
+                  value={value.dateFrom || ''}
+                  onChange={(e) => updateFilter({ dateFrom: e.target.value || null })}
+                  className="bg-white/5 border-brand/30 text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-white/70 mb-1 block">To</label>
+                <Input
+                  type="date"
+                  value={value.dateTo || ''}
+                  onChange={(e) => updateFilter({ dateTo: e.target.value || null })}
+                  className="bg-white/5 border-brand/30 text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Source Email Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-brand" />
+              <label className="text-sm font-medium text-white">Source Email</label>
+            </div>
+            <Select
+              onValueChange={(selectedEmail) => {
+                const current = value.sourceEmails || [];
+                if (!current.includes(selectedEmail)) {
+                  updateFilter({ sourceEmails: [...current, selectedEmail] });
+                }
+              }}
+            >
+              <SelectTrigger className="bg-white/5 border-brand/30 text-white">
+                <SelectValue placeholder="Select source emails..." />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-brand/30 text-white max-h-48 overflow-auto">
+                {sourceEmailOptions.map(email => (
+                  <SelectItem key={email} value={email}>
+                    {email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {value.sourceEmails && value.sourceEmails.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {value.sourceEmails.map(email => (
+                  <Badge
+                    key={email}
+                    variant="secondary"
+                    className="bg-purple-500/20 text-purple-300 border-purple-500/30"
+                  >
+                    {email}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer"
+                      onClick={() => removeSourceEmail(email)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Country Filter */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -185,9 +176,10 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
               <label className="text-sm font-medium text-white">Countries</label>
             </div>
             <Select
-              onValueChange={(value) => {
-                if (!selectedCountries.includes(value)) {
-                  setSelectedCountries([...selectedCountries, value]);
+              onValueChange={(selectedCountry) => {
+                const current = value.countries || [];
+                if (!current.includes(selectedCountry)) {
+                  updateFilter({ countries: [...current, selectedCountry] });
                 }
               }}
             >
@@ -202,9 +194,9 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
                 ))}
               </SelectContent>
             </Select>
-            {selectedCountries.length > 0 && (
+            {value.countries && value.countries.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {selectedCountries.map(country => (
+                {value.countries.map(country => (
                   <Badge
                     key={country}
                     variant="secondary"
@@ -225,12 +217,13 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-brand" />
-              <label className="text-sm font-medium text-white">Skills</label>
+              <label className="text-sm font-medium text-white">Skills (AND)</label>
             </div>
             <Select
-              onValueChange={(value) => {
-                if (!selectedSkills.includes(value)) {
-                  setSelectedSkills([...selectedSkills, value]);
+              onValueChange={(selectedSkill) => {
+                const current = value.skills || [];
+                if (!current.includes(selectedSkill)) {
+                  updateFilter({ skills: [...current, selectedSkill] });
                 }
               }}
             >
@@ -245,9 +238,9 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
                 ))}
               </SelectContent>
             </Select>
-            {selectedSkills.length > 0 && (
+            {value.skills && value.skills.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {selectedSkills.map(skill => (
+                {value.skills.map(skill => (
                   <Badge
                     key={skill}
                     variant="secondary"
@@ -272,16 +265,19 @@ export const AdvancedFilters = ({ uploads, onFilterChange, searchQuery, onSearch
             </div>
             <div className="space-y-2">
               <Slider
-                value={scoreRange}
-                onValueChange={(value) => setScoreRange(value as [number, number])}
+                value={[value.scoreMin ?? 5, value.scoreMax ?? 10]}
+                onValueChange={(range) => updateFilter({ 
+                  scoreMin: range[0] === 5 ? undefined : range[0], 
+                  scoreMax: range[1] === 10 ? undefined : range[1] 
+                })}
                 min={5}
                 max={10}
                 step={1}
                 className="w-full"
               />
               <div className="flex justify-between text-sm text-white/70">
-                <span>{scoreRange[0]}/10</span>
-                <span>{scoreRange[1]}/10</span>
+                <span>{value.scoreMin ?? 5}/10</span>
+                <span>{value.scoreMax ?? 10}/10</span>
               </div>
             </div>
           </div>

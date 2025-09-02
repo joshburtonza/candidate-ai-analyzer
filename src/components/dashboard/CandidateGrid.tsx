@@ -8,6 +8,10 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { getEffectiveDateString, formatDateForDB } from '@/utils/dateUtils';
 import { normalizeFirstLastName } from '@/utils/candidateFilters';
+import { AdvancedFilterState, applyDashboardFilters } from '@/utils/applyDashboardFilters';
+import { FeatureFlags } from '@/config/featureFlags';
+import { VerticalConfig } from '@/config/verticals';
+import { FilterPreset } from '@/config/filterPresets';
 interface CandidateGridProps {
   uploads: CVUpload[];
   viewMode: 'grid' | 'list';
@@ -16,6 +20,11 @@ interface CandidateGridProps {
   dedupe?: boolean;
   requireName?: boolean;
   dateFilterMode?: 'api' | 'client'; // 'api' for All Uploads, 'client' for Best Candidates
+  advancedFilters?: AdvancedFilterState;
+  featureFlags?: FeatureFlags;
+  verticalConfig?: VerticalConfig;
+  presetConfig?: FilterPreset;
+  strictMode?: boolean;
 }
 
 // Function to remove duplicates based on first and last name
@@ -57,7 +66,12 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
   onCandidateDelete,
   dedupe = true,
   requireName = true,
-  dateFilterMode = 'api'
+  dateFilterMode = 'api',
+  advancedFilters,
+  featureFlags,
+  verticalConfig,
+  presetConfig,
+  strictMode = false
 }) => {
   const [dateFilteredUploads, setDateFilteredUploads] = useState<CVUpload[]>([]);
   const [isLoadingDateFilter, setIsLoadingDateFilter] = useState(false);
@@ -127,8 +141,23 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
     }
   };
 
-  // Determine which uploads to show
+  // Determine which uploads to show with unified filtering
   const uploadsToShow = selectedDate ? dateFilteredUploads : (() => {
+    // Use unified filtering logic if advanced filters are enabled
+    if (featureFlags?.enableAdvancedFilters && advancedFilters && featureFlags && verticalConfig && presetConfig) {
+      const view = dedupe ? 'best' : 'allUploads';
+      return applyDashboardFilters({
+        items: uploads,
+        view,
+        featureFlags,
+        verticalConfig,
+        presetConfig,
+        strict: strictMode,
+        advanced: advancedFilters
+      });
+    }
+    
+    // Legacy filtering logic when advanced filters are disabled
     let filteredUploads = uploads;
     
     // Filter by name requirement if enabled

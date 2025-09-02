@@ -18,6 +18,8 @@ import { useFeatureFlags } from '@/context/FeatureFlagsContext';
 import { useVertical } from '@/context/VerticalContext';
 import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFilters';
 import { filterValidCandidates, filterAllQualifiedCandidates } from '@/utils/candidateFilters';
+import { AdvancedFilters } from '@/components/dashboard/AdvancedFilters';
+import { AdvancedFilterState, extractSourceEmailOptions } from '@/utils/applyDashboardFilters';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -31,6 +33,7 @@ const Dashboard = () => {
   const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'best'>('best');
   const [isExporting, setIsExporting] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterState>({});
 
   // Fetch uploads with pagination for better performance
   const { data: uploads = [], refetch, isLoading, error } = useQuery({
@@ -58,6 +61,25 @@ const Dashboard = () => {
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     gcTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
   });
+
+  // Load/save advanced filters from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('advancedFilters.v1');
+    if (saved) {
+      try {
+        setAdvancedFilters(JSON.parse(saved));
+      } catch (error) {
+        console.warn('Failed to parse saved advanced filters:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem('advancedFilters.v1', JSON.stringify(advancedFilters));
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [advancedFilters]);
 
   // Real-time subscription
   useEffect(() => {
@@ -166,7 +188,7 @@ const Dashboard = () => {
     }
   }, [uploads, bestCandidates, selectedCalendarDate]);
 
-  // Data source based on active tab and date filter
+  // Data source based on active tab and date filter  
   const currentUploads = useMemo(() => {
     const baseData = activeTab === 'all' ? uploads : bestCandidates;
     
@@ -180,6 +202,40 @@ const Dashboard = () => {
     
     return baseData;
   }, [activeTab, uploads, bestCandidates, selectedCalendarDate]);
+
+  // Helper to normalize arrays from candidate data
+  const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.filter(item => item && item.trim()).map(item => item.trim());
+    }
+    if (typeof value === 'string') {
+      return value.split(',').map(item => item.trim()).filter(item => item.length > 0);
+    }
+    return [];
+  };
+
+  // Extract options for advanced filters
+  const { sourceEmailOptions, availableCountries, availableSkills } = useMemo(() => {
+    const sourceEmails = extractSourceEmailOptions(currentUploads);
+    
+    const countrySet = new Set<string>();
+    const skillSet = new Set<string>();
+    
+    currentUploads.forEach(upload => {
+      const countries = normalizeToArray(upload.extracted_json?.countries);
+      const skills = normalizeToArray(upload.extracted_json?.current_employment);
+      
+      countries.forEach(country => countrySet.add(country));
+      skills.forEach(skill => skillSet.add(skill));
+    });
+    
+    return {
+      sourceEmailOptions: sourceEmails,
+      availableCountries: Array.from(countrySet).sort(),
+      availableSkills: Array.from(skillSet).sort()
+    };
+  }, [currentUploads]);
 
   const handleUploadComplete = (newUpload: CVUpload) => {
     console.log('New upload completed:', newUpload);
@@ -288,7 +344,16 @@ const Dashboard = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="all">
+              <TabsContent value="all" className="space-y-6">
+                {flags.enableAdvancedFilters && (
+                  <AdvancedFilters
+                    value={advancedFilters}
+                    onChange={setAdvancedFilters}
+                    sourceEmailOptions={sourceEmailOptions}
+                    availableCountries={availableCountries}
+                    availableSkills={availableSkills}
+                  />
+                )}
                 <CandidateGrid 
                   uploads={uploads} 
                   viewMode={viewMode} 
@@ -297,10 +362,24 @@ const Dashboard = () => {
                   dedupe={false}
                   requireName={false}
                   dateFilterMode="api"
+                  advancedFilters={flags.enableAdvancedFilters ? advancedFilters : undefined}
+                  featureFlags={flags}
+                  verticalConfig={currentVertical}
+                  presetConfig={currentPreset}
+                  strictMode={strictMode}
                 />
               </TabsContent>
 
-              <TabsContent value="best">
+              <TabsContent value="best" className="space-y-6">
+                {flags.enableAdvancedFilters && (
+                  <AdvancedFilters
+                    value={advancedFilters}
+                    onChange={setAdvancedFilters}
+                    sourceEmailOptions={sourceEmailOptions}
+                    availableCountries={availableCountries}
+                    availableSkills={availableSkills}
+                  />
+                )}
                 <CandidateGrid 
                   uploads={bestCandidates} 
                   viewMode={viewMode} 
@@ -309,6 +388,11 @@ const Dashboard = () => {
                   dedupe={true}
                   requireName={true}
                   dateFilterMode="client"
+                  advancedFilters={flags.enableAdvancedFilters ? advancedFilters : undefined}
+                  featureFlags={flags}
+                  verticalConfig={currentVertical}
+                  presetConfig={currentPreset}
+                  strictMode={strictMode}
                 />
               </TabsContent>
             </Tabs>

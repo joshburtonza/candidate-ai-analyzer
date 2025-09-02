@@ -91,6 +91,27 @@ const FeatureFlagSettings: React.FC = () => {
                 />
               </div>
             </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="advanced-filters" className="text-white font-medium">
+                  Advanced Filters
+                </Label>
+                <p className="text-sm text-slate-300">
+                  Enhanced search and filtering with source email, date range, and more options
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  Beta
+                </Badge>
+                <Switch
+                  id="advanced-filters"
+                  checked={flags.enableAdvancedFilters}
+                  onCheckedChange={(checked) => updateFlag('enableAdvancedFilters', checked)}
+                />
+              </div>
+            </div>
           </div>
 
           <Alert className="border-blue-500/20 bg-blue-500/10">

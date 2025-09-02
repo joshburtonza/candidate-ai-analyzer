@@ -2,12 +2,14 @@ export interface FeatureFlags {
   enableVerticals: boolean;
   enableFilterPresets: boolean;
   enableDynamicIngestion: boolean;
+  enableAdvancedFilters: boolean;
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   enableVerticals: false,
   enableFilterPresets: false, 
   enableDynamicIngestion: false,
+  enableAdvancedFilters: false,
 };
 
 // Environment-based feature flags (can be overridden by URL params or user settings)
@@ -26,6 +28,9 @@ export const getEnvironmentFeatureFlags = (): Partial<FeatureFlags> => {
     
     if (params.get('dynamic') === 'true') flags.enableDynamicIngestion = true;
     if (params.get('dynamic') === 'false') flags.enableDynamicIngestion = false;
+    
+    if (params.get('advancedFilters') === 'true') flags.enableAdvancedFilters = true;
+    if (params.get('advancedFilters') === 'false') flags.enableAdvancedFilters = false;
   }
   
   return flags;
