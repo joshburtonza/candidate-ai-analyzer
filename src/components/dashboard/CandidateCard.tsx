@@ -78,7 +78,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="h-full relative"
+      className="h-full relative min-h-[500px]"
     >
       <div className="relative overflow-hidden h-full cursor-pointer group">
         {/* Background gradient */}
@@ -118,7 +118,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             )}
           </Button>
 
-          <div className="space-y-5 flex-1 flex flex-col mt-12">
+          <div className="space-y-6 flex-1 flex flex-col mt-12">
             {/* Header with Avatar and Score */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
@@ -146,7 +146,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             </div>
 
             {/* Current Employment Section */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-5 bg-slate-400 rounded"></div>
                 <h4 className="text-sm font-bold text-gray-300 tracking-wider">EMPLOYMENT</h4>
@@ -155,17 +155,17 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 <div className="flex items-start gap-3">
                   <Briefcase className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-white truncate">
+                    <div className="text-sm font-medium text-white leading-relaxed">
                       {employment.jobTitle}
                     </div>
                     {employment.company && (
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1.5">
                         <Building2 className="w-3 h-3" />
-                        <span className="truncate">{employment.company}</span>
+                        <span className="leading-relaxed">{employment.company}</span>
                       </div>
                     )}
                     {employment.duration && (
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="text-xs text-gray-400 mt-1.5 leading-relaxed">
                         {employment.duration}
                       </div>
                     )}
@@ -176,13 +176,13 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
             {/* Job History Section */}
             {jobHistoryBullets.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-5 bg-slate-400 rounded"></div>
                   <h4 className="text-sm font-bold text-gray-300 tracking-wider">EXPERIENCE</h4>
                 </div>
-                <div className="space-y-2 pl-3">
-                  {jobHistoryBullets.slice(0, 3).map((bullet, index) => (
+                <div className="space-y-3 pl-3">
+                  {jobHistoryBullets.slice(0, 4).map((bullet, index) => (
                     <div key={index} className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mt-2 flex-shrink-0"></div>
                       <span className="text-sm text-gray-300 leading-relaxed">{bullet}</span>
@@ -193,7 +193,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
             )}
 
             {/* Education Section */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-5 bg-slate-400 rounded"></div>
                 <h4 className="text-sm font-bold text-gray-300 tracking-wider">EDUCATION</h4>
@@ -202,16 +202,16 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
                 <div className="flex items-start gap-3">
                   <GraduationCap className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-white truncate">
+                    <div className="text-sm font-medium text-white leading-relaxed">
                       {education.degree}
                     </div>
                     {education.institution && (
-                      <div className="text-xs text-gray-400 truncate mt-1">
+                      <div className="text-xs text-gray-400 mt-1.5 leading-relaxed">
                         {education.institution}
                       </div>
                     )}
                     {education.year && (
-                      <div className="text-xs text-gray-400 mt-1">
+                      <div className="text-xs text-gray-400 mt-1.5 leading-relaxed">
                         {education.year}
                       </div>
                     )}
@@ -222,7 +222,7 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
 
             {/* Score Progress - only show if score exists */}
             {data.score && (
-              <div className="space-y-2 mt-auto">
+              <div className="space-y-3 mt-auto pt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">FIT SCORE</span>
                   <span className="text-sm font-medium text-white">{score}/10</span>
@@ -236,11 +236,11 @@ export const CandidateCard = ({ upload, onDelete }: CandidateCardProps) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: isHovered ? 1 : 0 }}
               transition={{ duration: 0.2 }}
-              className="mt-4"
+              className="mt-6"
             >
               <Button
                 onClick={() => navigate(`/candidate/${upload.id}`)}
-                className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold shadow-lg shadow-slate-400/25 rounded-lg"
+                className="w-full bg-brand-gradient hover:opacity-90 text-slate-800 font-semibold shadow-lg shadow-slate-400/25 rounded-lg py-3"
               >
                 <Eye className="w-4 h-4 mr-2" />
                 VIEW PROFILE
