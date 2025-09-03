@@ -2,7 +2,7 @@ import { CVUpload } from '@/types/candidate';
 import { FeatureFlags } from '@/config/featureFlags';
 import { VerticalConfig } from '@/config/verticals';
 import { FilterPreset } from '@/config/filterPresets';
-import { filterValidCandidates, filterAllQualifiedCandidates, normalizeFirstLastName } from '@/utils/candidateFilters';
+import { filterValidCandidates, filterAllQualifiedCandidates, normalizeFirstLastName, isBestCandidate } from '@/utils/candidateFilters';
 import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFilters';
 import { getEffectiveDateString } from '@/utils/dateUtils';
 
@@ -183,18 +183,16 @@ export const applyDashboardFilters = ({
 
   // Step 1: Base valid filter
   if (view === 'best') {
-    if (!featureFlags.enableVerticals && !featureFlags.enableFilterPresets) {
-      filtered = filterAllQualifiedCandidates(filtered);
-    } else if (featureFlags.enableFilterPresets && presetConfig?.id === 'education-legacy') {
-      filtered = filterAllQualifiedCandidates(filtered);
-    } else if (featureFlags.enableFilterPresets && presetConfig) {
-      // Preset filtering will be applied in next step
+    // For best candidates, always apply strict filtering unless using presets/verticals
+    if (featureFlags.enableFilterPresets && presetConfig && presetConfig.id !== 'education-legacy') {
+      // Preset filtering will be applied in next step, use basic filter for now
       filtered = filterValidCandidates(filtered);
     } else if (featureFlags.enableVerticals && verticalConfig) {
-      // Vertical filtering will be applied in next step
+      // Vertical filtering will be applied in next step, use basic filter for now
       filtered = filterValidCandidates(filtered);
     } else {
-      filtered = filterAllQualifiedCandidates(filtered);
+      // Apply strict best candidate filtering (includes teaching qualifications)
+      filtered = filtered.filter(upload => isBestCandidate(upload));
     }
   } else {
     // For 'allUploads', apply minimal base filtering
