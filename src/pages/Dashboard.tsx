@@ -97,11 +97,18 @@ const Dashboard = () => {
       return; 
     }
 
-    // Use local date components to avoid timezone issues
-    const year = selectedCalendarDate.getFullYear();
-    const month = String(selectedCalendarDate.getMonth() + 1).padStart(2, '0');
-    const day = String(selectedCalendarDate.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
+    // Use local date string to avoid timezone issues
+    const localYear = selectedCalendarDate.getFullYear();
+    const localMonth = selectedCalendarDate.getMonth();
+    const localDay = selectedCalendarDate.getDate();
+    
+    // Create a new date in local timezone to get proper local date string
+    const localDate = new Date(localYear, localMonth, localDay);
+    const dateStr = [
+      localDate.getFullYear(),
+      String(localDate.getMonth() + 1).padStart(2, '0'),
+      String(localDate.getDate()).padStart(2, '0')
+    ].join('-');
     console.log('Fetching candidates for date:', dateStr, 'from calendar date:', selectedCalendarDate);
     setDateLoading(true); 
     setDateError(null);
@@ -202,19 +209,20 @@ const Dashboard = () => {
   // Base uploads: selected day (if any) else regular uploads  
   const baseUploads = selectedCalendarDate ? dateUploads : uploads;
 
-  // Unified data processing for both tabs with consistent filtering
+  // Different processing for each tab - minimal filtering for "all uploads"
   const processedUploads = useMemo(() => {
-    // Always use unified filtering logic - no bypasses
+    // All uploads tab: minimal filtering (just basic validity + advanced filters)
     const allFiltered = applyDashboardFilters({
       items: baseUploads,
       view: 'allUploads',
-      featureFlags: flags,
+      featureFlags: { ...flags, enableFilterPresets: false, enableVerticals: false }, // Disable strict filtering
       verticalConfig: currentVertical,
       presetConfig: currentPreset,
-      strict: strictMode,
+      strict: false, // Never use strict mode for "all uploads"
       advanced: advancedFilters
     });
     
+    // Best candidates tab: full filtering pipeline
     const bestFiltered = applyDashboardFilters({
       items: baseUploads,
       view: 'best',
