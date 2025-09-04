@@ -35,18 +35,12 @@ export async function fetchByLocalDay<T = any>(
   supabase: any,
   dateStr: string
 ): Promise<T[]> {
-  // Compute next LOCAL day as YYYY-MM-DD (handles month/year rollover safely)
+  // Validate date string and use inclusive upper bound [from, to]
   const [y, m, d] = dateStr.split("-").map((n) => parseInt(n, 10));
   if (!y || !m || !d) return [];
-  const next = new Date(y, m - 1, d);
-  next.setDate(next.getDate() + 1);
-  const to = [
-    next.getFullYear(),
-    String(next.getMonth() + 1).padStart(2, "0"),
-    String(next.getDate()).padStart(2, "0"),
-  ].join("-");
+  const to = dateStr;
 
-  // 1) Half-open interval [from, to) using your existing range function
+  // 1) Inclusive interval [from, to] using your existing range function
   {
     const { data, error } = await supabase.functions.invoke(
       `candidates-by-range?from=${encodeURIComponent(dateStr)}&to=${encodeURIComponent(to)}`
