@@ -35,10 +35,15 @@ export async function fetchByLocalDay<T = any>(
   supabase: any,
   dateStr: string
 ): Promise<T[]> {
-  // 1) Try range first (YYYY-MM-DD both sides; inclusive on your function)
+  // to = next local day (YYYY-MM-DD) to handle half-open interval
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + 1);
+  const to = d.toISOString().slice(0, 10);
+
+  // 1) Try range first (YYYY-MM-DD from, next day to)
   {
     const { data, error } = await supabase.functions.invoke(
-      `candidates-by-range?from=${encodeURIComponent(dateStr)}&to=${encodeURIComponent(dateStr)}`
+      `candidates-by-range?from=${encodeURIComponent(dateStr)}&to=${encodeURIComponent(to)}`
     );
     if (!error) {
       const list = normalizeCandidates<T>(data);
