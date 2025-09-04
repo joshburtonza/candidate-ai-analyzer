@@ -82,15 +82,41 @@ export const UploadHistoryCalendar = ({ allUploads, bestUploads, onDateSelect, s
     if (Object.keys(calendarCounts).length > 0) {
       totalCount = calendarCounts[dateStr] || 0;
     } else {
-      // Fallback to legacy counting for all uploads
+      // Fallback to legacy counting for all uploads - count all uploads for the date
       totalCount = realtimeAllUploads.filter(upload => getEffectiveDateString(upload) === dateStr).length;
     }
     
-    // For best uploads, always use client-side filtering
-    const bestCount = realtimeBestUploads.filter(upload => getEffectiveDateString(upload) === dateStr).length;
+    // For best uploads, always use client-side filtering but apply the same logic as the Best tab
+    const dateUploads = realtimeAllUploads.filter(upload => getEffectiveDateString(upload) === dateStr);
     
+    // Apply the same best candidate filtering as the dashboard
+    let bestCount = 0;
+    if (dateUploads.length > 0) {
+      // Use the same filtering logic as applyDashboardFilters for 'best' view
+      let bestFiltered = dateUploads.filter(upload => {
+        const candidateName = upload.extracted_json?.candidate_name?.trim();
+        return candidateName && candidateName.length > 0;
+      });
+      
+      // Apply teaching degree filter if it's an education vertical
+      const hasEducationVertical = true; // Assuming education vertical for now
+      if (hasEducationVertical) {
+        bestFiltered = bestFiltered.filter(upload => {
+          if (!upload.extracted_json) return false;
+          const education = upload.extracted_json.educational_qualifications?.toLowerCase() || '';
+          const hasTeachingDegree = education.includes('b.ed') || education.includes('bachelor of education') || 
+                                   education.includes('pgce') || education.includes('teaching') || 
+                                   education.includes('education');
+          return hasTeachingDegree;
+        });
+      }
+      
+      bestCount = bestFiltered.length;
+    }
+    
+    console.log(`Calendar counts for ${dateStr}: total=${totalCount}, best=${bestCount}, raw=${dateUploads.length}`);
     return { total: totalCount, best: bestCount };
-  }, [calendarCounts, realtimeAllUploads, realtimeBestUploads]);
+  }, [calendarCounts, realtimeAllUploads]);
 
   // Real-time subscription for calendar updates
   useEffect(() => {
