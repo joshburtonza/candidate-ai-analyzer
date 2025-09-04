@@ -622,7 +622,7 @@ export const isBestCandidate = (upload: CVUpload): boolean => {
     return false;
   }
   
-  // Apply all strict filters for Best Candidates
+  // Apply flexible best candidate criteria - require some key conditions but be more lenient
   const strictEducationValid = hasStrictEducation(upload);
   const strictCitizenshipValid = hasStrictCitizenship(upload);
   const postQualExperienceValid = hasPostQualificationTeachingExperience(upload);
@@ -632,14 +632,22 @@ export const isBestCandidate = (upload: CVUpload): boolean => {
   const dateCorrelationValid = hasValidDateCorrelation(upload);
   const strictCurrentRoleValid = hasStrictCurrentTeachingRole(upload);
   
-  const isBest = strictEducationValid && 
-                 strictCitizenshipValid && 
-                 postQualExperienceValid && 
-                 currentlyTeachingValid && 
-                 teachingPhaseValid && 
-                 notScannedValid && 
-                 dateCorrelationValid && 
-                 strictCurrentRoleValid;
+  // Core requirements - must have these
+  const coreRequirements = strictCitizenshipValid && 
+                          teachingPhaseValid && 
+                          notScannedValid && 
+                          dateCorrelationValid;
+  
+  // Flexible requirements - at least 2 of these should be true
+  const flexibleChecks = [
+    strictEducationValid,
+    postQualExperienceValid, 
+    currentlyTeachingValid,
+    strictCurrentRoleValid
+  ];
+  const flexibleScore = flexibleChecks.filter(Boolean).length;
+  
+  const isBest = coreRequirements && flexibleScore >= 2;
   
   console.log('Best candidate check for:', upload.extracted_json?.candidate_name, {
     strictEducation: strictEducationValid,
