@@ -97,7 +97,12 @@ const Dashboard = () => {
       return; 
     }
 
-    const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
+    // Use local date components to avoid timezone issues
+    const year = selectedCalendarDate.getFullYear();
+    const month = String(selectedCalendarDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedCalendarDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    console.log('Fetching candidates for date:', dateStr, 'from calendar date:', selectedCalendarDate);
     setDateLoading(true); 
     setDateError(null);
     
