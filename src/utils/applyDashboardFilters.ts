@@ -232,40 +232,61 @@ export const applyDashboardFilters = ({
 
   // Step 2: View-specific processing
   if (view === 'best') {
+    console.log(`Best Candidates filtering started with ${filtered.length} items`);
+    
     // Always require name for Best candidates
+    const beforeNameFilter = filtered.length;
     filtered = filtered.filter(upload => {
       const candidateName = upload.extracted_json?.candidate_name?.trim();
       return candidateName && candidateName.length > 0;
     });
+    console.log(`After name filter: ${filtered.length} (removed ${beforeNameFilter - filtered.length})`);
 
     // HARD GATE: Teaching degree completion for education verticals
     const vertical = verticalConfig?.id || presetConfig?.verticalId;
     if (isEducationVertical(vertical, presetConfig?.id)) {
+      const beforeDegreeFilter = filtered.length;
       filtered = filtered.filter(upload => {
         if (!upload.extracted_json) return false;
-        return hasCompletedTeachingDegree(upload.extracted_json as unknown as Record<string, unknown>);
+        const hasTeachingDegree = hasCompletedTeachingDegree(upload.extracted_json as unknown as Record<string, unknown>);
+        console.log(`Teaching degree check for ${upload.extracted_json?.candidate_name}: ${hasTeachingDegree}`);
+        return hasTeachingDegree;
       });
+      console.log(`After teaching degree filter: ${filtered.length} (removed ${beforeDegreeFilter - filtered.length})`);
     }
 
     // Apply strict rules if enabled
     if (strict) {
+      const beforeStrictFilter = filtered.length;
       if (featureFlags.enableFilterPresets && presetConfig) {
-        filtered = filtered.filter(upload => 
-          isPresetCandidate(upload, presetConfig, verticalConfig)
-        );
+        filtered = filtered.filter(upload => {
+          const passes = isPresetCandidate(upload, presetConfig, verticalConfig);
+          console.log(`Preset filter for ${upload.extracted_json?.candidate_name}: ${passes}`);
+          return passes;
+        });
       } else if (featureFlags.enableVerticals && verticalConfig) {
         filtered = filterVerticalCandidates(filtered, verticalConfig, strict);
       } else {
         // Apply original best candidate filtering for strict mode
-        filtered = filtered.filter(upload => isBestCandidate(upload));
+        filtered = filtered.filter(upload => {
+          const passes = isBestCandidate(upload);
+          console.log(`Best candidate filter for ${upload.extracted_json?.candidate_name}: ${passes}`);
+          return passes;
+        });
       }
+      console.log(`After strict filter: ${filtered.length} (removed ${beforeStrictFilter - filtered.length})`);
     }
 
     // Single deduper for Best only
+    const beforeDedupeFilter = filtered.length;
     filtered = dedupeByFirstLast(filtered);
+    console.log(`After deduplication: ${filtered.length} (removed ${beforeDedupeFilter - filtered.length})`);
+    
+    console.log(`Best Candidates filtering completed: ${filtered.length} final results`);
   } else {
     // For 'allUploads', no filters – return items as-is
     filtered = items;
+    console.log(`All Uploads: returning ${filtered.length} items without filtering`);
   }
 
   // Step 3: Apply deterministic stable sort
