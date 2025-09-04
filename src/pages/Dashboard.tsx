@@ -407,15 +407,7 @@ const Dashboard = () => {
               </TabsList>
 
               <TabsContent value="all" className="space-y-6">
-                {flags.enableAdvancedFilters && (
-                  <AdvancedFilters
-                    value={advancedFilters}
-                    onChange={setAdvancedFilters}
-                    sourceEmailOptions={sourceEmailOptions}
-                    availableCountries={availableCountries}
-                    availableSkills={availableSkills}
-                  />
-                )}
+                {/* Advanced filters hidden on All Uploads tab by design */}
                 <CandidateGrid 
                   uploads={currentUploads} 
                   viewMode={viewMode} 

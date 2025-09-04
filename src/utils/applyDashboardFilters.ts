@@ -225,8 +225,8 @@ export const applyDashboardFilters = ({
 }): CVUpload[] => {
   let filtered = items;
 
-  // Step 1: Apply advanced filters early (before view-specific logic)
-  if (featureFlags.enableAdvancedFilters && advanced) {
+  // Step 1: Apply advanced filters ONLY for Best tab
+  if (view === 'best' && featureFlags.enableAdvancedFilters && advanced) {
     filtered = applyAdvanced(filtered, advanced);
   }
 
@@ -264,8 +264,8 @@ export const applyDashboardFilters = ({
     // Single deduper for Best only
     filtered = dedupeByFirstLast(filtered);
   } else {
-    // For 'allUploads', apply minimal base filtering
-    filtered = filterValidCandidates(filtered);
+    // For 'allUploads', no filters – return items as-is
+    filtered = items;
   }
 
   // Step 3: Apply deterministic stable sort
