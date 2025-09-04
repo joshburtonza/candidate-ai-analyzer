@@ -35,29 +35,49 @@ export async function fetchByLocalDay<T = any>(
   supabase: any,
   dateStr: string
 ): Promise<T[]> {
-  // to = next local day (YYYY-MM-DD) to handle half-open interval
-  const d = new Date(dateStr + "T00:00:00");
-  d.setDate(d.getDate() + 1);
-  const to = d.toISOString().slice(0, 10);
+  // Compute next LOCAL day as YYYY-MM-DD (handles month/year rollover safely)
+  const [y, m, d] = dateStr.split("-").map((n) => parseInt(n, 10));
+  if (!y || !m || !d) return [];
+  const next = new Date(y, m - 1, d);
+  next.setDate(next.getDate() + 1);
+  const to = [
+    next.getFullYear(),
+    String(next.getMonth() + 1).padStart(2, "0"),
+    String(next.getDate()).padStart(2, "0"),
+  ].join("-");
 
-  // 1) Try range first (YYYY-MM-DD from, next day to)
+  // 1) Half-open interval [from, to) using your existing range function
   {
     const { data, error } = await supabase.functions.invoke(
       `candidates-by-range?from=${encodeURIComponent(dateStr)}&to=${encodeURIComponent(to)}`
     );
     if (!error) {
-      const list = normalizeCandidates<T>(data);
-      if (list.length) return list;
+      const payload = data as any;
+      const list = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.items)
+        ? payload.items
+        : Array.isArray(payload?.candidates)
+        ? payload.candidates
+        : [];
+      if (list.length) return list as T[];
     }
   }
 
-  // 2) Fall back to single-day function
+  // 2) Fallback to single-day function (same YYYY-MM-DD contract)
   {
     const { data, error } = await supabase.functions.invoke(
       `candidates-by-date?date=${encodeURIComponent(dateStr)}`
     );
     if (!error) {
-      return normalizeCandidates<T>(data);
+      const payload = data as any;
+      return (Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.items)
+        ? payload.items
+        : Array.isArray(payload?.candidates)
+        ? payload.candidates
+        : []) as T[];
     }
   }
 
