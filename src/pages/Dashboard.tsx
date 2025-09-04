@@ -19,7 +19,7 @@ import { useVertical } from '@/context/VerticalContext';
 import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFilters';
 import { filterValidCandidates, filterAllQualifiedCandidates } from '@/utils/candidateFilters';
 import { AdvancedFilters } from '@/components/dashboard/AdvancedFilters';
-import { AdvancedFilterState, extractSourceEmailOptions } from '@/utils/applyDashboardFilters';
+import { AdvancedFilterState, extractSourceEmailOptions, applyDashboardFilters } from '@/utils/applyDashboardFilters';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -160,17 +160,48 @@ const Dashboard = () => {
     return filterAllQualifiedCandidates(uploads);
   }, [uploads, flags, currentVertical, currentPreset, strictMode]);
 
-  // Calculate counts based on selected date
+  // Unified data processing for both tabs with consistent filtering
+  const processedUploads = useMemo(() => {
+    // Apply unified filtering logic for both tabs
+    if (flags.enableAdvancedFilters && advancedFilters && Object.keys(advancedFilters).length > 0) {
+      const allFiltered = applyDashboardFilters({
+        items: uploads,
+        view: 'allUploads',
+        featureFlags: flags,
+        verticalConfig: currentVertical,
+        presetConfig: currentPreset,
+        strict: strictMode,
+        advanced: advancedFilters
+      });
+      
+      const bestFiltered = applyDashboardFilters({
+        items: uploads,
+        view: 'best',
+        featureFlags: flags,
+        verticalConfig: currentVertical,
+        presetConfig: currentPreset,
+        strict: strictMode,
+        advanced: advancedFilters
+      });
+      
+      return { all: allFiltered, best: bestFiltered };
+    } else {
+      // Use legacy logic when advanced filters not applied
+      return { all: uploads, best: bestCandidates };
+    }
+  }, [uploads, bestCandidates, flags, advancedFilters, currentVertical, currentPreset, strictMode]);
+
+  // Calculate counts based on selected date and processed data
   const { allUploadsCount, bestCandidatesCount } = useMemo(() => {
     if (selectedCalendarDate) {
-      // Show counts for selected date
+      // Show counts for selected date using processed data
       const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
-      const allUploadsForDate = uploads.filter(upload => {
+      const allUploadsForDate = processedUploads.all.filter(upload => {
         const uploadDate = upload.received_date || upload.extracted_json?.date_received;
         return uploadDate && uploadDate.startsWith(dateStr);
       }).length;
       
-      const bestCandidatesForDate = bestCandidates.filter(upload => {
+      const bestCandidatesForDate = processedUploads.best.filter(upload => {
         const uploadDate = upload.received_date || upload.extracted_json?.date_received;
         return uploadDate && uploadDate.startsWith(dateStr);
       }).length;
@@ -180,17 +211,17 @@ const Dashboard = () => {
         bestCandidatesCount: bestCandidatesForDate
       };
     } else {
-      // Show overall totals
+      // Show overall totals from processed data
       return {
-        allUploadsCount: uploads.length,
-        bestCandidatesCount: bestCandidates.length
+        allUploadsCount: processedUploads.all.length,
+        bestCandidatesCount: processedUploads.best.length
       };
     }
-  }, [uploads, bestCandidates, selectedCalendarDate]);
+  }, [processedUploads, selectedCalendarDate]);
 
   // Data source based on active tab and date filter  
   const currentUploads = useMemo(() => {
-    const baseData = activeTab === 'all' ? uploads : bestCandidates;
+    const baseData = activeTab === 'all' ? processedUploads.all : processedUploads.best;
     
     if (selectedCalendarDate) {
       const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
@@ -201,7 +232,7 @@ const Dashboard = () => {
     }
     
     return baseData;
-  }, [activeTab, uploads, bestCandidates, selectedCalendarDate]);
+  }, [activeTab, processedUploads, selectedCalendarDate]);
 
   // Helper to normalize arrays from candidate data
   const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
@@ -355,14 +386,14 @@ const Dashboard = () => {
                   />
                 )}
                 <CandidateGrid 
-                  uploads={uploads} 
+                  uploads={currentUploads} 
                   viewMode={viewMode} 
-                  selectedDate={selectedCalendarDate}
+                  selectedDate={null}
                   onCandidateDelete={handleCandidateDelete}
                   dedupe={false}
                   requireName={false}
-                  dateFilterMode="api"
-                  advancedFilters={flags.enableAdvancedFilters ? advancedFilters : undefined}
+                  dateFilterMode="client"
+                  advancedFilters={undefined}
                   featureFlags={flags}
                   verticalConfig={currentVertical}
                   presetConfig={currentPreset}
@@ -381,14 +412,14 @@ const Dashboard = () => {
                   />
                 )}
                 <CandidateGrid 
-                  uploads={bestCandidates} 
+                  uploads={currentUploads} 
                   viewMode={viewMode} 
-                  selectedDate={selectedCalendarDate}
+                  selectedDate={null}
                   onCandidateDelete={handleCandidateDelete}
-                  dedupe={true}
-                  requireName={true}
+                  dedupe={false}
+                  requireName={false}
                   dateFilterMode="client"
-                  advancedFilters={flags.enableAdvancedFilters ? advancedFilters : undefined}
+                  advancedFilters={undefined}
                   featureFlags={flags}
                   verticalConfig={currentVertical}
                   presetConfig={currentPreset}

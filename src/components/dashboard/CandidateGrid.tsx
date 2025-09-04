@@ -177,11 +177,22 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
     return filteredUploads;
   })();
 
-// Sort by date_received string (YYYY-MM-DD), newest first
+// Stable deterministic sorting: score desc → date desc → name asc
 const sortedUploads = [...uploadsToShow].sort((a, b) => {
-  const aStr = getEffectiveDateString(a);
-  const bStr = getEffectiveDateString(b);
-  return bStr.localeCompare(aStr);
+  // First by score (higher first)
+  const scoreA = parseFloat(a.extracted_json?.score || '0');
+  const scoreB = parseFloat(b.extracted_json?.score || '0');
+  if (scoreA !== scoreB) return scoreB - scoreA;
+  
+  // Then by date (newer first)
+  const dateA = getEffectiveDateString(a);
+  const dateB = getEffectiveDateString(b);
+  if (dateA !== dateB) return dateB.localeCompare(dateA);
+  
+  // Finally by name (alphabetical)
+  const nameA = a.extracted_json?.candidate_name || '';
+  const nameB = b.extracted_json?.candidate_name || '';
+  return nameA.localeCompare(nameB);
 });
 
   const handleCandidateDelete = (deletedId: string) => {
