@@ -162,34 +162,29 @@ const Dashboard = () => {
 
   // Unified data processing for both tabs with consistent filtering
   const processedUploads = useMemo(() => {
-    // Apply unified filtering logic for both tabs
-    if (flags.enableAdvancedFilters && advancedFilters && Object.keys(advancedFilters).length > 0) {
-      const allFiltered = applyDashboardFilters({
-        items: uploads,
-        view: 'allUploads',
-        featureFlags: flags,
-        verticalConfig: currentVertical,
-        presetConfig: currentPreset,
-        strict: strictMode,
-        advanced: advancedFilters
-      });
-      
-      const bestFiltered = applyDashboardFilters({
-        items: uploads,
-        view: 'best',
-        featureFlags: flags,
-        verticalConfig: currentVertical,
-        presetConfig: currentPreset,
-        strict: strictMode,
-        advanced: advancedFilters
-      });
-      
-      return { all: allFiltered, best: bestFiltered };
-    } else {
-      // Use legacy logic when advanced filters not applied
-      return { all: uploads, best: bestCandidates };
-    }
-  }, [uploads, bestCandidates, flags, advancedFilters, currentVertical, currentPreset, strictMode]);
+    // Always use unified filtering logic - no bypasses
+    const allFiltered = applyDashboardFilters({
+      items: uploads,
+      view: 'allUploads',
+      featureFlags: flags,
+      verticalConfig: currentVertical,
+      presetConfig: currentPreset,
+      strict: strictMode,
+      advanced: advancedFilters
+    });
+    
+    const bestFiltered = applyDashboardFilters({
+      items: uploads,
+      view: 'best',
+      featureFlags: flags,
+      verticalConfig: currentVertical,
+      presetConfig: currentPreset,
+      strict: strictMode,
+      advanced: advancedFilters
+    });
+    
+    return { all: allFiltered, best: bestFiltered };
+  }, [uploads, flags, advancedFilters, currentVertical, currentPreset, strictMode]);
 
   // Calculate counts based on selected date and processed data
   const { allUploadsCount, bestCandidatesCount } = useMemo(() => {

@@ -141,59 +141,11 @@ const CandidateGrid: React.FC<CandidateGridProps> = ({
     }
   };
 
-  // Determine which uploads to show with unified filtering
-  const uploadsToShow = selectedDate ? dateFilteredUploads : (() => {
-    // Use unified filtering logic if advanced filters are enabled
-    if (featureFlags?.enableAdvancedFilters && advancedFilters && featureFlags && verticalConfig && presetConfig) {
-      const view = dedupe ? 'best' : 'allUploads';
-      return applyDashboardFilters({
-        items: uploads,
-        view,
-        featureFlags,
-        verticalConfig,
-        presetConfig,
-        strict: strictMode,
-        advanced: advancedFilters
-      });
-    }
-    
-    // Legacy filtering logic when advanced filters are disabled
-    let filteredUploads = uploads;
-    
-    // Filter by name requirement if enabled
-    if (requireName) {
-      filteredUploads = filteredUploads.filter(upload => {
-        if (!upload.extracted_json) return false;
-        const candidateName = upload.extracted_json.candidate_name?.trim();
-        return candidateName && candidateName.length > 0;
-      });
-    }
-    
-    // Apply deduplication if enabled
-    if (dedupe) {
-      filteredUploads = removeDuplicates(filteredUploads);
-    }
-    
-    return filteredUploads;
-  })();
+  // Use the uploads as-is - filtering is done upstream
+  const uploadsToShow = selectedDate ? dateFilteredUploads : uploads;
 
-// Stable deterministic sorting: score desc → date desc → name asc
-const sortedUploads = [...uploadsToShow].sort((a, b) => {
-  // First by score (higher first)
-  const scoreA = parseFloat(a.extracted_json?.score || '0');
-  const scoreB = parseFloat(b.extracted_json?.score || '0');
-  if (scoreA !== scoreB) return scoreB - scoreA;
-  
-  // Then by date (newer first)
-  const dateA = getEffectiveDateString(a);
-  const dateB = getEffectiveDateString(b);
-  if (dateA !== dateB) return dateB.localeCompare(dateA);
-  
-  // Finally by name (alphabetical)
-  const nameA = a.extracted_json?.candidate_name || '';
-  const nameB = b.extracted_json?.candidate_name || '';
-  return nameA.localeCompare(nameB);
-});
+  // Uploads are already sorted upstream - just use them as-is for stability
+  const sortedUploads = uploadsToShow;
 
   const handleCandidateDelete = (deletedId: string) => {
     onCandidateDelete?.(deletedId);

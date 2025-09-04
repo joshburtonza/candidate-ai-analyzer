@@ -5,6 +5,7 @@ import { FilterPreset } from '@/config/filterPresets';
 import { filterValidCandidates, filterAllQualifiedCandidates, normalizeFirstLastName, isBestCandidate } from '@/utils/candidateFilters';
 import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFilters';
 import { getEffectiveDateString } from '@/utils/dateUtils';
+import { hasCompletedTeachingDegree } from '@/config/teachingQuals';
 
 export type AdvancedFilterState = {
   search?: string;
@@ -68,27 +69,70 @@ const isDateInRange = (upload: CVUpload, dateFrom?: string | null, dateTo?: stri
   return true;
 };
 
-// Remove duplicates based on first and last name
+// Deterministic sorting: score desc → created_at desc → name asc
+const stableSort = (uploads: CVUpload[]): CVUpload[] => {
+  return [...uploads].sort((a, b) => {
+    const scoreA = parseFloat(a.extracted_json?.score || '0');
+    const scoreB = parseFloat(b.extracted_json?.score || '0');
+    if (scoreA !== scoreB) return scoreB - scoreA;
+    
+    const dateA = getEffectiveDateString(a);
+    const dateB = getEffectiveDateString(b);
+    if (dateA !== dateB) return dateB.localeCompare(dateA);
+    
+    const nameA = a.extracted_json?.candidate_name || '';
+    const nameB = b.extracted_json?.candidate_name || '';
+    return nameA.localeCompare(nameB);
+  });
+};
+
+// Remove duplicates based on first and last name, keeping the best one
 const dedupeByFirstLast = (uploads: CVUpload[]): CVUpload[] => {
-  const seen = new Set<string>();
-  const uniqueUploads: CVUpload[] = [];
+  const map = new Map<string, CVUpload>();
 
   for (const upload of uploads) {
     if (!upload.extracted_json?.candidate_name) continue;
     
     const normalizedName = normalizeFirstLastName(upload.extracted_json.candidate_name);
-    
-    if (normalizedName && seen.has(normalizedName)) {
+    if (!normalizedName) continue;
+
+    const existing = map.get(normalizedName);
+    if (!existing) {
+      map.set(normalizedName, upload);
       continue;
     }
-    
-    if (normalizedName) {
-      seen.add(normalizedName);
+
+    // Keep the better candidate (higher score, newer date, alphabetical name)
+    const scoreA = parseFloat(upload.extracted_json?.score || '0');
+    const scoreB = parseFloat(existing.extracted_json?.score || '0');
+    if (scoreA !== scoreB) {
+      if (scoreA > scoreB) map.set(normalizedName, upload);
+      continue;
     }
-    uniqueUploads.push(upload);
+
+    const dateA = getEffectiveDateString(upload);
+    const dateB = getEffectiveDateString(existing);
+    if (dateA !== dateB) {
+      if (dateA > dateB) map.set(normalizedName, upload);
+      continue;
+    }
+
+    const nameA = upload.extracted_json?.candidate_name || '';
+    const nameB = existing.extracted_json?.candidate_name || '';
+    if (nameA.localeCompare(nameB) < 0) {
+      map.set(normalizedName, upload);
+    }
   }
 
-  return uniqueUploads;
+  return Array.from(map.values());
+};
+
+// Check if vertical is education/teachers
+const isEducationVertical = (verticalId?: string, presetId?: string): boolean => {
+  const v = (verticalId ?? '').toLowerCase();
+  const p = (presetId ?? '').toLowerCase();
+  return v === 'education' || v === 'teachers' || v === 'teaching' || 
+         p.includes('education') || p.includes('teacher');
 };
 
 // Apply advanced filters
@@ -181,52 +225,51 @@ export const applyDashboardFilters = ({
 }): CVUpload[] => {
   let filtered = items;
 
-  // Step 1: Base valid filter
+  // Step 1: Apply advanced filters early (before view-specific logic)
+  if (featureFlags.enableAdvancedFilters && advanced) {
+    filtered = applyAdvanced(filtered, advanced);
+  }
+
+  // Step 2: View-specific processing
   if (view === 'best') {
-    // For best candidates, always apply strict filtering unless using presets/verticals
-    if (featureFlags.enableFilterPresets && presetConfig && presetConfig.id !== 'education-legacy') {
-      // Preset filtering will be applied in next step, use basic filter for now
-      filtered = filterValidCandidates(filtered);
-    } else if (featureFlags.enableVerticals && verticalConfig) {
-      // Vertical filtering will be applied in next step, use basic filter for now
-      filtered = filterValidCandidates(filtered);
-    } else {
-      // Apply strict best candidate filtering (includes teaching qualifications)
-      filtered = filtered.filter(upload => isBestCandidate(upload));
+    // Always require name for Best candidates
+    filtered = filtered.filter(upload => {
+      const candidateName = upload.extracted_json?.candidate_name?.trim();
+      return candidateName && candidateName.length > 0;
+    });
+
+    // HARD GATE: Teaching degree completion for education verticals
+    const vertical = verticalConfig?.id || presetConfig?.verticalId;
+    if (isEducationVertical(vertical, presetConfig?.id)) {
+      filtered = filtered.filter(upload => {
+        if (!upload.extracted_json) return false;
+        return hasCompletedTeachingDegree(upload.extracted_json as unknown as Record<string, unknown>);
+      });
     }
+
+    // Apply strict rules if enabled
+    if (strict) {
+      if (featureFlags.enableFilterPresets && presetConfig) {
+        filtered = filtered.filter(upload => 
+          isPresetCandidate(upload, presetConfig, verticalConfig)
+        );
+      } else if (featureFlags.enableVerticals && verticalConfig) {
+        filtered = filterVerticalCandidates(filtered, verticalConfig, strict);
+      } else {
+        // Apply original best candidate filtering for strict mode
+        filtered = filtered.filter(upload => isBestCandidate(upload));
+      }
+    }
+
+    // Single deduper for Best only
+    filtered = dedupeByFirstLast(filtered);
   } else {
     // For 'allUploads', apply minimal base filtering
     filtered = filterValidCandidates(filtered);
   }
 
-  // Step 2: Vertical OR Preset rules
-  if (view === 'best' && featureFlags.enableFilterPresets && presetConfig) {
-    filtered = filtered.filter(upload => 
-      isPresetCandidate(upload, presetConfig, verticalConfig)
-    );
-  } else if (view === 'best' && featureFlags.enableVerticals && verticalConfig) {
-    filtered = filterVerticalCandidates(filtered, verticalConfig, strict);
-  }
-
-  // Step 3: Advanced filters (if enabled)
-  if (featureFlags.enableAdvancedFilters && advanced) {
-    filtered = applyAdvanced(filtered, advanced);
-  }
-
-  // Step 4: View-specific constraints
-  if (view === 'best') {
-    // Require non-empty normalized name
-    filtered = filtered.filter(upload => {
-      const candidateName = upload.extracted_json?.candidate_name?.trim();
-      return candidateName && candidateName.length > 0;
-    });
-    
-    // Dedupe by first_last
-    filtered = dedupeByFirstLast(filtered);
-  }
-  // 'allUploads' has no dedupe and no name requirement
-
-  return filtered;
+  // Step 3: Apply deterministic stable sort
+  return stableSort(filtered);
 };
 
 // Extract unique source emails from dataset for filter options
