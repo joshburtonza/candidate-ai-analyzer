@@ -194,7 +194,7 @@ const Dashboard = () => {
     return filterAllQualifiedCandidates(uploads);
   }, [uploads, flags, currentVertical, currentPreset, strictMode]);
 
-  // Base uploads: selected day (if any) else regular uploads
+  // Base uploads: selected day (if any) else regular uploads  
   const baseUploads = selectedCalendarDate ? dateUploads : uploads;
 
   // Unified data processing for both tabs with consistent filtering
