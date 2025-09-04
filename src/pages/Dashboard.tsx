@@ -20,6 +20,7 @@ import { filterVerticalCandidates, isPresetCandidate } from '@/utils/verticalFil
 import { filterValidCandidates, filterAllQualifiedCandidates } from '@/utils/candidateFilters';
 import { AdvancedFilters } from '@/components/dashboard/AdvancedFilters';
 import { AdvancedFilterState, extractSourceEmailOptions, applyDashboardFilters } from '@/utils/applyDashboardFilters';
+import { fetchByLocalDay } from '@/lib/dayRange';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -34,6 +35,11 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'best'>('best');
   const [isExporting, setIsExporting] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterState>({});
+
+  // Date-scoped fetch state
+  const [dateUploads, setDateUploads] = useState<CVUpload[]>([]);
+  const [dateLoading, setDateLoading] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   // Fetch uploads with pagination for better performance
   const { data: uploads = [], refetch, isLoading, error } = useQuery({
@@ -80,6 +86,34 @@ const Dashboard = () => {
     }, 300);
     return () => clearTimeout(timeoutId);
   }, [advancedFilters]);
+
+  // Fetch when a calendar date is selected
+  useEffect(() => {
+    let alive = true;
+    if (!selectedCalendarDate) { 
+      setDateUploads([]); 
+      setDateLoading(false); 
+      setDateError(null); 
+      return; 
+    }
+
+    const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
+    setDateLoading(true); 
+    setDateError(null);
+    
+    fetchByLocalDay<CVUpload>(supabase, dateStr)
+      .then(list => { 
+        if (alive) setDateUploads(list); 
+      })
+      .catch(err => { 
+        if (alive) setDateError(err?.message || 'Failed to load day'); 
+      })
+      .finally(() => { 
+        if (alive) setDateLoading(false); 
+      });
+
+    return () => { alive = false; };
+  }, [selectedCalendarDate]);
 
   // Real-time subscription
   useEffect(() => {
@@ -160,11 +194,14 @@ const Dashboard = () => {
     return filterAllQualifiedCandidates(uploads);
   }, [uploads, flags, currentVertical, currentPreset, strictMode]);
 
+  // Base uploads: selected day (if any) else regular uploads
+  const baseUploads = selectedCalendarDate ? dateUploads : uploads;
+
   // Unified data processing for both tabs with consistent filtering
   const processedUploads = useMemo(() => {
     // Always use unified filtering logic - no bypasses
     const allFiltered = applyDashboardFilters({
-      items: uploads,
+      items: baseUploads,
       view: 'allUploads',
       featureFlags: flags,
       verticalConfig: currentVertical,
@@ -174,7 +211,7 @@ const Dashboard = () => {
     });
     
     const bestFiltered = applyDashboardFilters({
-      items: uploads,
+      items: baseUploads,
       view: 'best',
       featureFlags: flags,
       verticalConfig: currentVertical,
@@ -184,50 +221,20 @@ const Dashboard = () => {
     });
     
     return { all: allFiltered, best: bestFiltered };
-  }, [uploads, flags, advancedFilters, currentVertical, currentPreset, strictMode]);
+  }, [baseUploads, flags, advancedFilters, currentVertical, currentPreset, strictMode]);
 
-  // Calculate counts based on selected date and processed data
+  // Calculate counts and current data - no more client-side date filtering needed
   const { allUploadsCount, bestCandidatesCount } = useMemo(() => {
-    if (selectedCalendarDate) {
-      // Show counts for selected date using processed data
-      const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
-      const allUploadsForDate = processedUploads.all.filter(upload => {
-        const uploadDate = upload.received_date || upload.extracted_json?.date_received;
-        return uploadDate && uploadDate.startsWith(dateStr);
-      }).length;
-      
-      const bestCandidatesForDate = processedUploads.best.filter(upload => {
-        const uploadDate = upload.received_date || upload.extracted_json?.date_received;
-        return uploadDate && uploadDate.startsWith(dateStr);
-      }).length;
-      
-      return {
-        allUploadsCount: allUploadsForDate,
-        bestCandidatesCount: bestCandidatesForDate
-      };
-    } else {
-      // Show overall totals from processed data
-      return {
-        allUploadsCount: processedUploads.all.length,
-        bestCandidatesCount: processedUploads.best.length
-      };
-    }
-  }, [processedUploads, selectedCalendarDate]);
+    return {
+      allUploadsCount: processedUploads.all.length,
+      bestCandidatesCount: processedUploads.best.length
+    };
+  }, [processedUploads]);
 
-  // Data source based on active tab and date filter  
+  // Data source based on active tab - already date-scoped via baseUploads
   const currentUploads = useMemo(() => {
-    const baseData = activeTab === 'all' ? processedUploads.all : processedUploads.best;
-    
-    if (selectedCalendarDate) {
-      const dateStr = format(selectedCalendarDate, 'yyyy-MM-dd');
-      return baseData.filter(upload => {
-        const uploadDate = upload.received_date || upload.extracted_json?.date_received;
-        return uploadDate && uploadDate.startsWith(dateStr);
-      });
-    }
-    
-    return baseData;
-  }, [activeTab, processedUploads, selectedCalendarDate]);
+    return activeTab === 'all' ? processedUploads.all : processedUploads.best;
+  }, [activeTab, processedUploads]);
 
   // Helper to normalize arrays from candidate data
   const normalizeToArray = (value: string | string[] | null | undefined): string[] => {
@@ -356,6 +363,14 @@ const Dashboard = () => {
             onDateSelect={handleCalendarDateChange}
             selectedDate={selectedCalendarDate}
           />
+
+          {selectedCalendarDate && dateLoading && (
+            <div className="text-sm text-muted-foreground">Loading day...</div>
+          )}
+          
+          {dateError && (
+            <div className="text-sm text-destructive">Error: {dateError}</div>
+          )}
 
           <div className="space-y-6">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'best')} className="space-y-6">
