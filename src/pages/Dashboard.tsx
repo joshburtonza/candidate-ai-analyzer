@@ -97,19 +97,16 @@ const Dashboard = () => {
       return; 
     }
 
-    // Use local date string to avoid timezone issues
+    // Create proper local date string avoiding timezone issues
     const localYear = selectedCalendarDate.getFullYear();
-    const localMonth = selectedCalendarDate.getMonth();
+    const localMonth = selectedCalendarDate.getMonth() + 1;
     const localDay = selectedCalendarDate.getDate();
+    const dateStr = `${localYear}-${String(localMonth).padStart(2, '0')}-${String(localDay).padStart(2, '0')}`;
     
-    // Create a new date in local timezone to get proper local date string
-    const localDate = new Date(localYear, localMonth, localDay);
-    const dateStr = [
-      localDate.getFullYear(),
-      String(localDate.getMonth() + 1).padStart(2, '0'),
-      String(localDate.getDate()).padStart(2, '0')
-    ].join('-');
-    console.log('Fetching candidates for date:', dateStr, 'from calendar date:', selectedCalendarDate);
+    console.log('Fetching candidates for date:', dateStr, 'from calendar date:', {
+      original: selectedCalendarDate,
+      localComponents: { year: localYear, month: localMonth, day: localDay }
+    });
     setDateLoading(true); 
     setDateError(null);
     
@@ -211,14 +208,18 @@ const Dashboard = () => {
 
   // Different processing for each tab - minimal filtering for "all uploads"
   const processedUploads = useMemo(() => {
-    // All uploads tab: minimal filtering (just basic validity + advanced filters)
+    // All uploads tab: basic validity + advanced filters only (no strict preset/vertical filtering)
     const allFiltered = applyDashboardFilters({
       items: baseUploads,
       view: 'allUploads',
-      featureFlags: { ...flags, enableFilterPresets: false, enableVerticals: false }, // Disable strict filtering
+      featureFlags: { 
+        ...flags, 
+        enableFilterPresets: false, 
+        enableVerticals: false 
+      },
       verticalConfig: currentVertical,
       presetConfig: currentPreset,
-      strict: false, // Never use strict mode for "all uploads"
+      strict: false,
       advanced: advancedFilters
     });
     
@@ -233,8 +234,15 @@ const Dashboard = () => {
       advanced: advancedFilters
     });
     
+    console.log('Processed uploads:', {
+      baseCount: baseUploads.length,
+      allFilteredCount: allFiltered.length,
+      bestFilteredCount: bestFiltered.length,
+      selectedDate: selectedCalendarDate
+    });
+    
     return { all: allFiltered, best: bestFiltered };
-  }, [baseUploads, flags, advancedFilters, currentVertical, currentPreset, strictMode]);
+  }, [baseUploads, flags, advancedFilters, currentVertical, currentPreset, strictMode, selectedCalendarDate]);
 
   // Calculate counts and current data - no more client-side date filtering needed
   const { allUploadsCount, bestCandidatesCount } = useMemo(() => {
